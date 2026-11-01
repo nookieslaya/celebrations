@@ -34,6 +34,7 @@ final class Catalog {
                 'defaults'      => $this->defaults_from_schema( $birthday_schema ),
                 'features'      => array(),
                 'normalizer'    => array( EventDate::class, 'normalise' ),
+                'publishRequired' => array( 'content.celebrantName', 'content.heading', 'content.message', 'content.event.localDateTime', 'content.event.timeZone', 'content.event.startsAt', 'content.venueName', 'content.address' ),
             ),
             'basic-page' => array(
                 'id'            => 'basic-page',
@@ -41,6 +42,7 @@ final class Catalog {
                 'schemaVersion' => 1,
                 'schema'        => $schema,
                 'defaults'      => $this->defaults_from_schema( $schema ),
+                'publishRequired' => array( 'content.heading' ),
                 'features'      => array(),
             ),
         );

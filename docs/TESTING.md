@@ -51,3 +51,7 @@ PHPCS nie było skonfigurowane w poprzednim etapie i nie jest raportowane jako u
 ## Etap 4
 
 Pełny runner zawiera birthday.mjs: kontrakt/rejestry, defaults i szkic bez daty, wiek/palety/limity/HTML/unknown fields, DST gap/fold i offset Kathmandu, prywatny HTML/REST, zachowanie basic-page, tworzenie i zapis, dirty preview (także błędny zapis), intro/skip/focus/confetti, details shortcut, reduced motion i screenshoty trzech viewportów oraz maksymalnych treści. Sprawdza również brak żądań chunku BirthdayParty na loginie/liście/edytorze i działanie produkcyjne bez Vite. TEST_SCOPE=birthday uruchamia tylko ten zakres, na tej samej bazie. PHPCS i CI pozostają istniejącym długiem i nie są konfigurowane w tym etapie.
+
+## Publikacja — etap 5
+
+Pełne npm run test:integration uruchamia także tests/publication.mjs: rzeczywiste sesje i nonce, prawa projektu nadawane CLI, własność, gotowość, niezależny snapshot, błędy zapisu/blokadę na drugim połączeniu MySQL, flow przeglądarki i publiczny odczyt bez cookies/Vite. QR SVG i PNG są pobierane z UI, rasteryzowane i dekodowane przez jsqr 1.4.0; wynik jest porównywany z backendowym URL. Artefakty publikacji: app/test-results/publication, osobno od smoke/birthday. TEST_SCOPE=publication npm run test:integration to węższy przebieg 8 grup na tej samej stałej bazie, a nie pełna regresja. TEST_SCOPE=birthday nadal uruchamia wyłącznie 10 grup urodzinowych.

@@ -151,3 +151,7 @@ Login: 10 prób na IP/15 minut; rejestracja: 5 prób na IP/15 minut. Dotyczy ró
 Katalog zawiera birthday-invitation/schemaVersion 1 oraz birthday-party/templateVersion "1" (string zgodny z dotychczasowym kontraktem). Tworzenie i edycja nadal używają tego samego POST/PATCH sites. Konfiguracja, limity i przykład event są w [BIRTHDAY-INVITATION.md](BIRTHDAY-INVITATION.md). Wynik zapisów zawiera kanoniczne startsAt, wyliczone przez backend z localDateTime/timeZone.
 
 `GET /sites/{id}/preview` wymaga sesji/nonce, capabilities i własności tak jak GET site. Zwraca zwalidowany DTO w data; błędna zapisana wersja daje 409, błędne dane 400, cudzy/brakujący projekt 404, brak sesji 401. Odpowiedź ma no-store/private i noindex. Endpoint jest wspólny dla typów. Prywatny adres HTML to /app/sites/{id}/preview, bez nonce w URL. Nie istnieje urodzinowy CRUD ani publikacja pod /s/.
+
+## Publikacja — etap 5
+
+POST sites/{id}/publish i POST sites/{id}/unpublish zwracają {data: Site}. Sesja, nonce i dostęp jak w CRUD. Żadne pola publikacji ani prawa nie są przyjmowane od klienta. Site zawiera publication z backendowym URL, stanem snapshotu i gotowością. Szczegółowy kontrakt, błędy i nadawanie prawa: [PUBLICATION.md](PUBLICATION.md).

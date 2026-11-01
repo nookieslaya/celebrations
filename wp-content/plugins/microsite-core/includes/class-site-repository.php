@@ -103,7 +103,7 @@ final class SiteRepository {
     public function to_record( WP_Post $post ): array {
         $data = get_post_meta( $post->ID, self::META_KEY, true );
 
-        return array(
+        $record = array(
             'id'              => $post->ID,
             'publicId'        => $data['publicId'],
             'name'            => $post->post_title,
@@ -116,6 +116,11 @@ final class SiteRepository {
             'createdAt'       => mysql_to_rfc3339( $post->post_date_gmt ) . 'Z',
             'updatedAt'       => mysql_to_rfc3339( $post->post_modified_gmt ) . 'Z',
         );
+
+        $publication = new Publication( $this, new SiteValidator( new Catalog() ), new Permissions() );
+        $record['publication'] = $publication->describe( $record );
+
+        return $record;
     }
 
     private function new_public_id(): string {

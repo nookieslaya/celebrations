@@ -5,6 +5,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { PublicationPanel } from "../components/PublicationPanel";
 import { ApiError, type Site, type SiteTypeId } from "../api/client";
 import { useSession } from "../auth/SessionProvider";
 import {
@@ -77,10 +78,13 @@ function DraftEditor<Type extends SiteTypeId>({
     return () => setDirty(false);
   }, [dirty, setDirty]);
 
-  async function save(event?: FormEvent, openPreview = false) {
+  async function save(
+    event?: FormEvent,
+    openPreview = false,
+  ): Promise<Site | null> {
     event?.preventDefault();
     if (submitting.current || !dirty || !module) {
-      return;
+      return null;
     }
     submitting.current = true;
     setBusy(true);
@@ -102,10 +106,12 @@ function DraftEditor<Type extends SiteTypeId>({
           navigate(`${appBase}/sites/${saved.id}/preview`, false, true);
         }
       }
+      return saved;
     } catch (failure) {
       if (mounted.current) {
         setError(failure);
       }
+      return null;
     } finally {
       submitting.current = false;
       if (mounted.current) {
@@ -135,7 +141,9 @@ function DraftEditor<Type extends SiteTypeId>({
       </Link>
       <div className="page-title">
         <h1>{copy.edit}</h1>
-        <span className="badge">{copy.draft}</span>
+        <span className="badge">
+          {site.publication.published ? "Published" : copy.draft}
+        </span>
       </div>
       <div className="editor-layout">
         <form className="panel-card" onSubmit={(event) => void save(event)}>
@@ -221,7 +229,25 @@ function DraftEditor<Type extends SiteTypeId>({
               )}
             </>
           )}
-          <p className="field-help">{copy.previewHelp}</p>
+          <p className="field-help">
+            {site.publication.published
+              ? "This preview shows your current form. Your live page changes only when you publish."
+              : copy.previewHelp}
+          </p>
+          <PublicationPanel
+            site={site}
+            dirty={dirty}
+            busy={busy}
+            save={() => save()}
+            onBusy={setBusy}
+            onChange={(updated) => {
+              // Publication may be withdrawn while a form still has unsaved edits.
+              setSite((current) => ({
+                ...current,
+                publication: updated.publication,
+              }));
+            }}
+          />
         </div>
       </div>
     </>

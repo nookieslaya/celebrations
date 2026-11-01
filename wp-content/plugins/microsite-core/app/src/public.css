@@ -1,0 +1,10 @@
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: #fbfaf7;
+}
+#public-root > .draft-preview {
+  min-height: 100svh;
+  box-sizing: border-box;
+  border-radius: 0;
+}

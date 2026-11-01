@@ -10,6 +10,18 @@ interface RendererDefinition {
 // The preview API validates the type, version and full draft before this boundary.
 const registry = new Map<string, RendererDefinition>([
   [
+    "basic@1.0.0",
+    {
+      siteType: "basic-page",
+      Component: lazy(
+        () =>
+          import("./basic/BasicPage") as Promise<{
+            default: ComponentType<{ value: Site["draft"] }>;
+          }>,
+      ),
+    },
+  ],
+  [
     "birthday-party@1",
     {
       siteType: "birthday-invitation",

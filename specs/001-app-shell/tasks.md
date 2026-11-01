@@ -47,6 +47,21 @@
 - [x] Screenshoty i oględziny 375×812, 768×1024, 1440×900 oraz długich tekstów.
 - [x] Kontrole jakości, dokumentacja i wyniki.
 
+## Etap 5 — publikacja i udostępnianie
+
+- [x] Osobny snapshot, atomowy stan/data, stabilny URL i blokada współbieżności.
+- [x] Centralne prawo projektu, CLI grant/revoke, kontrola sesji i właściciela.
+- [x] Gotowość w rejestrze, błędy pól, brak wpływu na zapis szkicu.
+- [x] Chronione komendy REST i prywatny DTO publikacji.
+- [x] Publiczna powłoka bez kont/Vite, wspólne renderery birthday i basic.
+- [x] Edytor: save-and-publish/cancel, aktualizacja i potwierdzane wycofanie.
+- [x] Kopiowanie/share i QR SVG/PNG na żądanie, ostrzeżenie LocalWP.
+- [x] Metadane snapshotu, noindex/no-store, katalog i zasady przyszłych SVG.
+- [x] Pełna regresja HTTP/E2E: 57 grup PASS, test błędu zapisu/blokady i przegląd dwóch rozmiarów.
+- [x] Końcowy STATUS i przykład opublikowanej strony LocalWP.
+
 ## Dalsze etapy
+
+- [ ] RSVP bez konta gościa.
 - [ ] PHPCS i CI, prywatny podgląd basic-page.
-- [ ] Media, publikacja i snapshoty; później płatności, RSVP i QR jako osobne moduły.
+- [ ] Płatności, media/uploady i jawna integracja sprawdzonych assetów jako oddzielne moduły.

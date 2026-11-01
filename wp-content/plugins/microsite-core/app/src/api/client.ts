@@ -12,6 +12,16 @@ export interface Site<Type extends SiteTypeId = SiteTypeId> {
   schemaVersion: number;
   draft: DraftBySiteType[Type];
   status: "draft";
+  publication: {
+    published: boolean;
+    publicUrl: string;
+    lastPublishedAt: string | null;
+    hasUnpublishedChanges: boolean;
+    canPublish: boolean;
+    blockedReason: string | null;
+    blockedCode: string | null;
+    fieldErrors: Record<string, string>;
+  };
   createdAt: string;
   updatedAt: string;
 }
@@ -59,6 +69,7 @@ export class ApiError extends Error {
     public readonly code: string,
     message: string,
     public readonly status: number,
+    public readonly fields: Record<string, string> = {},
   ) {
     super(message);
     this.name = "ApiError";
@@ -165,6 +176,7 @@ export function createApiClient(options: ApiClientOptions) {
         body?.code ?? "http_error",
         body?.message ?? "The request failed.",
         response.status,
+        body?.data?.fields ?? {},
       );
     }
 
@@ -173,6 +185,7 @@ export function createApiClient(options: ApiClientOptions) {
         "invalid_response",
         "The API returned an invalid response.",
         response.status,
+        body?.data?.fields ?? {},
       );
     }
 
@@ -205,6 +218,8 @@ export function createApiClient(options: ApiClientOptions) {
         true,
       ),
     logout: () => request<Session>("auth/logout", "POST"),
+    publish: (id: number) => request<Site>(`sites/${id}/publish`, "POST"),
+    unpublish: (id: number) => request<Site>(`sites/${id}/unpublish`, "POST"),
     list: (page = 1, perPage = 20, signal?: AbortSignal) =>
       request<SiteList>(
         `sites?page=${page}&per_page=${perPage}`,

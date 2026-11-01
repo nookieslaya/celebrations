@@ -10,7 +10,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 final class Permissions {
-    private const VERSION = '1';
+    private const VERSION = '2';
 
     public static function install(): void {
         $customer = get_role( 'microsite_customer' );
@@ -35,6 +35,7 @@ final class Permissions {
             'read',
             'create_ms_sites',
             'edit_ms_sites',
+            'publish_ms_sites',
         );
 
         $administrator_capabilities = array_merge(

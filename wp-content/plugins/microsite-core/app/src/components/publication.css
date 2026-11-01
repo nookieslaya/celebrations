@@ -1,0 +1,44 @@
+.publication-panel {
+  margin-top: 2rem;
+}
+.publication-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.publication-title h2 {
+  margin: 0;
+}
+.publication-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+.publication-actions .button {
+  white-space: normal;
+  text-align: center;
+}
+.publication-sharing {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #dedbea;
+}
+.publication-fields {
+  padding-left: 1.25rem;
+  overflow-wrap: anywhere;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.local-warning {
+  border-left: 3px solid #9b650d;
+}
+@media (max-width: 480px) {
+  .publication-actions > * {
+    flex: 1 1 100%;
+  }
+  .publication-title {
+    flex-wrap: wrap;
+  }
+}

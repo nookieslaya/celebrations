@@ -1,3 +1,4 @@
+import BasicPage from "../renderers/basic/BasicPage";
 import schema from "../../../contracts/basic-page.v1.json";
 import type { BasicPageDraft } from "../generated/drafts";
 import { copy } from "../copy";
@@ -67,17 +68,5 @@ export function BasicPageFields({ value, onChange }: BasicPageFieldsProps) {
 }
 
 export function BasicPagePreview({ value }: { value: BasicPageDraft }) {
-  return (
-    <section
-      className="draft-preview"
-      data-accent={value.appearance.accent}
-      aria-label={copy.preview}
-    >
-      <span className="preview-flower" aria-hidden="true">
-        ✳
-      </span>
-      <h2>{value.content.heading}</h2>
-      <p>{value.content.description}</p>
-    </section>
-  );
+  return <BasicPage value={value} label={copy.preview} />;
 }

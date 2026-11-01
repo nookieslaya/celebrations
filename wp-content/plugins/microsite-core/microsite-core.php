@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Microsite Core
  * Description: Theme-independent application shell for microsites.
- * Version: 0.4.0
+ * Version: 0.5.0
  * Requires PHP: 8.2
  * Requires at least: 6.6
  * Text Domain: microsite-core
@@ -26,6 +26,9 @@ require_once __DIR__ . '/includes/class-permissions.php';
 require_once __DIR__ . '/includes/class-site-validator.php';
 require_once __DIR__ . '/includes/class-site-repository.php';
 require_once __DIR__ . '/includes/class-site-service.php';
+require_once __DIR__ . '/includes/class-publication.php';
+require_once __DIR__ . '/includes/class-publication-controller.php';
+require_once __DIR__ . '/includes/class-public-page.php';
 require_once __DIR__ . '/includes/class-sites-controller.php';
 
 require_once __DIR__ . '/includes/class-auth-csrf.php';
@@ -47,6 +50,26 @@ function boot_backend(): void {
     $validator = new SiteValidator( $catalog );
     $service = new SiteService( $repository, $validator, $permissions );
     $controller = new SitesController( $catalog, $service, $permissions );
+    $publication = new Publication( $repository, $validator, $permissions );
+    $publication_controller = new PublicationController( $publication, $permissions );
+    add_action( 'rest_api_init', array( $publication_controller, 'register_routes' ) );
+    add_action( 'template_redirect', array( new PublicPage( $publication ), 'render' ), -2 );
+
+    if ( defined( 'WP_CLI' ) && WP_CLI ) {
+        \WP_CLI::add_command( 'microsite publication-right', function ( array $args ) use ( $publication ): void {
+            if ( count( $args ) !== 2 || ! ctype_digit( $args[0] ) || ! in_array( $args[1], array( 'grant', 'revoke' ), true ) ) {
+                \WP_CLI::error( 'Usage: wp microsite publication-right <project-id> grant|revoke --user=<administrator>' );
+            }
+
+            $result = $publication->set_entitlement( (int) $args[0], 'grant' === $args[1] );
+
+            if ( is_wp_error( $result ) ) {
+                \WP_CLI::error( $result->get_error_message() );
+            }
+
+            \WP_CLI::success( 'Project publication right updated.' );
+        } );
+    }
 
     add_action( 'template_redirect', array( new PreviewAccess( $service ), 'check' ), -1 );
 

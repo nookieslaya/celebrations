@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" preserveAspectRatio="xMidYMid meet" role="presentation" aria-hidden="true" focusable="false" overflow="visible" data-asset="gift-box">
+  <g data-part="shadow"><path fill="var(--asset-primary, #FF6B6B)" d="M120 0C53.8 0 0 53.8 0 120s53.8 120 120 120 120-53.8 120-120S186.2 0 120 0z"/></g>
+  <g data-part="box"><rect x="9" y="7" width="222" height="226" rx="12" fill="var(--asset-primary, #FF6B6B)"/>
+    <g data-part="ribbon">
+      <path d="M120 50 L110 80 Q100 90 120 100 Z" stroke="var(--asset-ink, #252238)" fill="none" stroke-width="4"/>
+      <rect x="116" y="76" width="2" height="20" rx="1" fill="var(--asset-primary, #FF6B6B)"/>
+    </g>
+  </g>
+  <g data-part="lid"><polygon points="120,85 95,120 145,120" fill="var(--asset-accent, #A78BFA)" stroke="var(--asset-ink, #252238)" stroke-width="2"/>
+    <g data-part="bow">
+      <circle cx="120" cy="65" r="10" fill="var(--asset-primary, #FF6B6B)"/>
+      <path d="M120 75 L110 85 Q100 95 120 105 Z" stroke="var(--asset-ink, #252238)" fill="none" stroke-width="2"/>
+    </g>
+  </g>
+</svg>

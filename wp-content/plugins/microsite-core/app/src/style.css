@@ -519,40 +519,6 @@ fieldset .button {
   color: #7f8c75;
   margin: 22px 0 0;
 }
-.draft-preview {
-  --preview-accent: #547452;
-  --preview-background: #f0f5eb;
-  text-align: center;
-  padding: 45px 25px;
-  border-radius: 12px;
-  border: 1px solid #dce5d6;
-  background: var(--preview-background);
-  color: #283b37;
-  overflow-wrap: anywhere;
-}
-.draft-preview[data-accent="rose"] {
-  --preview-accent: #a95970;
-  --preview-background: #fcf0f1;
-}
-.draft-preview[data-accent="ocean"] {
-  --preview-accent: #427b96;
-  --preview-background: #edf5f9;
-}
-.preview-flower {
-  font-size: 46px;
-  color: var(--preview-accent);
-}
-.draft-preview h2 {
-  font-family: Georgia, serif;
-  font-size: 30px;
-  font-weight: 400;
-  color: var(--preview-accent);
-}
-.draft-preview p {
-  white-space: pre-wrap;
-  font-size: 14px;
-  line-height: 1.9;
-}
 .account-menu {
   display: flex;
   align-items: center;

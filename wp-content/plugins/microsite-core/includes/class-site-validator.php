@@ -69,7 +69,7 @@ final class SiteValidator {
         return array( 'type' => $type, 'template' => $template );
     }
 
-    public function draft( mixed $draft, array $type, array $template ): array|WP_Error {
+    public function draft( mixed $draft, array $type, array $template, bool $normalise = true ): array|WP_Error {
         if ( ! $this->strict_integer_types( $draft, $type['schema'] ) ) {
             return $this->invalid( 'Integer fields must contain JSON integers, not text.' );
         }
@@ -90,8 +90,52 @@ final class SiteValidator {
             }
         }
 
-        if ( isset( $type['normalizer'] ) ) {
+        if ( $normalise && isset( $type['normalizer'] ) ) {
             return call_user_func( $type['normalizer'], $draft );
+        }
+
+        return $draft;
+    }
+
+    public function publishable( array $record, bool $normalise = true ): array|WP_Error {
+        $selection = $this->selection( $record['siteType'], $record['templateId'] );
+
+        if ( is_wp_error( $selection ) ) {
+            return $selection;
+        }
+
+        $versions = $this->stored_versions( $record, $selection );
+
+        if ( is_wp_error( $versions ) ) {
+            return $versions;
+        }
+
+        $draft = $this->draft( $record['draft'], $selection['type'], $selection['template'], $normalise );
+
+        if ( is_wp_error( $draft ) ) {
+            return $draft;
+        }
+
+        $fields = array();
+
+        foreach ( $selection['type']['publishRequired'] as $path ) {
+            $value = $draft;
+
+            foreach ( explode( '.', $path ) as $key ) {
+                $value = $value[ $key ] ?? null;
+            }
+
+            if ( ! is_string( $value ) || preg_match( '/^[\s\p{Z}]*$/u', $value ) ) {
+                $fields[ $path ] = 'Complete this field before publishing.';
+            }
+        }
+
+        if ( $fields ) {
+            return new WP_Error(
+                'microsite_not_ready',
+                'Complete the required publication fields.',
+                array( 'status' => 422, 'fields' => $fields )
+            );
         }
 
         return $draft;

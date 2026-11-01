@@ -43,7 +43,9 @@ export default defineConfig(({ mode }) => {
     build: {
       manifest: true,
       outDir: "dist",
-      rollupOptions: { input: "src/main.tsx" },
+      rollupOptions: {
+        input: { app: "src/main.tsx", public: "src/public.tsx" },
+      },
     },
   };
 });

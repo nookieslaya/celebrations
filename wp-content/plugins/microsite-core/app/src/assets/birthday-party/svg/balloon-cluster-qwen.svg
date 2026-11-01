@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 320" preserveAspectRatio="xMidYMid meet" role="presentation" aria-hidden="true" focusable="false" overflow="visible" data-asset="balloon-cluster">
+  <g data-part="balloon-left">
+    <rect x="35" y="160" width="30" height="70" rx="15" fill="var(--asset-primary, #FF6B6B)"/>
+    <rect x="40" y="90" width="20" height="70" rx="15" fill="var(--asset-highlight, #FFFFFF)"/>
+    <circle cx="45" cy="80" r="5" fill="var(--asset-ink, #252238)"/>
+    <line x1="35" y1="160" x2="70" y2="95" stroke="var(--asset-ink, #252238)" stroke-width="4"/>
+  </g>
+  <g data-part="balloon-center">
+    <rect x="100" y="110" width="40" height="60" rx="20" fill="var(--asset-secondary, #FFD166)"/>
+    <rect x="115" y="50" width="30" height="70" rx="20" fill="var(--asset-highlight, #FFFFFF)"/>
+    <circle cx="120" cy="40" r="5" fill="var(--asset-ink, #252238)"/>
+    <line x1="100" y1="110" x2="160" y2="70" stroke="var(--asset-ink, #252238)" stroke-width="4"/>
+  </g>
+  <g data-part="balloon-right">
+    <rect x="165" y="95" width="30" height="70" rx="15" fill="var(--asset-accent, #A78BFA)"/>
+    <rect x="170" y="25" width="20" height="70" rx="15" fill="var(--asset-highlight, #FFFFFF)"/>
+    <circle cx="175" cy="15" r="5" fill="var(--asset-ink, #252238)"/>
+    <line x1="165" y1="95" x2="200" y2="60" stroke="var(--asset-ink, #252238)" stroke-width="4"/>
+  </g>
+</svg>

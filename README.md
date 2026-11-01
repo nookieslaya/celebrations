@@ -71,3 +71,7 @@ W Create a site wybierz Birthday invitation / birthday-party. Edytor ma sekcje c
 Przykładowy projekt i daty/strefy/animacje: [docs/BIRTHDAY-INVITATION.md](docs/BIRTHDAY-INVITATION.md). GSAP 3.15.0 jest ładowany wyłącznie dla tego szablonu, bez CDN. Pełny zestaw testów nadal działa przez npm run test:integration na stałej bazie; szybki zakres birthday: TEST_SCOPE=birthday npm run test:integration. Screenshoty: wp-content/plugins/microsite-core/app/test-results/birthday.
 
 Przykład utworzony lokalnie dla istniejącego administratora: http://celebrations.local/app/sites/8/preview (projekt Demo · Birthday party). Wymaga logowania; nie jest publicznym zaproszeniem. Skrypt tworzący przykład jest idempotentny i opisany w dokumentacji etapu 4.
+
+## Etap 5 — publikacja
+
+Edytor obsługuje publikację, osobny snapshot, wycofanie, link i QR SVG/PNG. Każdy projekt wymaga jawnego prawa nadanego przez administratora; nie ma płatności. Szczegóły i komendy z LocalWP Open site shell: [docs/PUBLICATION.md](docs/PUBLICATION.md). Publiczne /s/{publicId}/ zawsze używa builda produkcyjnego, dlatego wykonaj npm run build także przy działającym Vite. Lokalny link nie jest dostępny dla gości przez Internet.

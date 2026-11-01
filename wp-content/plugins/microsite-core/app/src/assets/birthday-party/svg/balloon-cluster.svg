@@ -1,0 +1,46 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 240 320"
+  preserveAspectRatio="xMidYMid meet"
+  role="presentation"
+  aria-hidden="true"
+  focusable="false"
+  overflow="visible"
+  data-asset="balloon-cluster"
+>
+  <!-- Balloon Left -->
+  <g data-part="balloon-left">
+    <!-- Body (Primary Color) -->
+    <path d="M 80 150 C 60 120, 100 80, 140 90 L 130 170 C 100 190, 60 170, 80 150 Z" fill="var(--asset-primary, #FF6B6B)" />
+    <!-- Highlight -->
+    <path d="M 85 145 C 70 125, 95 95, 130 105 L 120 165 C 90 185, 70 165, 85 145 Z" fill="var(--asset-highlight, #FFFFFF)" opacity="0.4"/>
+    <!-- Knot -->
+    <circle cx="130" cy="170" r="5" fill="var(--asset-ink, #252238)" />
+    <!-- String -->
+    <line x1="130" y1="170" x2="130" y2="240" stroke="var(--asset-ink, #252238)" stroke-width="2"/>
+  </g>
+
+  <!-- Balloon Center -->
+  <g data-part="balloon-center">
+    <!-- Body (Accent Color) -->
+    <path d="M 120 100 C 90 70, 150 40, 180 60 L 170 180 C 140 200, 100 180, 120 100 Z" fill="var(--asset-accent, #A78BFA)" />
+    <!-- Highlight -->
+    <path d="M 125 95 C 100 75, 135 45, 165 55 L 155 175 C 125 195, 105 175, 125 95 Z" fill="var(--asset-highlight, #FFFFFF)" opacity="0.3"/>
+    <!-- Knot -->
+    <circle cx="160" cy="180" r="5" fill="var(--asset-ink, #252238)" />
+    <!-- String -->
+    <line x1="160" y1="180" x2="160" y2="270" stroke="var(--asset-ink, #252238)" stroke-width="2"/>
+  </g>
+
+  <!-- Balloon Right -->
+  <g data-part="balloon-right">
+    <!-- Body (Secondary Color) -->
+    <path d="M 190 160 C 210 130, 170 90, 140 100 L 150 200 C 180 220, 210 200, 190 160 Z" fill="var(--asset-secondary, #FFD166)" />
+    <!-- Highlight -->
+    <path d="M 195 155 C 205 135, 180 105, 145 115 L 155 195 C 185 215, 215 195, 195 155 Z" fill="var(--asset-highlight, #FFFFFF)" opacity="0.3"/>
+    <!-- Knot -->
+    <circle cx="145" cy="200" r="5" fill="var(--asset-ink, #252238)" />
+    <!-- String -->
+    <line x1="145" y1="200" x2="145" y2="290" stroke="var(--asset-ink, #252238)" stroke-width="2"/>
+  </g>
+</svg>

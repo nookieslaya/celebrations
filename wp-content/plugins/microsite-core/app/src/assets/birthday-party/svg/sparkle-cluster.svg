@@ -1,0 +1,39 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 240 240"
+  preserveAspectRatio="xMidYMid meet"
+  role="presentation"
+  aria-hidden="true"
+  focusable="false"
+  overflow="visible"
+  data-asset="sparkle-cluster"
+>
+  <!-- Large Sparkle 1 (Top Left) -->
+  <g data-part="sparkle-large">
+    <polygon points="100,50 120,70 140,50 120,30" fill="var(--asset-primary, #FF6B6B)" />
+    <circle cx="120" cy="60" r="3" fill="var(--asset-secondary, #FFD166)" opacity="0.8"/>
+  </g>
+
+  <!-- Large Sparkle 2 (Bottom Right) -->
+  <g data-part="sparkle-large">
+    <polygon points="170,190 190,210 210,190 190,170" fill="var(--asset-accent, #A78BFA)" />
+    <circle cx="190" cy="200" r="3" fill="var(--asset-secondary, #FFD166)" opacity="0.8"/>
+  </g>
+
+  <!-- Small Star (Center) -->
+  <g data-part="star">
+    <polygon points="120,95 135,115 155,115 140,125 148,105 165,105 150,95" fill="var(--asset-primary, #FF6B6B)" />
+  </g>
+
+  <!-- Dot Accents -->
+  <g data-part="dot-1">
+    <circle cx="70" cy="180" r="4" fill="var(--asset-secondary, #FFD166)" />
+  </g>
+  <g data-part="dot-2">
+    <circle cx="200" cy="50" r="3" fill="var(--asset-accent, #A78BFA)" />
+  </g>
+  <g data-part="dot-3">
+    <circle cx="140" cy="20" r="2.5" fill="var(--asset-highlight, #FFFFFF)" opacity="0.6"/>
+  </g>
+
+</svg>

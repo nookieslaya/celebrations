@@ -1,0 +1,45 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 240 240"
+  preserveAspectRatio="xMidYMid meet"
+  role="presentation"
+  aria-hidden="true"
+  focusable="false"
+  overflow="visible"
+  data-asset="gift-box"
+>
+  <!-- Shadow -->
+  <g data-part="shadow">
+    <ellipse cx="120" cy="235" rx="80" ry="10" fill="rgba(37, 34, 56, 0.1)" />
+  </g>
+
+  <!-- Main Box Structure -->
+  <g data-part="box">
+    <!-- Base Box Body (Primary Color) -->
+    <rect x="50" y="80" width="140" height="120" rx="15" fill="var(--asset-primary, #FF6B6B)" stroke="var(--asset-ink, #252238)" stroke-width="3"/>
+
+    <!-- Ribbon (Wrapped around the box) -->
+    <g data-part="ribbon">
+      <!-- Vertical ribbon strip -->
+      <rect x="100" y="60" width="10" height="140" fill="var(--asset-secondary, #FFD166)" />
+      <!-- Horizontal ribbon strip (top) -->
+      <rect x="50" y="90" width="140" height="10" fill="var(--asset-secondary, #FFD166)" />
+    </g>
+
+    <!-- Lid Structure (Slightly lifted appearance) -->
+    <g data-part="lid">
+      <!-- Lid Base (Solid Fill) -->
+      <rect x="45" y="70" width="150" height="20" rx="10" fill="var(--asset-primary, #FF6B6B)" stroke="var(--asset-ink, #252238)" stroke-width="3"/>
+
+      <!-- Bow (Attached to the lid) -->
+      <g data-part="bow">
+        <!-- Center knot/base -->
+        <circle cx="120" cy="75" r="6" fill="var(--asset-secondary, #FFD166)" />
+        <!-- Left loop -->
+        <path d="M 95 70 Q 80 60, 90 80 T 105 70 Z" fill="var(--asset-secondary, #FFD166)" transform="rotate(-20 100 75)"/>
+        <!-- Right loop -->
+        <path d="M 145 70 Q 160 60, 150 80 T 135 70 Z" fill="var(--asset-secondary, #FFD166)" transform="rotate(20 140 75)"/>
+      </g>
+    </g>
+  </g>
+</svg>

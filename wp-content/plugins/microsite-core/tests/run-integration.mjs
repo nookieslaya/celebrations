@@ -1,3 +1,4 @@
+import { runPublicationTests } from "./publication.mjs";
 import { runBirthdayTests } from "./birthday.mjs";
 import { runBrowserFlows } from "./browser-flows.mjs";
 import { runAccountTests } from "./accounts.mjs";
@@ -440,7 +441,7 @@ try {
     return body;
   }
 
-  if (process.env.TEST_SCOPE !== "birthday") {
+  if (!["birthday", "publication"].includes(process.env.TEST_SCOPE)) {
     await check(
       "production shell serves both app paths and manifest assets independently of the running Vite",
       async () => {
@@ -947,7 +948,7 @@ try {
         assert.deepEqual(after, before);
         assert.deepEqual(
           Object.keys(after.microsite_customer.capabilities).sort(),
-          ["create_ms_sites", "edit_ms_sites", "read"],
+          ["create_ms_sites", "edit_ms_sites", "publish_ms_sites", "read"],
         );
         assert.equal(after.subscriber.capabilities.create_ms_sites, undefined);
       },
@@ -964,17 +965,32 @@ try {
     await runBrowserFlows({ origin, password, check, isolatedWp });
   }
 
-  await runBirthdayTests({
-    origin,
-    api,
-    a,
-    b,
-    admin,
-    check,
-    password,
-    pluginDirectory,
-    isolatedWp,
-  });
+  if (process.env.TEST_SCOPE !== "publication") {
+    await runBirthdayTests({
+      origin,
+      api,
+      a,
+      b,
+      admin,
+      check,
+      password,
+      pluginDirectory,
+      isolatedWp,
+    });
+  }
+
+  if (process.env.TEST_SCOPE !== "birthday") {
+    await runPublicationTests({
+      origin,
+      api,
+      a,
+      b,
+      check,
+      password,
+      pluginDirectory,
+      isolatedWp,
+    });
+  }
 
   if (existsSync(join(temporaryDirectory, "php-errors.log"))) {
     const log = readFileSync(
