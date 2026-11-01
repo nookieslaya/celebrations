@@ -1,3 +1,4 @@
+import type { ResponseList } from "../rsvp/api";
 import type { DraftBySiteType } from "../generated/drafts";
 
 export type SiteTypeId = keyof DraftBySiteType;
@@ -218,6 +219,16 @@ export function createApiClient(options: ApiClientOptions) {
         true,
       ),
     logout: () => request<Session>("auth/logout", "POST"),
+    responses: (id: number, page = 1, filter = "", signal?: AbortSignal) =>
+      request<ResponseList>(
+        `sites/${id}/responses?page=${page}&attending=${encodeURIComponent(filter)}`,
+        "GET",
+        undefined,
+        true,
+        signal,
+      ),
+    deleteResponse: (id: number, responseId: number) =>
+      request<boolean>(`sites/${id}/responses/${responseId}`, "DELETE"),
     publish: (id: number) => request<Site>(`sites/${id}/publish`, "POST"),
     unpublish: (id: number) => request<Site>(`sites/${id}/unpublish`, "POST"),
     list: (page = 1, perPage = 20, signal?: AbortSignal) =>

@@ -60,8 +60,20 @@
 - [x] Pełna regresja HTTP/E2E: 57 grup PASS, test błędu zapisu/blokady i przegląd dwóch rozmiarów.
 - [x] Końcowy STATUS i przykład opublikowanej strony LocalWP.
 
+## Etap 6 — RSVP bez konta gościa
+
+- [x] Opcjonalny kontrakt RSVP birthday, boolean TS i zgodność starszych danych.
+- [x] Deadline UTC przez istniejący mechanizm IANA/DST oraz zależność od daty wydarzenia.
+- [x] Wersjonowane, idempotentne tabele i indeksy; usunięcie projektu sprząta odpowiedzi.
+- [x] Tworzenie i zarządzanie przez hash sekretu, oddzielna powłoka i fragment URL.
+- [x] Idempotencja, unikalność DB, znacznik usuniętej operacji i wygasanie kluczy.
+- [x] Limit requestu, typów, honeypot, rate limiting i same-origin bez wildcard CORS.
+- [x] Formularz publiczny i konfiguracja wyłącznie z opublikowanego snapshotu.
+- [x] Panel organizatora: statystyki, lista, filtr, paginacja i potwierdzane usunięcie.
+- [x] HTTP/E2E: 68 grup PASS, produkcja, mobile/desktop, klawiatura i oględziny; 8 smoke/HMR PASS.
+- [x] Dokumentacja, faktyczne wyniki i przykład LocalWP.
+
 ## Dalsze etapy
 
-- [ ] RSVP bez konta gościa.
 - [ ] PHPCS i CI, prywatny podgląd basic-page.
 - [ ] Płatności, media/uploady i jawna integracja sprawdzonych assetów jako oddzielne moduły.

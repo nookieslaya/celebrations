@@ -82,3 +82,7 @@ Kontrakt, temporalna normalizacja, routing prywatnego preview i niezależne rend
 ## Etap 5
 
 [Publikacja](PUBLICATION.md) opisuje atomowy snapshot, blokadę współbieżności, centralny serwis uprawnień i CLI, kontrakt prywatnego DTO/API oraz osobny publiczny entry Vite. Prywatny podgląd i publiczna powłoka współdzielą renderer. Basic-page ma wydzielony wspólny komponent i style. Publiczny dokument zawsze używa produkcyjnego builda, nie inicjuje kont ani prywatnego API. RSVP pozostaje kolejnym etapem.
+
+## Etap 6 — RSVP
+
+[RSVP.md](RSVP.md) opisuje opcjonalną funkcję birthday-invitation, kompatybilne rozszerzenie kontraktu v1, osobne tabele odpowiedzi i usuniętych operacji, idempotencję, sekret zarządzania i zasady czasowe. Publication i RSVP współdzielą ProjectLock. Publiczne formularze i oddzielna powłoka /rsvp/manage/ nie importują kont/routera panelu. Prywatny widok /app/sites/:id/responses korzysta z tego samego klienta sesji i nonce co CRUD. AssetManifest zbiera CSS także z importowanych statycznie chunków Vite, co jest konieczne przy trzech entry i współdzielonych stylach. Nie zmieniano animacji ani własnych SVG.

@@ -13,7 +13,7 @@ final class PreviewAccess {
     public function check(): void {
         $path = wp_parse_url( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ), PHP_URL_PATH );
         $base = wp_parse_url( home_url( '/app/' ), PHP_URL_PATH );
-        $pattern = '#^' . preg_quote( $base, '#' ) . 'sites/([1-9][0-9]*)/preview/?$#';
+        $pattern = '#^' . preg_quote( $base, '#' ) . 'sites/([1-9][0-9]*)/(?:preview|responses)/?$#';
 
         if ( ! is_string( $path ) || ! preg_match( $pattern, $path, $matches ) ) {
             return;

@@ -1,0 +1,122 @@
+.rsvp-card {
+  box-sizing: border-box;
+  width: min(100% - 2rem, 46rem);
+  margin: 3rem auto;
+  padding: clamp(1.25rem, 4vw, 3rem);
+  border: 1px solid #ced8cf;
+  border-radius: 1.5rem;
+  background: #fffdf8;
+  color: #24382c;
+  font-family: system-ui, sans-serif;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.rsvp-card h1,
+.rsvp-card h2 {
+  margin-top: 0;
+  line-height: 1.2;
+}
+.rsvp-card label {
+  display: block;
+  margin-top: 1rem;
+  font-weight: 650;
+}
+.rsvp-card input,
+.rsvp-card select,
+.rsvp-card button,
+.rsvp-actions a {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #728577;
+  border-radius: 0.5rem;
+  font: inherit;
+  color: inherit;
+  background: white;
+}
+.rsvp-card input,
+.rsvp-card select {
+  width: 100%;
+}
+.rsvp-card button {
+  cursor: pointer;
+  margin-top: 1rem;
+  background: #254e37;
+  color: white;
+}
+.rsvp-card fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.rsvp-card :focus-visible {
+  outline: 3px solid #315ed0;
+  outline-offset: 3px;
+}
+.rsvp-card :disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+.rsvp-error {
+  color: #8e2432;
+}
+.rsvp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.rsvp-actions a {
+  margin-top: 1rem;
+}
+.rsvp-honeypot {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.rsvp-confirm {
+  border: 2px solid #8e2432;
+  padding: 1rem;
+  margin-top: 1rem;
+  border-radius: 0.75rem;
+}
+#rsvp-management-root {
+  padding: 1px;
+  min-height: 100svh;
+  background: #f4f6f0;
+}
+body:has(#rsvp-management-root) {
+  margin: 0;
+}
+.response-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.response-summary p {
+  padding: 1rem;
+  background: #eef4eb;
+  border-radius: 0.5rem;
+}
+.response-list {
+  list-style: none;
+  padding: 0;
+}
+.response-list li {
+  padding: 1rem 0;
+  border-bottom: 1px solid #dce5d6;
+  overflow-wrap: anywhere;
+}
+.response-list h3 {
+  margin: 0.25rem 0;
+}
+@media (max-width: 480px) {
+  .rsvp-actions > * {
+    width: 100%;
+    text-align: center;
+  }
+}

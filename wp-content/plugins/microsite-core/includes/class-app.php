@@ -44,7 +44,7 @@ final class App {
         }
         $manifest_path = dirname( __DIR__ ) . '/app/dist/.vite/manifest.json';
         $manifest = is_readable( $manifest_path ) ? json_decode( file_get_contents( $manifest_path ), true ) : array();
-        $entry = $manifest['src/main.tsx'] ?? null;
+        $entry = AssetManifest::entry( $manifest, 'src/main.tsx' );
         if ( ! $dev && ! $entry ) {
             status_header( 503 );
         }

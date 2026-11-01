@@ -1,3 +1,4 @@
+import { RsvpSettings } from "../rsvp/RsvpSettings";
 import schema from "../../../contracts/birthday-invitation.v1.json";
 import type { BirthdayInvitationDraft } from "../generated/drafts";
 import "./birthday-editor.css";
@@ -168,6 +169,7 @@ export function BirthdayInvitationFields({ value, onChange }: Props) {
           {contentSchema.additionalInfo.maxLength}
         </small>
       </section>
+      <RsvpSettings value={value} onChange={onChange} />
       <section aria-labelledby="appearance-fields">
         <h2 id="appearance-fields">Appearance</h2>
         <label htmlFor="birthday-palette">{birthdayCopy.palette}</label>

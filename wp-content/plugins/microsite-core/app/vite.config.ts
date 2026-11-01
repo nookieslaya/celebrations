@@ -44,7 +44,11 @@ export default defineConfig(({ mode }) => {
       manifest: true,
       outDir: "dist",
       rollupOptions: {
-        input: { app: "src/main.tsx", public: "src/public.tsx" },
+        input: {
+          app: "src/main.tsx",
+          public: "src/public.tsx",
+          management: "src/rsvp-manage.tsx",
+        },
       },
     },
   };

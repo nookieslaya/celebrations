@@ -95,6 +95,40 @@
                     "maxLength": 500,
                     "pattern": "^[^<>\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]*$",
                     "default": ""
+                },
+                "rsvp": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "enabled",
+                        "maxPartySize",
+                        "deadlineLocal",
+                        "deadlineAt"
+                    ],
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean",
+                            "default": false
+                        },
+                        "maxPartySize": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 20,
+                            "default": 5
+                        },
+                        "deadlineLocal": {
+                            "type": "string",
+                            "maxLength": 16,
+                            "pattern": "^$|^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$",
+                            "default": ""
+                        },
+                        "deadlineAt": {
+                            "type": "string",
+                            "maxLength": 20,
+                            "pattern": "^$|^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+                            "default": ""
+                        }
+                    }
                 }
             }
         },

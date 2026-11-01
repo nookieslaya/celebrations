@@ -75,3 +75,7 @@ Przykład utworzony lokalnie dla istniejącego administratora: http://celebratio
 ## Etap 5 — publikacja
 
 Edytor obsługuje publikację, osobny snapshot, wycofanie, link i QR SVG/PNG. Każdy projekt wymaga jawnego prawa nadanego przez administratora; nie ma płatności. Szczegóły i komendy z LocalWP Open site shell: [docs/PUBLICATION.md](docs/PUBLICATION.md). Publiczne /s/{publicId}/ zawsze używa builda produkcyjnego, dlatego wykonaj npm run build także przy działającym Vite. Lokalny link nie jest dostępny dla gości przez Internet.
+
+## Etap 6 — RSVP
+
+Birthday invitation ma opcjonalne RSVP: konfiguracja w edytorze → zapis → aktualizacja publikacji. Odpowiedzi organizatora: /app/sites/{id}/responses. Gość nie potrzebuje konta i otrzymuje prywatny link do swojej odpowiedzi. [docs/RSVP.md](docs/RSVP.md) opisuje czas, sekrety, idempotencję, usuwanie i ograniczenia. Starsze projekty/snapshoty pozostają z wyłączonym RSVP.

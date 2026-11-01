@@ -24,6 +24,9 @@ if ( ! defined( 'ABSPATH' ) ) {
     <div id="public-root"></div>
     <noscript>This invitation needs JavaScript to display its interactive design.</noscript>
     <script id="microsite-public" type="application/json"><?php echo wp_json_encode( $snapshot, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ); ?></script>
+    <?php if ( $rsvp_config ) : ?>
+        <script id="microsite-rsvp" type="application/json"><?php echo wp_json_encode( $rsvp_config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT ); ?></script>
+    <?php endif; ?>
     <script type="module" src="<?php echo esc_url( $base_url . $entry['file'] ); ?>"></script>
 </body>
 </html>

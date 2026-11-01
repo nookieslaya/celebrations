@@ -157,6 +157,10 @@ final class SiteValidator {
     }
 
     private function strict_integer_types( mixed $value, array $schema ): bool {
+        if ( 'boolean' === $schema['type'] ) {
+            return is_bool( $value );
+        }
+
         if ( 'integer' === $schema['type'] ) {
             return is_int( $value );
         }

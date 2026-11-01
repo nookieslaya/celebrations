@@ -13,6 +13,10 @@ function typescriptType(schema, indentation = 0) {
     return "number";
   }
 
+  if (schema.type === "boolean") {
+    return "boolean";
+  }
+
   if (schema.type === "string") {
     return "string";
   }

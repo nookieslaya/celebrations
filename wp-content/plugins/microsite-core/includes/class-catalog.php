@@ -32,8 +32,8 @@ final class Catalog {
                 'schemaVersion' => 1,
                 'schema'        => $birthday_schema,
                 'defaults'      => $this->defaults_from_schema( $birthday_schema ),
-                'features'      => array(),
-                'normalizer'    => array( EventDate::class, 'normalise' ),
+                'features'      => array( 'rsvp' ),
+                'normalizer'    => array( RsvpConfig::class, 'normalise' ),
                 'publishRequired' => array( 'content.celebrantName', 'content.heading', 'content.message', 'content.event.localDateTime', 'content.event.timeZone', 'content.event.startsAt', 'content.venueName', 'content.address' ),
             ),
             'basic-page' => array(

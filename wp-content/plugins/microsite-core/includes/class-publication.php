@@ -120,6 +120,10 @@ final class Publication {
     }
 
     public function public_snapshot( string $public_id ): ?array {
+        if ( ! preg_match( '/^[a-f0-9]{32}$/', $public_id ) ) {
+            return null;
+        }
+
         $posts = get_posts( array(
             'post_type' => 'ms_site',
             'post_status' => 'draft',
@@ -215,21 +219,7 @@ final class Publication {
     }
 
     private function locked( int $id, callable $operation ): mixed {
-        global $wpdb;
-        // Database-scoped advisory locks serialize publish, withdraw and entitlement changes.
-        $key = 'microsite:' . substr( hash( 'sha256', DB_NAME . ':' . $wpdb->prefix . ':' . $id ), 0, 48 );
-        $acquired = $wpdb->get_var( $wpdb->prepare( 'SELECT GET_LOCK(%s, 0)', $key ) );
-
-        if ( '1' !== (string) $acquired ) {
-            return new WP_Error( 'microsite_publication_busy', 'Another publication operation is running. Try again.', array( 'status' => 409 ) );
-        }
-
-        try {
-            wp_cache_delete( $id, 'post_meta' );
-            return $operation();
-        } finally {
-            $wpdb->get_var( $wpdb->prepare( 'SELECT RELEASE_LOCK(%s)', $key ) );
-        }
+        return ProjectLock::run( $id, $operation );
     }
 
     private function not_found(): WP_Error {

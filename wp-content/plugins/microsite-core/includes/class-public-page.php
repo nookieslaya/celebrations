@@ -14,6 +14,11 @@ final class PublicPage {
         $path = wp_parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH );
         $base = wp_parse_url( home_url( '/s/' ), PHP_URL_PATH );
 
+        if ( rtrim( (string) $path, '/' ) === rtrim( (string) wp_parse_url( home_url( '/rsvp/manage/' ), PHP_URL_PATH ), '/' ) ) {
+            $this->management();
+        }
+
+
         if ( ! is_string( $path ) || ! preg_match( '#^' . preg_quote( $base, '#' ) . '([^/]+)/?$#', $path, $matches ) ) {
             return;
         }
@@ -33,7 +38,7 @@ final class PublicPage {
         // Public documents always use the production entry, independently of Vite.
         $manifest_path = dirname( __DIR__ ) . '/app/dist/.vite/manifest.json';
         $manifest = is_readable( $manifest_path ) ? json_decode( file_get_contents( $manifest_path ), true ) : array();
-        $entry = $manifest['src/public.tsx'] ?? null;
+        $entry = AssetManifest::entry( $manifest, 'src/public.tsx' );
 
         if ( ! $entry ) {
             status_header( 503 );
@@ -47,8 +52,35 @@ final class PublicPage {
         $content = $snapshot['content'];
         $title = $content['heading'];
         $description = $content['message'] ?? $content['description'] ?? '';
+        $rsvp_config = null;
+
+        if ( ! empty( $snapshot['content']['rsvp']['enabled'] ) ) {
+            $rsvp_config = array(
+                'statusUrl' => rest_url( 'microsites/v1/public/sites/' . $matches[1] . '/rsvp' ),
+                'createUrl' => rest_url( 'microsites/v1/public/sites/' . $matches[1] . '/responses' ),
+                'managementUrl' => home_url( '/rsvp/manage/' ),
+            );
+        }
+
+        header( 'Referrer-Policy: no-referrer' );
         $base_url = plugin_dir_url( dirname( __FILE__ ) ) . 'app/dist/';
         require dirname( __DIR__ ) . '/templates/public.php';
+        exit;
+    }
+
+    private function management(): never {
+        nocache_headers();
+        header( 'Cache-Control: no-store, private, max-age=0' );
+        header( 'Referrer-Policy: no-referrer' );
+        header( 'X-Robots-Tag: noindex, nofollow, noarchive' );
+        header( "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" );
+        $manifest_path = dirname( __DIR__ ) . '/app/dist/.vite/manifest.json';
+        $manifest = is_readable( $manifest_path ) ? json_decode( file_get_contents( $manifest_path ), true ) : array();
+        $entry = AssetManifest::entry( $manifest, 'src/rsvp-manage.tsx' );
+        status_header( $entry ? 200 : 503 );
+        $base_url = plugin_dir_url( dirname( __FILE__ ) ) . 'app/dist/';
+        $configuration = array( 'responsesUrl' => rest_url( 'microsites/v1/rsvp/responses/' ) );
+        require dirname( __DIR__ ) . '/templates/rsvp-manage.php';
         exit;
     }
 }

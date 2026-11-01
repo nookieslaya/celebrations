@@ -18,3 +18,7 @@ add_action(
         wp_send_json_success( array( 'nonce' => wp_create_nonce( 'wp_rest' ) ) );
     }
 );
+
+add_filter( 'microsite_rsvp_now', static function ( int $now ): int {
+    return (int) get_option( 'microsite_test_rsvp_now', $now );
+} );

@@ -155,3 +155,7 @@ Katalog zawiera birthday-invitation/schemaVersion 1 oraz birthday-party/template
 ## Publikacja — etap 5
 
 POST sites/{id}/publish i POST sites/{id}/unpublish zwracają {data: Site}. Sesja, nonce i dostęp jak w CRUD. Żadne pola publikacji ani prawa nie są przyjmowane od klienta. Site zawiera publication z backendowym URL, stanem snapshotu i gotowością. Szczegółowy kontrakt, błędy i nadawanie prawa: [PUBLICATION.md](PUBLICATION.md).
+
+## RSVP — etap 6
+
+Publiczne utworzenie odpowiedzi i stan RSVP są pod public/sites/{publicId}/responses oraz public/sites/{publicId}/rsvp. Zarządzanie przez X-Microsite-RSVP: GET/PATCH/DELETE rsvp/responses/{id}. Organizator: GET sites/{id}/responses i DELETE sites/{id}/responses/{responseId}, z istniejącą sesją, REST nonce i kontrolą dostępu. Pełny kontrakt, statusy, parametry listy i reguły idempotencji: [RSVP.md](RSVP.md).

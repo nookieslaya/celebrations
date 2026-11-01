@@ -1,55 +1,53 @@
 # Stan faktyczny — 2026-11-01
 
-Etap 5: wtyczka 0.5.0. Publikacja, publiczny renderer i udostępnianie są wdrożone. Pozostawiono istniejącą instancję Vite, aktywny motyw i konfigurację LocalWP. users_can_register nadal 0. Nie resetowano bazy strony; testy ponownie używają microsite_test_430601248a09bf6c.
+Etap 6: wtyczka 0.6.0. RSVP i panel odpowiedzi są wdrożone jako rozszerzenie istniejącej publikacji. Pozostawiono istniejący Vite, aktywny motyw i konfigurację LocalWP. users_can_register nadal 0. Nie resetowano bazy strony. Testy ponownie używają microsite_test_430601248a09bf6c.
 
 ## Działający zakres
 
-Oddzielny opublikowany snapshot zawiera wyłącznie treść, wygląd i tożsamość typu/szablonu/wersji. Jest zapisywany razem ze stanem i datą w jednym wpisie meta, pod blokadą MySQL. Zapis szkicu nie zmienia publicznej strony. Hash konfiguracji wykrywa nieopublikowane zmiany; nazwa projektu i updatedAt nie zastępują porównania treści. Wycofanie daje 404, zachowując szkic i publicId. Ponowna publikacja używa tego samego URL, a identyczne retry nie zmienia daty aktywnej publikacji.
+Opcjonalne content.rsvp w birthday-invitation/schemaVersion 1: enabled, limit 1–20 (włącznie z odpowiadającym), deadline lokalny w strefie wydarzenia i kanoniczny UTC. Rozszerzenie jest kompatybilne: starsze szkice i snapshoty bez RSVP pozostają wyłączone i nie są przepisywane. JSON Schema jest źródłem limitów/defaults/typów; generator obsługuje boolean. basic-page nie obsługuje RSVP. Termin korzysta z istniejącego EventDate/IANA/DST i nie może być po wydarzeniu, także po zmianie jego daty/strefy.
 
-Publication jest centralnym serwisem uprawnień dla administratora i przyszłych płatności. Domyślnie projekt nie ma prawa publikacji. Capability, dostęp do projektu i osobne prawo są sprawdzane łącznie. Klient nie ustawia prawa przez API. Administrator nadaje/odbiera prawo przez CLI. Odebranie blokuje aktualizacje, ale nie wycofuje strony i nie blokuje szkicu ani wycofania przez właściciela.
+Dwie wersjonowane tabele InnoDB z prefiksem WordPressa: odpowiedzi oraz nieosobowe znaczniki usuniętych operacji. Unique sekretu i operacji projektu, indeks listy/filtra. Migracja jest idempotentna i sprawdza kluczowe indeksy/engine przed oznaczeniem wersji. Trwałe usunięcie projektu usuwa odpowiedzi i sekrety; zwykła dezaktywacja niczego nie usuwa.
 
-Gotowość korzysta z JSON Schema i list wymaganych ścieżek w Catalog, bez kopii kontraktu. Niepełny szkic można zapisać, ale brak wymaganych danych daje błędy konkretnych pól przy publikacji. Nie ma automatycznego wyłączenia po wydarzeniu.
+Gość podaje imię, yes/no i liczbę osób. Bez konta, emaila, telefonu i danych wrażliwych. Wyłącznie publikacja określa ustawienia formularza. Niekompletny draft pozostaje prywatny. Czas serwera zamyka tworzenie/zmiany/wycofanie przy równości deadline lub startu; usunięcie przez sekret pozostaje dostępne. Wycofanie publikacji i wyłączenie RSVP nie kasuje odpowiedzi. Obniżenie limitu nie zmienia historycznych rekordów.
 
-Publiczne /s/{publicId}/ ma osobny dokument i entry produkcyjny. Współdzieli renderer birthday-party i basic-page z prywatnym preview, bez kopiowania animacji. Nie ładuje panelu, kont, nonce, prywatnego API ani Vite. Metadane i canonical pochodzą ze snapshotu. Publiczny odczyt nie przelicza ponownie zamrożonego UTC. No-store oraz noindex/nofollow/noarchive, prywatny CPT poza sitemap.
+Sekret i losowa część klucza po 256 bitów, Web Crypto. Baza przechowuje tylko hash sekretu/klucza i fingerprint pierwotnego payloadu. Bez surowych IP/user-agent w odpowiedziach. Idempotentne retry odzyskuje istniejące id także po zamknięciu, konflikt sekretu/payloadu daje 409. Usunięcie trwale kasuje dane i transakcyjnie zapisuje znacznik operacji na 48 godzin; klucz nowej operacji jest ważny maksymalnie 24 godziny, więc po sprzątnięciu znacznika nie odtworzy danych. WP-Cron sprząta tylko znaczniki, nie odpowiedzi.
 
-Edytor obsługuje Publish/Update live page, zapis przed publikacją z anulowaniem, potwierdzane wycofanie, stan zmian, datę i powód blokady. Błąd zapisu nie uruchamia publikacji. Kopiowanie/Web Share i QR SVG/PNG są dostępne wyłącznie dla opublikowanego projektu. qrcode 1.5.4 jest importowane dopiero na żądanie, bez zewnętrznego generatora. LocalWP pokazuje ostrzeżenie o lokalnym linku.
+Prywatny link /rsvp/manage/#{id}.{secret} używa fragmentu i dedykowanego nagłówka. Osobna produkcyjna powłoka działa po wycofaniu zaproszenia, nie ujawnia jego treści, ma no-store/no-referrer/CSP, bez kont/analityki/zewnętrznych zasobów. Gość czyta/zmienia/wycofuje własną odpowiedź oraz potwierdza trwałe usunięcie. Musi zachować link; nie ma odzyskiwania bez emaila. Nie ma sekretów w liście organizatora, zwykłym HTML zaproszenia ani query string.
+
+Panel /app/sites/:id/responses ma stan publicznego RSVP, globalne sumy yes/no/uczestników, listę, filtr, deterministyczną paginację oraz potwierdzane usunięcie. Organizator nie edytuje odpowiedzi. Błędy nie są pokazywane jako poprawne zerowe statystyki. Nie ma listy zaproszonych ani metryki osób, które nie odpowiedziały.
+
+Limit body 2048 bajtów, imię 1–80 Unicode bez HTML, ścisła walidacja relacji yes/no/partySize, honeypot, same-origin bez wildcard CORS, krótko żyjący limiter SQL według hasha bezpośredniego IP. Limit nalicza się raz na request poza powtarzalnym permission_callback WordPressa. Istniejący snapshot, prawo publikacji, konta, CRUD, animacje i SVG zachowano. AssetManifest uwzględnia CSS statycznych importów współdzielonych przez trzy entry.
 
 ## Przykład LocalWP
 
-http://celebrations.local/s/61b486f3910b58960165852293f4eefa/
+Zaproszenie: http://celebrations.local/s/61b486f3910b58960165852293f4eefa/
 
-Opublikowano istniejący projekt demonstracyjny ID 8 (Demo · Birthday party), właściciel: istniejący administrator ID 1. Nie zmieniano treści innych projektów. Edytor: http://celebrations.local/app/sites/8. Anonimowy Chromium potwierdził HTTP 200, widocznego Alex Morgan, zero cookies i zero żądań do Vite/prywatnego API/panelu.
+Panel odpowiedzi: http://celebrations.local/app/sites/8/responses
 
-Prawo projektu z LocalWP → Open site shell:
+Włączono RSVP w istniejącym projekcie demonstracyjnym ID 8 i zaktualizowano jego publikację (administrator ID 1). Nie zmieniano innych projektów ani ustawień rejestracji i nie wysyłano testowych RSVP do bazy LocalWP (potwierdzono 0 rekordów w lokalnej tabeli odpowiedzi). Anonimowy Chromium potwierdził widoczny formularz, HTTP 200, zero cookies, brak żądań do Vite/panelu/kont oraz scrollY=0. To link lokalny, nie hosting dla gości z Internetu.
 
-```sh
-wp microsite publication-right 8 grant --user=1
-wp microsite publication-right 8 revoke --user=1
-```
+## Wykonane kontrole
 
-## Weryfikacja
+- npm run verify: kontrakty, ESLint, TypeScript i build trzech entry — PASS.
+- php -l: 30 własnych plików PHP — PASS. git diff --check — PASS.
+- TEST_SCOPE=rsvp npm run test:integration: 11 grup PASS na rzeczywistym WordPressie i stałej osobnej bazie.
+- Końcowy pełny npm run test:integration: 68 grup PASS (57 regresji i 11 RSVP), rzeczywiste sesje HTTP, produkcyjny build i ta sama stała baza testowa. Brak diagnostyki PHP. Baza zachowana do kolejnego przebiegu.
+- LocalWP: 8 anonimowych smoke/HMR testów PASS, w tym nowa chroniona trasa responses i refresh. HMR zachowuje formularz; Vite pozostaje uruchomiony.
+- Bezpiecznik --guard-only z nazwą aktywnej bazy LocalWP odrzuca operację przed resetem/tworzeniem/czyszczeniem — potwierdzony oczekiwany niezerowy kod.
+- HTTP RSVP: starsze dane/snapshoty, migracje, katalog typów, limit/typy, DST/UTC i zależność terminu, walidacja Unicode/HTML/yes/no/size, honeypot/body/origin/CORS, hash-only storage, retry i równoległe żądania, konflikt payloadu/sekretu, izolacja sekretów/A-B/sesji/nonce, globalne sumy przy filtrze i paginacji, niższy limit, dokładne granice czasu, replay po zamknięciu, wyłączenie/unpublish/republish, usunięcie i brak wskrzeszenia po wygaśnięciu znacznika, limiter bez bypassu X-Forwarded-For i usunięcie projektu.
+- Produkcyjne E2E RSVP: konfiguracja/publikacja organizatora → guest yes dla 3 osób → utrata HTTP po faktycznym zapisie → identyczne retry i jeden rekord → prywatny link → sumy organizatora → zmiana na no przez klawiaturę → nowe sumy → wycofanie publikacji → nadal działające trwałe usunięcie przez sekret → brak rekordu/sum. Preview nie ma przycisku wysyłania i nie tworzy odpowiedzi.
+- Dodatkowe E2E: 21 odpowiedzi, usunięcie ostatniej na stronie 2 wraca na stronę 1; filtr zachowuje sumy całego projektu. Formularz działa bez ukończenia intro w normal motion oraz w reduced motion. Publiczny/management build bez Vite, bez cookies i panelu. Zmiana fragmentu odrzuca poprzedni stan odpowiedzi.
 
-- npm run verify: aktualne kontrakty, ESLint, TypeScript i produkcyjny build obu entry — PASS.
-- php -l: 23 własne pliki PHP — PASS. git diff --check — PASS.
-- TEST_SCOPE=publication npm run test:integration: 8 grup PASS na rzeczywistym WordPressie i tej samej stałej bazie testowej.
-- Końcowy wspólny npm run test:integration: 57 grup PASS (49 grup regresji etapów 2–4 i 8 grup publikacji). Rzeczywiste sesje HTTP, produkcyjny build, bez diagnostyki PHP. Ta sama stała baza testowa zachowana po przebiegu.
-- LocalWP: 7 anonimowych smoke/HMR testów PASS, bez tworzenia kont/danych na stronie. Bezpośrednie trasy i odświeżenia, działający HMR z zachowaniem formularza. Vite pozostaje uruchomiony.
-- Nowe HTTP/E2E: brak prawa/escalation/CLI, sesje i nonce, własność A/B, niekompletność i Unicode whitespace, snapshot i metadata, izolacja szkicu, save/cancel/failed save, aktualizacja, stabilny publicId/URL, wycofanie i republish, odebranie prawa, publiczny odczyt bez cookies/Vite, basic-page i 404.
-- Pobrano rzeczywiste SVG i PNG z panelu, zrasteryzowano w Chromium i zdekodowano jsqr 1.4.0: oba wyniki są dokładnie równe backendowemu publicUrl.
-- Drugie połączenie MySQL zajmuje blokadę: komenda zwraca publication_busy. Wstrzyknięty błąd update_post_metadata: storage_error, poprzedni pełny snapshot bez zmian. Następny prawidłowy publish działa.
+## Wygląd i artefakty
 
-## Wygląd i assety
+Obejrzano formularz mobilny 375 px oraz panel organizatora przy 375×900 i 1440×1000. Czytelne etykiety, focus, zawijanie nazw/akcji, brak poziomego overflow (również asercja). Artefakty: app/test-results/rsvp/ — guest-mobile, guest-desktop, management-mobile, organizer-mobile i organizer-desktop. Osobne katalogi birthday/publication/smoke pozostają zachowane. PNG i build nie są commitowane; prywatny link na testowym zrzucie dotyczy odpowiedzi usuniętej w tym samym E2E.
 
-Obejrzano PNG sekcji publikacji przy viewportach 375×900 i 1440×900: czytelne stany/link, zawijające się akcje i brak poziomego overflow (także asercja przeglądarki). Artefakty: app/test-results/publication/. Zachowano osobne katalogi birthday i smoke, bez commitowania builda i artefaktów.
+## Ograniczenia i pominięte kontrole
 
-Folder przyszłych grafik: /Users/radek/Local Sites/celebrations/app/public/wp-content/plugins/microsite-core/app/src/assets/birthday-party/svg/. Znalezione trzy SVG zachowano bez zmian; przygotowano .gitkeep i README z zasadami przeglądu, inline/data-part/scoped selectors/--asset-*. Nie podłączono ich do renderera ani nie zmieniano dekoracji/animacji.
+Brak blokad ukończenia etapu. LocalWP nie jest hostingiem publicznym. Gość musi zachować sekret; brak emaila i odzyskiwania linku. SessionStorage zawiera tylko klucze niepotwierdzonej operacji, nie dane osobowe; po odświeżeniu przy odzyskiwaniu trzeba ponownie podać ten sam payload. Przy wyłączonym storage i utracie karty odzyskanie może być niemożliwe.
 
-## Ograniczenia
+Nie dodano płatności, maili/SMS, importu, CSV, indywidualnych zaproszeń, uploadów, retencji odpowiedzi, pytań dodatkowych ani nowych SVG. Ochrona nie zastępuje kontroli publicznego ruchu: NAT dzieli limity, rozproszone boty mogą je obchodzić. Przed publicznym startem: HTTPS, zaufany reverse proxy/ochrona na brzegu, przegląd logowania bez sekretów, polityka danych oraz nadal reset hasła i weryfikacja emaila organizatora.
 
-LocalWP nie jest publicznym hostingiem. Link można przekazywać dalej; random ID i noindex nie stanowią kontroli dostępu. Nie ma kodów dostępu ani indywidualnych zaproszeń. Zewnętrzne komunikatory mogą zachować stare podglądy mimo aktualnej odpowiedzi serwera.
+Nie uruchomiono PHPCS/CI (istniejący dług zgodnie z AGENTS), pełnej macierzy Safari/Firefox/urządzeń ani testu obciążeniowego wielu workerów. Równoległe HTTP sprawdza efekt idempotencji i unikalności, ale prosty testowy PHP server nie zastępuje testu obciążenia. Nie przeprowadzono osobnego testu awarii DB podczas transakcyjnego usuwania ani pełnego audytu dostępności. Dotychczasowe ograniczenia GSAP/tzdb i macierzy PHP/WP pozostają. Znane npm audit: 10 moderate narzędzi lintujących; nie zmieniano zależności ani nie wykonywano audit fix --force.
 
-Nie wdrożono RSVP, płatności, uploadów, domen własnych, historii publikacji ani konfliktów równoległej edycji szkicu. Kolejny etap: RSVP bez konta gościa. Przed publicznym startem pozostają reset hasła i weryfikacja emaila. Publiczna powłoka wymaga npm run build także podczas pracy panelu z HMR.
-
-Nie uruchamiano PHPCS/CI ani pełnej macierzy Safari/Firefox/urządzeń fizycznych. Nie sprawdzono natywnego systemowego okna Web Share na telefonie. Dotychczasowe ograniczenia GSAP/tzdb z etapu 4 pozostają: brak osobnego testu HMR modułu GSAP i wstrzyknięcia błędu jego inicjalizacji; brak pełnej macierzy PHP/WP. npm audit nadal zgłasza 10 moderate w narzędziach lintujących; brak wymuszonej aktualizacji zależności. Istniejące wersje pakietów zachowano, dodano tylko przypięte zależności QR/dekodera.
-
-Szczegóły architektury, API i CLI: [PUBLICATION.md](PUBLICATION.md). Zmiany pozostają lokalne, bez automatycznego commita/push.
+Szczegóły modelu, API i sekretów: [RSVP.md](RSVP.md). Praca pozostaje lokalna, bez automatycznego commita/push.

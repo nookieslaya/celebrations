@@ -107,3 +107,9 @@
 .preview-choice .button {
   margin: 8px 8px 0 0;
 }
+
+.birthday-fields input[type="checkbox"] {
+  width: 1.25rem;
+  min-height: 1.25rem;
+  accent-color: #365e44;
+}

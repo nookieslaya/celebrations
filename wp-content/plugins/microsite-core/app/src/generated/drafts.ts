@@ -25,6 +25,12 @@ export type BirthdayInvitationDraft = {
     "address": string;
     "dressCode"?: string;
     "additionalInfo"?: string;
+    "rsvp"?: {
+      "enabled": boolean;
+      "maxPartySize": number;
+      "deadlineLocal": string;
+      "deadlineAt": string;
+    };
   };
   "appearance": {
     "palette": "electric-citrus" | "pink-noir" | "cobalt-pop";

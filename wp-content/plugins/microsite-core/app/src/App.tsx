@@ -8,6 +8,7 @@ import { AuthView } from "./views/AuthView";
 import { SitesView } from "./views/SitesView";
 import { NewSiteView } from "./views/NewSiteView";
 import { EditorView } from "./views/EditorView";
+import { ResponsesView } from "./views/ResponsesView";
 import { PreviewView } from "./views/PreviewView";
 
 export default function App() {
@@ -34,6 +35,7 @@ function Workspace() {
   const authPage = suffix === "/login" || suffix === "/register";
   const protectedPage = suffix === "/sites" || suffix.startsWith("/sites/");
   const previewMatch = /^\/sites\/([1-9][0-9]*)\/preview$/.exec(suffix);
+  const responsesMatch = /^\/sites\/([1-9][0-9]*)\/responses$/.exec(suffix);
   const editorMatch = /^\/sites\/([1-9][0-9]*)$/.exec(suffix);
 
   useEffect(() => {
@@ -113,6 +115,13 @@ function Workspace() {
       <PreviewView
         key={`${session.user.id}:${previewMatch[1]}`}
         id={Number(previewMatch[1])}
+      />
+    );
+  } else if (session.user && responsesMatch) {
+    view = (
+      <ResponsesView
+        key={`${session.user.id}:${responsesMatch[1]}`}
+        id={Number(responsesMatch[1])}
       />
     );
   } else if (session.user && editorMatch) {

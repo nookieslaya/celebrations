@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Microsite Core
  * Description: Theme-independent application shell for microsites.
- * Version: 0.5.0
+ * Version: 0.6.0
  * Requires PHP: 8.2
  * Requires at least: 6.6
  * Text Domain: microsite-core
@@ -13,12 +13,18 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
+require_once __DIR__ . '/includes/class-asset-manifest.php';
 require_once __DIR__ . '/includes/class-app.php';
 App::boot();
 register_activation_hook( __FILE__, array( App::class, 'activate' ) );
 register_deactivation_hook( __FILE__, array( App::class, 'deactivate' ) );
 
 require_once __DIR__ . '/includes/class-event-date.php';
+require_once __DIR__ . '/includes/class-rsvp-config.php';
+require_once __DIR__ . '/includes/class-project-lock.php';
+require_once __DIR__ . '/includes/class-rsvp-database.php';
+require_once __DIR__ . '/includes/class-rsvp-service.php';
+require_once __DIR__ . '/includes/class-rsvp-controller.php';
 require_once __DIR__ . '/includes/class-preview-access.php';
 require_once __DIR__ . '/includes/class-catalog.php';
 require_once __DIR__ . '/includes/class-site-type.php';
@@ -41,6 +47,14 @@ add_filter( 'show_admin_bar', array( AuthController::class, 'hide_customer_admin
 add_filter( 'login_redirect', array( AuthController::class, 'login_redirect' ), 10, 3 );
 
 add_action( 'init', array( SiteType::class, 'register' ) );
+add_action( 'init', array( RsvpDatabase::class, 'install' ), 6 );
+add_action( 'microsite_rsvp_cleanup', array( RsvpDatabase::class, 'cleanup' ) );
+add_action( 'init', static function (): void {
+    if ( ! wp_next_scheduled( 'microsite_rsvp_cleanup' ) ) {
+        wp_schedule_event( time() + HOUR_IN_SECONDS, 'hourly', 'microsite_rsvp_cleanup' );
+    }
+} );
+add_action( 'before_delete_post', array( RsvpDatabase::class, 'delete_project' ) );
 add_action( 'init', array( Permissions::class, 'install' ), 5 );
 
 function boot_backend(): void {
@@ -51,6 +65,11 @@ function boot_backend(): void {
     $service = new SiteService( $repository, $validator, $permissions );
     $controller = new SitesController( $catalog, $service, $permissions );
     $publication = new Publication( $repository, $validator, $permissions );
+    $rsvp = new RsvpService( $publication, $catalog, $repository, $permissions );
+    $rsvp_controller = new RsvpController( $rsvp, $permissions );
+    add_action( 'rest_api_init', array( $rsvp_controller, 'register_routes' ) );
+    add_filter( 'rest_pre_serve_request', array( $rsvp_controller, 'restrict_cors' ), 5, 3 );
+    add_filter( 'rest_request_before_callbacks', array( $rsvp_controller, 'limit_request' ), 10, 3 );
     $publication_controller = new PublicationController( $publication, $permissions );
     add_action( 'rest_api_init', array( $publication_controller, 'register_routes' ) );
     add_action( 'template_redirect', array( new PublicPage( $publication ), 'render' ), -2 );

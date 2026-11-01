@@ -1,3 +1,4 @@
+import { GuestForm, type PublicRsvpConfig } from "./rsvp/GuestForm";
 import { Component, Suspense, type ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import type { Site } from "./api/client";
@@ -32,6 +33,11 @@ class PublicBoundary extends Component<
   }
 }
 
+const rsvpData = document.getElementById("microsite-rsvp");
+const rsvpConfiguration = rsvpData?.textContent
+  ? (JSON.parse(rsvpData.textContent) as PublicRsvpConfig)
+  : null;
+
 const root = document.getElementById("public-root");
 const data = document.getElementById("microsite-public");
 
@@ -53,6 +59,7 @@ if (root && data?.textContent) {
             }
           />
         </Suspense>
+        {rsvpConfiguration && <GuestForm configuration={rsvpConfiguration} />}
       </PublicBoundary>,
     );
   } else {

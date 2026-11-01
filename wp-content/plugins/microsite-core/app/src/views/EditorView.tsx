@@ -183,6 +183,14 @@ function DraftEditor<Type extends SiteTypeId>({
           </fieldset>
         </form>
         <div>
+          {site.siteType === "birthday-invitation" && (
+            <Link
+              className="button"
+              href={`${appBase}/sites/${site.id}/responses`}
+            >
+              Manage responses
+            </Link>
+          )}
           <p className="eyebrow">{copy.preview}</p>
           <Preview value={site.draft} />
           {module.fullPreview && (

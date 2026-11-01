@@ -6,6 +6,7 @@ for (const path of [
   "/app/sites/new",
   "/app/sites/123",
   "/app/sites/123/preview",
+  "/app/sites/123/responses",
 ]) {
   test(`anonymous direct entry and refresh: ${path}`, async ({ page }) => {
     const errors: string[] = [];
