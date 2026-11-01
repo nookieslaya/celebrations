@@ -9,7 +9,9 @@
  */
 namespace Microsite\Core;
 
-defined( 'ABSPATH' ) || exit;
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
 
 require_once __DIR__ . '/includes/class-app.php';
 App::boot();

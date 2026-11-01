@@ -9,3 +9,7 @@ Komendy WP/PHP wykonuj w LocalWP → Open site shell. Nie zapisuj bezwzględnych
 Jedyną listą zadań jest `specs/001-app-shell/tasks.md`. Stan weryfikacji zapisuj w docs/STATUS.md. Nie raportuj pominiętych kontroli jako PASS.
 
 Żadne przyszłe testy kasujące dane nie mogą używać bazy tej strony. Wymagaj osobnej bazy testowej i jawnego bezpiecznika przed migracją/resetem. Nie commituj WordPress core, wp-config.php, uploadów, sekretów, node_modules, vendor ani dist. Nie implementuj kont/projektów/płatności/zaproszeń w etapie 1.
+
+## Czytelność kodu
+
+Pisz pełny, zrozumiały kod. Stosuj konsekwentne wcięcia, opisowe nazwy oraz osobne linie dla instrukcji i elementów HTML/JSX. Nie minifikuj ręcznie kodu źródłowego ani konfiguracji. Warunki kończące wykonanie zapisuj jako jawne bloki `if`, zamiast skrótów typu `defined(...) || exit`. Oddzielaj logiczne części pustymi liniami. Skracanie zapisu nie jest celem; kod ma być łatwy do czytania i rozwijania.

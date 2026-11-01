@@ -23,3 +23,7 @@ npm audit: 10 wpisów moderate wynikających z minimatch <11.0.1 w drzewie ESLin
 Nie uruchomiono testów integracyjnych PHP, PHPCS, Vitest ani CI; nie skonfigurowano ich w tym ograniczonym etapie. Nie ma logiki domenowej do testów jednostkowych. HTTPS development nie był testowany. Nie aktywowano microsite-shell; jego składnia PHP została sprawdzona, panel zweryfikowano pod istniejącym motywem.
 
 Następny krok: narzędzia i odizolowana baza testowa, potem konta/sesje oraz uniwersalny model Site/basic-page. Animowany szablon urodzinowy dopiero po wspólnym silniku. Nie wdrożono logowania, projektów, płatności ani zaproszeń.
+
+## Czytelność kodu
+
+Rozpisano HTML/PHP/JSX, CSS i konfigurację na czytelne bloki. Zasadę zapisano w AGENTS.md. Po zmianach: php -l dla pięciu własnych plików — PASS; npm run verify — PASS; E2E produkcyjne — 3 PASS, HMR jawnie pominięty (Vite zatrzymany).
