@@ -1,4 +1,4 @@
-# Microsites — LocalWP, etapy 1–2
+# Microsites — LocalWP, etapy 1–3
 
 Wtyczka dostarcza niezależny od motywu panel React pod `/app/` i `/app/sites`. Motyw microsite-shell jest opcjonalny; panel działa niezależnie od aktywnego motywu.
 
@@ -33,21 +33,33 @@ npx playwright install chromium
 WP_SITE_URL="$(wp option get home)" npm run test:e2e
 ```
 
-`verify` sprawdza również aktualność wygenerowanych kontraktów, ESLint, TypeScript i build. Testy E2E są tylko odczytowe wobec WP i nie resetują bazy. Składnię PHP sprawdź `php -l` dla własnych plików PHP. Testy integracyjne uruchom poleceniem `npm run test:integration`; wymagają uprawnień do osobnej, nowej bazy. Szczegóły i bezpieczniki: [docs/TESTING.md](docs/TESTING.md). PHPCS i CI pozostają kolejnym etapem narzędziowym.
+`verify` sprawdza również aktualność wygenerowanych kontraktów, ESLint, TypeScript i build. Testy E2E są tylko odczytowe wobec WP i nie resetują bazy. Składnię PHP sprawdź `php -l` dla własnych plików PHP. Testy integracyjne uruchom poleceniem `npm run test:integration`; wymagają uprawnień do osobnej bazy testowej tworzonej tylko przy pierwszym uruchomieniu. Szczegóły i bezpieczniki: [docs/TESTING.md](docs/TESTING.md). PHPCS i CI pozostają kolejnym etapem narzędziowym.
 
 Zweryfikowane środowisko: PHP LocalWP 8.4.27, WP-CLI 2.12.0, Composer 2.8.6, MySQL LocalWP 8.4.0, Node 26.0.0, npm 11.12.1. WordPress 7.1.4. Minimalne PHP 8.2 / WP 6.6 są deklaracją kompatybilności, nie pełną macierzą testów. Zależności przypięte w package.json i package-lock.json: React 19.3.1, Vite 8.3.5, TypeScript 6.0.3 (zgodny z typescript-eslint; TS 7 odrzucony przez peer dependencies).
 
 Struktura: `includes/` — routing PHP, `templates/` — dokument panelu, `app/src/` — React, `app/tests/` — E2E, `wp-content/themes/microsite-shell/` — opcjonalny motyw, `docs/` — decyzje, `specs/001-app-shell/` — zakres/plan/jedyna lista zadań.
 
-HMR można sprawdzić automatycznie: uruchom `npm run dev`, a w drugim Open site shell w katalogu app wykonaj `TEST_HMR=1 WP_SITE_URL="$(wp option get home)" npm run test:e2e`. Test chwilowo zmienia tekst w `src/App.tsx` i przywraca plik w finally; nie edytuj tego pliku podczas testu. Po zmianie samego entrypointu lub preamble uruchom ponownie Vite, żeby odtworzyć spójny runtime React Refresh.
+HMR można sprawdzić automatycznie: uruchom `npm run dev`, a w drugim Open site shell w katalogu app wykonaj `TEST_HMR=1 WP_SITE_URL="$(wp option get home)" npm run test:e2e`. Test chwilowo zmienia tekst w `src/views/AuthView.tsx` i przywraca plik w finally; nie edytuj tego pliku podczas testu. Po zmianie samego entrypointu lub preamble uruchom ponownie Vite, żeby odtworzyć spójny runtime React Refresh.
 
 ## Backend etapu 2
 
-Wtyczka rejestruje prywatne szkice ms_site, rolę microsite_customer oraz `/wp-json/microsites/v1/catalog` i chronione CRUD `/sites`. Nie musisz reaktywować wtyczki: uprawnienia konfigurowane są idempotentnie przy aktualizacji kodu. Panel nie ma jeszcze logowania ani integracji CRUD. Typowany klient API wymaga nonce od modułu sesji, który powstanie w etapie 3.
+Wtyczka rejestruje prywatne szkice ms_site, rolę microsite_customer oraz `/wp-json/microsites/v1/catalog` i chronione CRUD `/sites`. Nie musisz reaktywować wtyczki: uprawnienia konfigurowane są idempotentnie przy aktualizacji kodu. Panel ma logowanie, rejestrację zgodną z ustawieniem WP, listę projektów i edytor basic-page. Bootstrap sesji/nonce jest generowany przez WordPress przy żądaniu dokumentu.
 
 - [Kontrakt API i przykładowe JSON](docs/API.md)
 - [Architektura i model danych](docs/ARCHITECTURE.md)
 - [Dodawanie typu i szablonu](docs/ADDING-A-SITE-TYPE.md)
 - [Testy i izolacja bazy](docs/TESTING.md)
 
-Kontrakty: `npm run contracts:generate`, kontrola: `npm run contracts:check` (również w verify). Integracja: `npm run test:integration` z Open site shell w katalogu app. Testowe konta powstają wyłącznie w tymczasowej bazie i są usuwane razem z nią. Nie tworzymy kont klientów ani szkiców testowych na stronie LocalWP.
+Kontrakty: `npm run contracts:generate`, kontrola: `npm run contracts:check` (również w verify). Integracja: `npm run test:integration` z Open site shell w katalogu app. Testowe konta powstają wyłącznie w tymczasowej bazie i są czyszczone przed kolejnym przebiegiem; baza pozostaje do ponownego użycia. Nie tworzymy kont klientów ani szkiców testowych na stronie LocalWP.
+
+## Konta i panel — etap 3
+
+Widoki pod aktualnym home URL: /app/login, /app/register, /app/sites, /app/sites/new i /app/sites/{id}. /app/ wybiera login lub projekty zgodnie z sesją. Konto klienta nie widzi admin bara i trafia z wp-admin do panelu; administrator zachowuje dostęp.
+
+Na tej stronie LocalWP rejestracja była wyłączona i tak pozostało. Panel pokazuje Registration is currently closed. Jeśli chcesz ją świadomie włączyć, jako administrator wybierz WordPress → Settings → General → Membership → Anyone can register, albo wykonaj z Open site shell `wp option update users_can_register 1`. Wyłączenie: `wp option update users_can_register 0`. Backend zawsze przypisuje nowym kontom rolę klienta. Nie zmienialiśmy tej opcji automatycznie.
+
+Logowanie wymaga emaila i hasła istniejącego konta WP. Nowe hasło: 12–128 bajtów oraz potwierdzenie. Po rejestracji konto jest zalogowane. Cookies są natywne; tokeny nie są zapisywane w localStorage. Publiczne operacje kont wymagają kontekstu CSRF i originu strony, a nie współdzielonego nonce anonimowego użytkownika. Szczegóły: docs/API.md i docs/ARCHITECTURE.md.
+
+Edytor zapisuje dopiero po Save changes i przesyła pełny draft. Błąd zachowuje formularz; wyjście z niezapisanymi zmianami wymaga potwierdzenia. Podgląd jest lokalny, strona nie jest publikowana. Reset hasła i weryfikacja emaila nie istnieją i są wymagane przed publicznym startem. Nie ma niedziałających linków do tych funkcji.
+
+`npm run test:integration` obejmuje także produkcyjne E2E kont i panelu na jednej stałej, osobnej bazie testowej. Zainstaluj przeglądarkę testową przez `npx playwright install chromium`. Istniejący Vite nie jest zatrzymywany. `npm run test:e2e` na stronie LocalWP wykonuje tylko anonimowe smoke tests; pełne konta/projekty są testowane wyłącznie w izolowanym runnerze.

@@ -48,10 +48,16 @@ final class App {
         if ( ! $dev && ! $entry ) {
             status_header( 503 );
         }
+        header( 'Cache-Control: no-store, private, max-age=0' );
+        header( 'Vary: Cookie' );
+        header( 'X-Frame-Options: SAMEORIGIN' );
+
         $config = array(
             'appUrl'  => home_url( '/app/' ),
             'restUrl' => rest_url(),
             'mode'    => $dev ? 'development' : 'production',
+            'session' => AuthService::session(),
+            'authCsrfToken' => AuthCsrf::bootstrap_token(),
         );
         require dirname( __DIR__ ) . '/templates/app.php';
         exit;

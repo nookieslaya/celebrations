@@ -1,4 +1,4 @@
-# REST API — etap 2
+# REST API — etapy 2–3
 
 Bazą jest `<WordPress rest_url>/microsites/v1/`, zwykle `/wp-json/microsites/v1/`. Nie hardkoduj domeny. Dane wejściowe zapisów muszą być obiektem JSON z Content-Type: application/json. Przykłady poniżej zakładają istniejącą sesję WordPress oraz prawidłowy X-WP-Nonce dla akcji wp_rest.
 
@@ -90,4 +90,58 @@ Name i draft są opcjonalne, ale wymagane jest co najmniej jedno z nich. Jeśli 
 
 Moduł `app/src/api/client.ts` udostępnia createApiClient({ restUrl, getNonce }), ApiError i metody catalog/list/read/create/update. Publiczny katalog nie potrzebuje nonce. Chronione operacje bez nonce są blokowane przez klienta jeszcze przed fetch. Cookies są wysyłane z credentials same-origin; operacje nie są automatycznie ponawiane.
 
-Nie wdrożono jeszcze bootstrapu sesji/nonce ani customowego logowania. Nie ma endpointu obchodzącego tę zależność. Etap 3 ma bezpiecznie dostarczyć nonce zalogowanej sesji i obsłużyć jej wygaśnięcie. W testach nonce pochodzi z chronionego AJAX fixture dostępnego wyłącznie w tymczasowej instalacji testowej po rzeczywistym wp-login.php.
+Bootstrap sesji jest generowany przy serwowaniu dokumentu /app/*. Client przyjmuje dynamiczne getNonce/getAuthCsrfToken, onNonce i onSessionExpired. Odczyty mogą być anulowane; zapisy nie mają automatycznych retry. Błąd sieci ma ApiError code=network_error i status=0. Zwykłe 403 jest odróżniane od 401/rest_cookie_invalid_nonce.
+
+## GET /session — sesja cookies i REST nonce
+
+Zwraca aktualny stan:
+
+```json
+{
+  "data": {
+    "user": {
+      "id": 12,
+      "email": "customer@example.com",
+      "displayName": "customer",
+      "canCreateSites": true,
+      "canEditSites": true
+    },
+    "nonce": "nonce-for-current-session",
+    "registrationEnabled": false
+  }
+}
+```
+
+Bez prawidłowej sesji/nonce jest 401 lub core'owy 403 dla błędnego nonce, nie pozornie poprawna anonimowa sesja. Początkowe user/nonce pochodzą z prywatnego dokumentu, więc działa rozpoznawanie po odświeżeniu. Nagłówek X-WP-Nonce kolejnych odpowiedzi odświeża wartość w pamięci klienta.
+
+## POST /auth/login — publiczny z kontekstem CSRF
+
+```json
+{ "email": "customer@example.com", "password": "a long private passphrase" }
+```
+
+Wymaga Origin równemu originowi strony, Content-Type: application/json, podpisanego HttpOnly cookie kontekstu oraz nagłówka X-Microsite-CSRF z bootstrapu dokumentu. Cookie i nagłówek są związane ze sobą; nie jest to wspólne anonimowe WP nonce. Brak/błędny kontekst i obcy Origin dają 403 microsite_csrf_rejected. Kontekst wygasa po 30 minutach; odświeżenie dokumentu tworzy nowy.
+
+Zwraca 200, natywne cookies WordPress i taki sam Session DTO jak GET /session. Nonce w odpowiedzi jest związany z nowym tokenem sesji. Błędny email/hasło dla poprawnej struktury żądania daje generyczne 401 microsite_invalid_credentials. Nieznane pola i błędna struktura to 400 microsite_auth_validation. Maksymalna długość emaila: 254 bajty; hasła logowania: 1–128 bajtów. Nie ma pól remember ani przekierowania pochodzącego z payloadu.
+
+## POST /auth/register — taka sama ochrona CSRF
+
+```json
+{
+  "email": "customer@example.com",
+  "password": "a long private passphrase",
+  "passwordConfirmation": "a long private passphrase"
+}
+```
+
+Respektuje users_can_register; wyłączenie daje 403 microsite_registration_disabled. Nie włącza rejestracji automatycznie. Hasło nowego konta musi mieć 12–128 bajtów i identyczne potwierdzenie. WordPress dodatkowo stosuje swoje ograniczenia danych konta. Rola microsite_customer jest zawsze ustawiana przez serwer; role/capabilities i wszystkie dodatkowe pola są odrzucane. Duplikat lub błąd natywnej rejestracji ma generyczne 400 microsite_registration_failed.
+
+Sukces: 201 i Session DTO; użytkownik jest od razu zalogowany natywną sesją, bez potrzeby osobnego loginu. Nie ma jeszcze weryfikacji emaila ani resetu hasła.
+
+## POST /auth/logout — sesja cookies i REST nonce
+
+Nie wymaga payloadu. Wywołuje natywne wp_logout, niszczy bieżący token i czyści cookies. Zwraca 200 z user:null, nonce:null i bieżącym registrationEnabled. Stary nonce/cookie nie daje już dostępu. Klient usuwa prywatne dane i powiadamia inne karty bez przesyłania sekretów.
+
+## Limity kont
+
+Login: 10 prób na IP/15 minut; rejestracja: 5 prób na IP/15 minut. Dotyczy również poprawnych prób po zweryfikowaniu CSRF. 429 microsite_rate_limited zawiera data.retryAfter i nagłówek Retry-After z sekundami do końca okna. IP pochodzi z REMOTE_ADDR, nie z niezaufanego X-Forwarded-For. Nie są logowane hasła ani cookies. Testy zerują liczniki tylko w izolowanej bazie, nigdy na stronie LocalWP.

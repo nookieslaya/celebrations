@@ -16,4 +16,12 @@ Pisz pełny, zrozumiały kod. Stosuj konsekwentne wcięcia, opisowe nazwy oraz o
 
 ## Backend od etapu 2
 
-`npm run contracts:generate` generuje TS ze schematów JSON, a `npm run verify` sprawdza aktualność wyniku, lint, typy i build. `npm run test:integration` uruchamia rzeczywiste testy HTTP na nowej, izolowanej bazie; szczegóły i bezpieczniki są w docs/TESTING.md. Nie zastępuj testów właściciela lub sesji mockami. Nie dodawaj fixture nonce do działającej strony. Działającego Vite nie uruchamiaj ponownie i nie zatrzymuj bez potrzeby. Drobne zmiany zostawiaj lokalnie; commit/push wykonuj po większych etapach lub na wyraźne polecenie, nie po każdej poprawce.
+`npm run contracts:generate` generuje TS ze schematów JSON, a `npm run verify` sprawdza aktualność wyniku, lint, typy i build. `npm run test:integration` uruchamia rzeczywiste testy HTTP na jednej stałej, izolowanej bazie testowej; szczegóły i bezpieczniki są w docs/TESTING.md. Nie zastępuj testów właściciela lub sesji mockami. Nie dodawaj fixture nonce do działającej strony. Działającego Vite nie uruchamiaj ponownie i nie zatrzymuj bez potrzeby. Drobne zmiany zostawiaj lokalnie; commit/push wykonuj po większych etapach lub na wyraźne polecenie, nie po każdej poprawce.
+
+## Konta i panel od etapu 3
+
+Bootstrap sesji i nonce generuje WordPress w prywatnym dokumencie /app/*. Operacje kont wymagają osobnego kontekstu CSRF i sprawdzenia Origin; nie zastępuj go anonimowym WP nonce. Nie włączaj automatycznie users_can_register. Nie dodawaj tokenów do localStorage ani statycznych assetów. Pełne E2E kont/projektów uruchamia npm run test:integration na tej samej dedykowanej bazie testowej; npm run test:e2e na stronie LocalWP ma pozostać anonimowy i bez tworzenia danych. Nowy typ ma własne Fields/Preview w rejestrze edytorów, bez kopiowania kont, odczytu i zapisu. Przed publicznym startem wymagane są reset hasła i weryfikacja emaila.
+
+## Ponowne używanie środowiska testowego
+
+Nie twórz nowej bazy przy każdym przebiegu. Używaj stałej bazy microsite_test_<identyfikator-projektu>, tworzonej tylko raz. Runner przełącza połączenie we własnej tymczasowej konfiguracji, nie zmienia wp-config.php strony LocalWP. Przed czyszczeniem wyłącznie tabel ms_test_* sprawdza różną DB_NAME, marker własności projektu i blokadę równoległych testów. Nie usuwaj bazy po testach. Nie przejmuj istniejącej bazy bez markera.

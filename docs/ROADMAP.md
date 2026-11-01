@@ -1,3 +1,3 @@
 # Kolejne etapy
 
-Jedyna lista zadań: [tasks.md](../specs/001-app-shell/tasks.md). Po backendzie etapu 2 następuje etap 3: customowe konta i bezpieczny bootstrap sesji/nonce, lista projektów oraz prosty edytor szkicu React. Potem prywatny renderer/podgląd i pierwszy animowany szablon urodzinowy na wspólnym silniku. Publikacja/snapshoty, płatności, media, RSVP i QR pozostają osobnymi dalszymi modułami.
+Jedyna lista zadań: [tasks.md](../specs/001-app-shell/tasks.md). Etap 3 łączy konta i panel z backendem. Etap 4 obejmuje typ birthday-invitation, jego moduł edytora i pierwszy animowany renderer. Publikacja/snapshoty, płatności, media, RSVP i QR pozostają osobnymi modułami. Przed publicznym startem trzeba dodać reset hasła i weryfikację emaila oraz przygotować CI i kontrolę standardów PHP.

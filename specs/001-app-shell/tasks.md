@@ -20,9 +20,25 @@
 - [x] Kontrole PHP, kontraktów, lint, typecheck, build i regresji panelu.
 - [x] Aktualizacja dokumentacji i faktycznych wyników.
 
+## Etap 3 — konta i panel
+
+- [x] Bootstrap sesji/nonce, ochrona CSRF i limity endpointów kont.
+- [x] Rejestracja respektująca konfigurację WP i ochrona administracji klienta.
+- [x] Router, widoki kont i prywatny stan klienta API.
+- [x] Lista, katalog i tworzenie projektu bez powielania POST.
+- [x] Rejestr edytorów, edycja basic-page, zapis, lokalny podgląd i ochrona zmian.
+- [x] Rzeczywiste testy HTTP kont/sesji/CSRF oraz E2E na izolowanej bazie i produkcyjnym buildzie.
+- [x] PHP, kontrakty, lint, typecheck, build i regresja; faktyczny status PHPCS/CI.
+- [x] Dokumentacja i raport etapu 3.
+
+## Usprawnienie testów po etapie 3
+
+- [x] Stała dedykowana baza, marker własności i blokada współbieżności.
+- [x] Pierwszy przebieg oraz ponowne użycie tej samej bazy.
+
 ## Dalsze etapy
 
-- [ ] Etap 3: customowe konta/sesja, lista projektów i prosty edytor szkicu React.
+- [ ] Etap 4: birthday-invitation, jego edytor i pierwszy animowany renderer.
 - [ ] PHPCS i CI, prywatny podgląd basic-page.
 - [ ] Pierwszy animowany szablon urodzinowy na wspólnym silniku.
 - [ ] Media, publikacja i snapshoty; później płatności, RSVP i QR jako osobne moduły.

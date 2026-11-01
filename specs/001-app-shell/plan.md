@@ -7,3 +7,11 @@ Spec Kit: brak poleceń uv i specify w tym środowisku oraz brak istniejącej ko
 ## Etap 2
 
 Dodać backend szkiców w istniejącej wtyczce: prywatny CPT i uprawnienia, jawny rejestr, JSON Schema z generowaniem TS, walidację i warstwy repozytorium/serwisu/autoryzacji/REST. Dodać klient API przyjmujący nonce od przyszłego modułu sesji. Przygotować izolowaną bazę i tymczasowy WordPress korzystający z istniejących plików core; sprawdzić uprawnienia i nonce przez HTTP. Zachować działający Vite i panel. Nie wdrażać logowania, edytora ani publikacji.
+
+## Etap 3
+
+Zachować istniejący backend CRUD i Vite. Dodać bootstrap sesji w dokumencie WP, chroniony odczyt sesji oraz endpointy kont z ochroną anonimowego kontekstu CSRF/origin i limitowaniem. Rozwinąć klient API, router History API, formularze kont, listę i tworzenie z katalogu oraz rejestr modułów edytora. Zapewnić ochronę niezapisanych zmian i nieaktualnych odpowiedzi. Rozszerzyć istniejący izolowany runner o rzeczywiste testy HTTP i Playwright produkcyjnego buildu. Nie zmieniać rejestracji na stronie LocalWP (zastana wartość 0).
+
+## Aktualizacja strategii bazy testowej
+
+Na polecenie użytkownika po etapie 3 używamy jednej stałej, dedykowanej bazy projektu zamiast losowej bazy na każdy przebieg. Czyścimy tylko jej tabele ms_test_* po sprawdzeniu markerów, izolacji od DB_NAME strony i wyłącznej blokady. Po testach baza pozostaje do ponownego użycia.

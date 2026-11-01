@@ -65,10 +65,35 @@ export class ApiError extends Error {
   }
 }
 
+export interface SessionUser {
+  id: number;
+  email: string;
+  displayName: string;
+  canCreateSites: boolean;
+  canEditSites: boolean;
+}
+
+export interface Session {
+  user: SessionUser | null;
+  nonce: string | null;
+  registrationEnabled: boolean;
+}
+
+export interface Credentials {
+  email: string;
+  password: string;
+}
+
+export interface Registration extends Credentials {
+  passwordConfirmation: string;
+}
+
 export interface ApiClientOptions {
   restUrl: string;
-  // A future session module must supply this. No public nonce or login workaround.
   getNonce: () => string | null;
+  getAuthCsrfToken: () => string;
+  onNonce: (nonce: string) => void;
+  onSessionExpired: () => void;
 }
 
 export function createApiClient(options: ApiClientOptions) {
@@ -79,38 +104,63 @@ export function createApiClient(options: ApiClientOptions) {
     method = "GET",
     payload?: unknown,
     protectedOperation = true,
+    signal?: AbortSignal,
+    authOperation = false,
   ): Promise<Data> {
     const headers = new Headers({ Accept: "application/json" });
+    const requestNonce = protectedOperation ? options.getNonce() : null;
 
     if (protectedOperation) {
-      const nonce = options.getNonce();
-
-      if (!nonce) {
+      if (!requestNonce) {
         throw new ApiError(
           "session_unavailable",
           "Sign in before accessing projects.",
           401,
         );
       }
+      headers.set("X-WP-Nonce", requestNonce);
+    }
 
-      headers.set("X-WP-Nonce", nonce);
+    if (authOperation) {
+      headers.set("X-Microsite-CSRF", options.getAuthCsrfToken());
     }
 
     if (payload !== undefined) {
       headers.set("Content-Type", "application/json");
     }
 
-    const response = await fetch(new URL(path, namespace), {
-      method,
-      headers,
-      credentials: "same-origin",
-      cache: "no-store",
-      body: payload === undefined ? undefined : JSON.stringify(payload),
-    });
+    let response: Response;
+    try {
+      response = await fetch(new URL(path, namespace), {
+        method,
+        headers,
+        credentials: "same-origin",
+        cache: "no-store",
+        signal,
+        body: payload === undefined ? undefined : JSON.stringify(payload),
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        throw error;
+      }
+      throw new ApiError(
+        "network_error",
+        "Connection failed. Check your network and try again.",
+        0,
+      );
+    }
 
     const body = await response.json().catch(() => null);
 
     if (!response.ok) {
+      if (
+        protectedOperation &&
+        (response.status === 401 ||
+          body?.code === "rest_cookie_invalid_nonce") &&
+        options.getNonce() === requestNonce
+      ) {
+        options.onSessionExpired();
+      }
       throw new ApiError(
         body?.code ?? "http_error",
         body?.message ?? "The request failed.",
@@ -118,7 +168,7 @@ export function createApiClient(options: ApiClientOptions) {
       );
     }
 
-    if (!body || !("data" in body)) {
+    if (!body || typeof body !== "object" || !("data" in body)) {
       throw new ApiError(
         "invalid_response",
         "The API returned an invalid response.",
@@ -126,17 +176,50 @@ export function createApiClient(options: ApiClientOptions) {
       );
     }
 
+    const refreshedNonce = response.headers.get("X-WP-Nonce");
+    if (
+      protectedOperation &&
+      refreshedNonce &&
+      options.getNonce() === requestNonce
+    ) {
+      options.onNonce(refreshedNonce);
+    }
+
     return body.data as Data;
   }
 
   return {
-    catalog: () => request<Catalog>("catalog", "GET", undefined, false),
-    list: (page = 1, perPage = 20) =>
-      request<SiteList>(`sites?page=${page}&per_page=${perPage}`),
-    read: (id: number) => request<Site>(`sites/${id}`),
+    catalog: (signal?: AbortSignal) =>
+      request<Catalog>("catalog", "GET", undefined, false, signal),
+    session: (signal?: AbortSignal) =>
+      request<Session>("session", "GET", undefined, true, signal),
+    login: (payload: Credentials) =>
+      request<Session>("auth/login", "POST", payload, false, undefined, true),
+    register: (payload: Registration) =>
+      request<Session>(
+        "auth/register",
+        "POST",
+        payload,
+        false,
+        undefined,
+        true,
+      ),
+    logout: () => request<Session>("auth/logout", "POST"),
+    list: (page = 1, perPage = 20, signal?: AbortSignal) =>
+      request<SiteList>(
+        `sites?page=${page}&per_page=${perPage}`,
+        "GET",
+        undefined,
+        true,
+        signal,
+      ),
+    read: (id: number, signal?: AbortSignal) =>
+      request<Site>(`sites/${id}`, "GET", undefined, true, signal),
     create: <Type extends SiteTypeId>(payload: CreateSite<Type>) =>
       request<Site<Type>>("sites", "POST", payload),
     update: <Type extends SiteTypeId>(id: number, payload: UpdateSite<Type>) =>
       request<Site<Type>>(`sites/${id}`, "PATCH", payload),
   };
 }
+
+export type ApiClient = ReturnType<typeof createApiClient>;

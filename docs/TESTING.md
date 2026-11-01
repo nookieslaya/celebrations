@@ -5,6 +5,7 @@ W LocalWP wybierz **Open site shell** i przejdź do `wp-content/plugins/microsit
 ```sh
 npm ci
 npm run verify
+npx playwright install chromium
 npm run test:integration
 WP_SITE_URL="$(wp option get home)" npm run test:e2e
 ```
@@ -13,26 +14,36 @@ Testy integracyjne używają Playwright APIRequestContext i asercji Node do wyko
 
 Testowy WP_ENVIRONMENT_TYPE=development wyłącza lokalny marker assetów, więc testy sprawdzają także produkcyjny manifest i obie ścieżki panelu przy nadal działającym Vite strony.
 
-Runner wymaga działających WP-CLI, PHP i klienta MySQL z Open site shell oraz uprawnień utworzenia/usunięcia osobnej bazy. Nie pobiera i nie instaluje ponownie core strony. Kopiuje istniejący core i motywy do systemowego katalogu tymczasowego; instaluje WordPressa wyłącznie tam i wyłącznie na nowej bazie `microsite_test_<losowy-sufiks>`. Losowy port PHP wybierany jest automatycznie i nie koliduje z Vite. Nie instaluje żadnych kontenerów ani nowej usługi MySQL.
+Runner wymaga WP-CLI, PHP i MySQL z Open site shell oraz uprawnień do oddzielnej bazy testowej. Domyślna nazwa microsite_test_<hash-katalogu-projektu> jest stała. Pierwszy przebieg tworzy bazę, następne przełączają połączenie do tej samej bazy i czyszczą wyłącznie tabele ms_test_* przed przygotowaniem powtarzalnych fixture. Baza pozostaje po zakończeniu, także po błędzie testu. Nie zmieniamy wp-config.php strony ani jej aktywnej bazy.
 
-Połączenie z MySQL pochodzi z konfiguracji strony, ale DB_NAME jest nowy. Socket jest wykrywany z konfiguracji mysqli w aktywnym PHP, bez hardkodowanych ścieżek. Lokalny auto_prepend/auto_append LocalWP jest wyłączany wyłącznie w procesie testowego serwera PHP, aby uniknąć dwukrotnego wykonania Local bootstrap przy routerze CLI.
+Core i motywy są kopiowane do tymczasowego katalogu. Tam WordPress jest przygotowywany na tej samej dedykowanej bazie. Serwer testowy wybiera wolny port i produkcyjne assety, bez zatrzymywania Vite. Połączenie i socket MySQL są wykrywane z konfiguracji LocalWP, bez hardkodowanych ścieżek.
 
-## Ochrona danych
+## Bezpieczniki i własność
 
-Przed jakąkolwiek instalacją lub modyfikacją runner porównuje testową DB_NAME z DB_NAME strony i odrzuca zgodność; wymaga prefiksu microsite_test_ i świeżej nazwy. Istniejąca baza, nawet testowa, powoduje odmowę. Przed poleceniami WP ponownie sprawdza konfigurację i prywatny marker własności w katalogu tymczasowym. Usuwana jest wyłącznie baza utworzona przez ten przebieg. Brak resetów lub czyszczenia bazy LocalWP.
+Przed operacjami na bazie runner odrzuca DB_NAME strony LocalWP i wymaga prefiksu microsite_test_. Istniejącą bazę wolno wyczyścić tylko przy zgodnym trwałym markerze własności projektu w ~/.cache/microsite-core/<hash-projektu>/<nazwa-bazy>.json. Marker zawiera nazwę bazy, katalog projektu i identyfikację połączenia; nie zawiera hasła. Powstaje dopiero po utworzeniu dedykowanej bazy. Brak lub niezgodność oznacza odmowę, nigdy automatyczne przejęcie bazy.
 
-Można jawnie wskazać nową nazwę przez TEST_DB_NAME; nie można w ten sposób podstawić bazy strony. Sam bezpiecznik można sprawdzić bez tworzenia bazy:
+Każde polecenie WP ponownie sprawdza tymczasową konfigurację i marker przebiegu. Przed czyszczeniem kontrolowany jest też table_prefix=ms_test_. Używane jest wp db clean, nie wp db drop/reset: baza nie jest usuwana. Blokada katalogowa <nazwa-bazy>.lock z PID nie pozwala uruchomić dwóch zestawów na jednej bazie równocześnie.
+
+TEST_DB_NAME opcjonalnie wybiera inną dedykowaną bazę z tymi samymi zabezpieczeniami. Bezpiecznik można sprawdzić bez operacji na bazie:
 
 ```sh
 TEST_DB_NAME="$(wp config get DB_NAME)" node ../tests/run-integration.mjs --guard-only
 ```
 
-Oczekiwany wynik: odmowa z niezerowym kodem. Dla nowej nazwy microsite_test_... --guard-only tylko sprawdza nazwę i niczego nie tworzy. Nie udostępniamy komendy resetu istniejącej bazy.
-
-Runner sprząta po sukcesie i zwykłym błędzie. Po wymuszonym zabiciu procesu może pozostać baza testowa i katalog tymczasowy; kolejny przebieg ich nie usuwa i tworzy nową nazwę. Ewentualne ręczne sprzątanie wymaga sprawdzenia nazwy, markera i konfiguracji — nigdy nie należy kierować resetu na DB_NAME strony.
+Oczekiwana jest odmowa z niezerowym kodem. Poprawna nazwa i --guard-only nie tworzą ani nie czyszczą bazy. Po zwykłym zakończeniu znika tymczasowy katalog i blokada, ale pozostają baza oraz trwały marker. Po wymuszonym zabiciu sprawdź PID przed ręcznym zdjęciem starej blokady. Nie usuwaj markera działającej bazy i nie kieruj testów na bazę LocalWP.
 
 ## Pokrycie
 
 Sprawdzane są: defaults i backendowe wersje, właściciel sesji, unikalne publicId, własna lista i paginacja, anonimowy dostęp, obustronna izolacja A/B, niezależne capabilities, administrator z jawnym uprawnieniem, brak/błędny nonce przez cookies (POST/PATCH), poprawny odczyt i edycja, zakazane pola systemowe, limity i pełna walidacja draft, brak zmian po nieudanej walidacji, konflikty zapisanych wersji, brak publicznego/default REST ujawnienia CPT, idempotentne role i brak diagnostyki PHP.
 
 `npm run verify` obejmuje sprawdzanie wygenerowanego kontraktu, ESLint, TypeScript i build. PHPCS/CI nie zostały jeszcze dodane; składnia PHP jest sprawdzana przez php -l. E2E panelu zachowują dotychczasowe testy obu tras i nawigacji. Test HMR jest uruchamiany tylko jawnie przy TEST_HMR=1.
+
+## Konta i E2E etapu 3
+
+Runner po regresji backendu uruchamia accounts.mjs z rzeczywistymi HTTP cookies i browser-flows.mjs w Chromium na produkcyjnym buildzie. Rejestracja jest przełączana wyłącznie w jego stałej testowej bazie. Testuje disabled registration, walidację i rolę, kontekst CSRF i obcy Origin, login, nonce nowej sesji, logout i blokadę starego nonce, limity/Retry-After oraz administrację klienta i administratora.
+
+Przepływy przeglądarkowe obejmują rejestrację → katalog → utworzenie → edytor → pełny zapis → refresh, odmowę dla klienta B, wygaśnięcie sesji, bezpieczny next, paginację, zachowanie danych po realnym błędzie walidacji, ostrzeżenia nawigacji i beforeunload oraz produkcyjny build bez żądań Vite. Awaria sieci i opóźniona odpowiedź są dodatkowo wywoływane na granicy HTTP przeglądarki; nie mockują backendowej autoryzacji ani odpowiedzi walidatora. Pozostałe testy używają rzeczywistego serwera/bazy.
+
+Smoke tests w app/tests są anonimowe, więc nie tworzą danych LocalWP i respektują zastane ustawienie rejestracji. Test HMR chwilowo zmienia moduł AuthView.tsx i sprawdza aktualizację bez utraty emaila. Nie edytuj tego pliku równolegle z TEST_HMR=1. Nie ma potrzeby zatrzymywania istniejącego Vite do testów produkcji.
+
+PHPCS nie było skonfigurowane w poprzednim etapie i nie jest raportowane jako uruchomione. CI nie ma skonfigurowanego workflow i nie zostało uruchomione na GitHubie; lokalny PASS nie oznacza CI PASS. Nie uruchomiono testów resetu hasła, weryfikacji emaila ani funkcji kolejnych etapów, ponieważ nie są implementowane.

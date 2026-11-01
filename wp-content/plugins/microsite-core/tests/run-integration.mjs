@@ -1,3 +1,5 @@
+import { runBrowserFlows } from "./browser-flows.mjs";
+import { runAccountTests } from "./accounts.mjs";
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
 import {
@@ -13,10 +15,10 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createServer } from "node:net";
-import { tmpdir } from "node:os";
+import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { randomBytes } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { request } from "../app/node_modules/playwright/index.mjs";
 
 const testsDirectory = dirname(fileURLToPath(import.meta.url));
@@ -57,9 +59,11 @@ const databaseHost =
   developmentHost === "localhost" && databaseSocket
     ? `localhost:${databaseSocket}`
     : developmentHost;
-const testDatabase =
-  process.env.TEST_DB_NAME ??
-  `microsite_test_${Date.now()}_${randomBytes(4).toString("hex")}`;
+const projectId = createHash("sha256")
+  .update(developmentDirectory)
+  .digest("hex")
+  .slice(0, 16);
+const testDatabase = process.env.TEST_DB_NAME ?? `microsite_test_${projectId}`;
 
 // This guard runs before creating files, databases, servers or test data.
 assertIsolatedDatabase(testDatabase, developmentDatabase);
@@ -71,17 +75,49 @@ if (process.argv.includes("--guard-only")) {
   process.exit(0);
 }
 
-// Never reuse a pre-existing database, including another test database.
 const existingDatabases = JSON.parse(
   wpAt(developmentDirectory, [
     "eval",
     "global $wpdb; echo wp_json_encode($wpdb->get_col('SHOW DATABASES'));",
   ]),
 );
+const databaseExists = existingDatabases.includes(testDatabase);
+const stateDirectory = join(homedir(), ".cache", "microsite-core", projectId);
+mkdirSync(stateDirectory, { recursive: true, mode: 0o700 });
+const persistentMarker = join(stateDirectory, `${testDatabase}.json`);
+const lockDirectory = join(stateDirectory, `${testDatabase}.lock`);
+const expectedOwnership = {
+  database: testDatabase,
+  developmentDirectory,
+  developmentDatabase,
+  databaseHost,
+};
 
-if (existingDatabases.includes(testDatabase)) {
+function assertPersistentOwnership() {
+  assertIsolatedDatabase(testDatabase, developmentDatabase);
+  if (!existsSync(persistentMarker)) {
+    throw new Error(
+      "Refusing to clean an existing database without this project's ownership marker.",
+    );
+  }
+  assert.deepEqual(
+    JSON.parse(readFileSync(persistentMarker, "utf8")),
+    expectedOwnership,
+  );
+}
+
+if (databaseExists) {
+  assertPersistentOwnership();
+}
+
+try {
+  mkdirSync(lockDirectory, { mode: 0o700 });
+  writeFileSync(join(lockDirectory, "pid"), String(process.pid), {
+    mode: 0o600,
+  });
+} catch {
   throw new Error(
-    "Refusing to reuse or clean an existing database. Choose a fresh test database.",
+    `Test database is locked. Check the running process before removing ${lockDirectory}.`,
   );
 }
 
@@ -90,7 +126,6 @@ const temporaryDirectory = mkdtempSync(
 );
 const ownershipMarker = join(temporaryDirectory, ".microsite-test-owner");
 writeFileSync(ownershipMarker, testDatabase, { mode: 0o600 });
-let databaseCreated = false;
 let server;
 const contexts = [];
 let checks = 0;
@@ -229,11 +264,29 @@ try {
     return wpAt(temporaryDirectory, args);
   }
 
-  isolatedWp(["db", "create"]);
-  databaseCreated = true;
-  console.log(
-    "Created a new isolated database and temporary WordPress; live site is not modified.",
-  );
+  if (databaseExists) {
+    assertPersistentOwnership();
+    // Only this runner's ms_test_* tables are removed. The database itself stays.
+    assert.equal(
+      wpAt(temporaryDirectory, [
+        "config",
+        "get",
+        "table_prefix",
+        "--type=variable",
+      ]),
+      "ms_test_",
+    );
+    isolatedWp(["db", "clean", "--yes"]);
+    console.log(`Reusing dedicated test database: ${testDatabase}`);
+  } else {
+    isolatedWp(["db", "create"]);
+    writeFileSync(
+      persistentMarker,
+      JSON.stringify(expectedOwnership, null, 2),
+      { mode: 0o600 },
+    );
+    console.log(`Created dedicated test database once: ${testDatabase}`);
+  }
 
   const password = randomBytes(24).toString("hex");
   isolatedWp([
@@ -386,20 +439,25 @@ try {
     return body;
   }
 
-  await check("production shell serves both app paths and manifest assets independently of the running Vite", async () => {
-    for (const path of ["/app/", "/app/sites"]) {
-      const response = await anonymous.get(path);
-      assert.equal(response.status(), 200);
-      const html = await response.text();
-      assert.match(html, /"mode":"production"/);
-      assert.doesNotMatch(html, /@vite\/client|@react-refresh/);
-      const assets = [...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g)];
-      assert.equal(assets.length >= 2, true);
-      for (const asset of assets) {
-        assert.equal((await anonymous.get(asset[1])).ok(), true);
+  await check(
+    "production shell serves both app paths and manifest assets independently of the running Vite",
+    async () => {
+      for (const path of ["/app/", "/app/sites"]) {
+        const response = await anonymous.get(path);
+        assert.equal(response.status(), 200);
+        const html = await response.text();
+        assert.match(html, /"mode":"production"/);
+        assert.doesNotMatch(html, /@vite\/client|@react-refresh/);
+        const assets = [
+          ...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g),
+        ];
+        assert.equal(assets.length >= 2, true);
+        for (const asset of assets) {
+          assert.equal((await anonymous.get(asset[1])).ok(), true);
+        }
       }
-    }
-  });
+    },
+  );
 
   let siteA;
   let siteB;
@@ -861,6 +919,16 @@ try {
     },
   );
 
+  await runAccountTests({
+    origin,
+    request,
+    contexts,
+    check,
+    isolatedWp,
+    password,
+  });
+  await runBrowserFlows({ origin, password, check, isolatedWp });
+
   if (existsSync(join(temporaryDirectory, "php-errors.log"))) {
     const log = readFileSync(
       join(temporaryDirectory, "php-errors.log"),
@@ -893,18 +961,9 @@ try {
     server.kill("SIGTERM");
     await stopped;
   }
-  if (databaseCreated) {
-    const configuredDatabase = wpAt(temporaryDirectory, [
-      "config",
-      "get",
-      "DB_NAME",
-      "--type=constant",
-    ]);
-    assertIsolatedDatabase(configuredDatabase, developmentDatabase);
-    assert.equal(configuredDatabase, testDatabase);
-    assert.equal(readFileSync(ownershipMarker, "utf8"), testDatabase);
-    wpAt(temporaryDirectory, ["db", "drop", "--yes"]);
-    console.log("Removed only the database created by this test run.");
-  }
+  console.log(
+    `Dedicated test database retained for the next run: ${testDatabase}`,
+  );
   rmSync(temporaryDirectory, { recursive: true, force: true });
+  rmSync(lockDirectory, { recursive: true, force: true });
 }

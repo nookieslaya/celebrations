@@ -1,140 +1,184 @@
-import { useEffect, useState } from "react";
-
-type Config = { appUrl: string; restUrl: string; mode: string };
-const config: Config = JSON.parse(
-  document.getElementById("microsite-config")!.textContent!,
-);
-const base = new URL(config.appUrl).pathname.replace(/\/$/, "");
-// English copy is centralized to allow introducing translations in the next stage.
+import { useEffect, useRef, useState } from "react";
+import { SessionProvider, useSession } from "./auth/SessionProvider";
+import { Router, Link, safeReturn, useRouter } from "./routing/Router";
+import { appBase, config } from "./config";
+import { copy } from "./copy";
+import { ErrorNotice, Loading, useMounted } from "./components/Async";
+import { AuthView } from "./views/AuthView";
+import { SitesView } from "./views/SitesView";
+import { NewSiteView } from "./views/NewSiteView";
+import { EditorView } from "./views/EditorView";
 
 export default function App() {
-  const copy = {
-    brand: "microsites",
-    overview: "Overview",
-    sites: "My sites",
-    eyebrow: "YOUR CREATIVE WORKSPACE",
-    title: "Small pages. Big moments.",
-    intro:
-      "A home for the things worth celebrating. Your workspace is taking shape.",
-    empty: "Your next idea starts here",
-    emptyDescription:
-      "Projects will appear here once project creation is available.",
-    stage: "Foundation preview",
-    stageDescription:
-      "The workspace is ready. Accounts, projects and publishing are coming in the next stages.",
-  };
-  const [path, setPath] = useState(window.location.pathname.replace(/\/$/, ""));
-  const [note, setNote] = useState("");
+  return (
+    <SessionProvider>
+      <Router>
+        <Workspace />
+      </Router>
+    </SessionProvider>
+  );
+}
+
+function Workspace() {
+  const { session, api, ready, applySession, bootstrapError, retryBootstrap } =
+    useSession();
+  const { location, navigate, confirmLeave } = useRouter();
+  const [logoutError, setLogoutError] = useState<unknown>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const logoutPending = useRef(false);
+  const mounted = useMounted();
+  const url = new URL(location, window.location.origin);
+  const path = url.pathname.replace(/\/$/, "");
+  const suffix = path.slice(appBase.length);
+  const authPage = suffix === "/login" || suffix === "/register";
+  const protectedPage = suffix === "/sites" || suffix.startsWith("/sites/");
+  const editorMatch = /^\/sites\/([1-9][0-9]*)$/.exec(suffix);
+
   useEffect(() => {
-    const update = () => setPath(window.location.pathname.replace(/\/$/, ""));
-    window.addEventListener("popstate", update);
-    return () => window.removeEventListener("popstate", update);
-  }, []);
-  const isSites = path === `${base}/sites`;
-  const known = path === base || isSites;
-  function navigate(event: React.MouseEvent<HTMLAnchorElement>) {
-    if (
-      event.button ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey
-    )
+    if (!ready) {
       return;
-    event.preventDefault();
-    history.pushState(null, "", event.currentTarget.href);
-    setPath(window.location.pathname.replace(/\/$/, ""));
+    }
+    if (!suffix) {
+      navigate(`${appBase}/${session.user ? "sites" : "login"}`, true, true);
+    } else if (!session.user && protectedPage) {
+      const next = safeReturn(location);
+      navigate(`${appBase}/login?next=${encodeURIComponent(next)}`, true, true);
+    } else if (session.user && authPage) {
+      navigate(safeReturn(url.searchParams.get("next")), true, true);
+    }
+  }, [
+    ready,
+    session.user,
+    suffix,
+    protectedPage,
+    authPage,
+    location,
+    navigate,
+    url.search,
+  ]);
+
+  async function logout() {
+    if (logoutPending.current || !confirmLeave()) {
+      return;
+    }
+    logoutPending.current = true;
+    setLoggingOut(true);
+    setLogoutError(null);
+    try {
+      const anonymous = await api.logout();
+      if (mounted.current) {
+        applySession(anonymous, true);
+        navigate(`${appBase}/login`, true, true);
+      }
+    } catch (error) {
+      if (mounted.current) {
+        setLogoutError(error);
+      }
+    } finally {
+      logoutPending.current = false;
+      if (mounted.current) {
+        setLoggingOut(false);
+      }
+    }
   }
+
+  let view;
+  if (!ready) {
+    view = bootstrapError ? (
+      <>
+        <ErrorNotice error={new Error(bootstrapError)} />
+        <button className="button" onClick={retryBootstrap}>
+          {copy.retry}
+        </button>
+      </>
+    ) : (
+      <Loading />
+    );
+  } else if (
+    (!session.user && protectedPage) ||
+    (session.user && authPage) ||
+    !suffix
+  ) {
+    view = <Loading />;
+  } else if (authPage) {
+    view = <AuthView key={suffix} registering={suffix === "/register"} />;
+  } else if (session.user && suffix === "/sites") {
+    view = <SitesView key={`${session.user.id}:${url.search}`} />;
+  } else if (session.user && suffix === "/sites/new") {
+    view = <NewSiteView key={session.user.id} />;
+  } else if (session.user && editorMatch) {
+    view = (
+      <EditorView
+        key={`${session.user.id}:${editorMatch[1]}`}
+        id={Number(editorMatch[1])}
+      />
+    );
+  } else {
+    view = (
+      <>
+        <h1>{copy.unknownPage}</h1>
+        <Link className="text-link" href={`${appBase}/sites`}>
+          {copy.back}
+        </Link>
+      </>
+    );
+  }
+
   return (
     <div className="layout">
       <aside>
-        <a className="brand" href={config.appUrl} onClick={navigate}>
+        <Link className="brand" href={`${appBase}/sites`}>
           <span className="brand-icon">✳</span>
           {copy.brand}
           <span className="dot">.</span>
-        </a>
-        <div className="workspace-label">WORKSPACE</div>
+        </Link>
+        <div className="workspace-label">{copy.workspace.toUpperCase()}</div>
         <nav aria-label="Workspace">
-          <a
-            aria-current={path === base ? "page" : undefined}
-            href={config.appUrl}
-            onClick={navigate}
-          >
-            ◫ <span>{copy.overview}</span>
-          </a>
-          <a
-            aria-current={isSites ? "page" : undefined}
-            href={`${config.appUrl}sites`}
-            onClick={navigate}
-          >
-            ▤ <span>{copy.sites}</span>
-          </a>
+          {session.user && ready ? (
+            <Link
+              aria-current={protectedPage ? "page" : undefined}
+              href={`${appBase}/sites`}
+            >
+              <span aria-hidden="true">▤</span>
+              <span>{copy.sites}</span>
+            </Link>
+          ) : (
+            <Link href={`${appBase}/login`}>{copy.loginAction}</Link>
+          )}
         </nav>
         <div className="sidebar-note">
-          <span className="status-dot" /> A little room for big ideas
+          <span className="status-dot" /> {copy.early}
           <br />
-          <small>Workspace · v0.1</small>
+          <small>Workspace · v0.3</small>
         </div>
       </aside>
       <div className="content">
         <header>
-          <span>
-            Workspace <span className="slash">/</span>{" "}
-            {isSites ? copy.sites : "Overview"}
-          </span>
-          <span className="badge">{copy.stage}</span>
+          <span>{copy.workspace}</span>
+          <div className="account-menu">
+            {session.user && ready && (
+              <>
+                <span className="account-email">{session.user.email}</span>
+                <button
+                  className="button"
+                  disabled={loggingOut}
+                  onClick={logout}
+                >
+                  {copy.logout}
+                </button>
+              </>
+            )}
+          </div>
         </header>
         <main>
-          <p className="eyebrow">{copy.eyebrow}</p>
-          <h1>
-            {known ? (isSites ? "Your sites" : copy.title) : "Page not found"}
-          </h1>
-          <p className="intro">
-            {known
-              ? isSites
-                ? "A place for every celebration, story and new beginning."
-                : copy.intro
-              : "Choose a page from the workspace navigation."}
-          </p>
-          {known && (
-            <>
-              <section className="empty">
-                <div className="paper" aria-hidden="true">
-                  <span>✳</span>
-                  <i />
-                  <i />
-                  <b />
-                </div>
-                <span className="mini-label">
-                  A BLANK CANVAS, ENDLESS POSSIBILITIES
-                </span>
-                <h2>{copy.empty}</h2>
-                <p>{copy.emptyDescription}</p>
-                <span className="coming">Project creation · coming soon</span>
-              </section>
-              <section className="foundation">
-                <span className="spark">✧</span>
-                <div>
-                  <h2>{copy.stage}</h2>
-                  <p>{copy.stageDescription}</p>
-                </div>
-                <span className="mode">{config.mode}</span>
-              </section>
-              <details>
-                <summary>Try the workspace</summary>
-                <label htmlFor="scratch">A temporary note (not saved)</label>
-                <input
-                  id="scratch"
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="An idea worth celebrating…"
-                />
-              </details>
-            </>
+          {logoutError !== null && session.user && (
+            <ErrorNotice error={logoutError} />
           )}
+          {view}
         </main>
         <footer>
-          Made for moments that matter.<span>MICROSITES / EARLY PREVIEW</span>
+          {copy.early}
+          <span>{config.mode}</span>
         </footer>
       </div>
     </div>

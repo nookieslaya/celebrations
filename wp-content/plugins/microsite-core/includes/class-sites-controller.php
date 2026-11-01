@@ -151,6 +151,12 @@ final class SitesController {
         if ( str_starts_with( $request->get_route(), '/microsites/v1/' ) ) {
             $response->header( 'Cache-Control', 'no-store, private, max-age=0' );
             $response->header( 'Vary', 'Cookie, X-WP-Nonce' );
+
+            $body = $response->get_data();
+
+            if ( 429 === $response->get_status() && isset( $body['data']['retryAfter'] ) ) {
+                $response->header( 'Retry-After', (string) $body['data']['retryAfter'] );
+            }
         }
 
         return $response;

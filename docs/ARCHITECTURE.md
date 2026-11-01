@@ -2,7 +2,7 @@
 
 ## Działający fundament
 
-WordPress LocalWP obsługuje dokument panelu i REST API pod jednym originem. Wtyczka `microsite-core` odpowiada za routing `/app/*`; motyw nie zawiera logiki aplikacji. Vite służy do assetów/HMR. Produkcja odczytuje manifest. Dotychczasowy bootstrap dokumentu zawiera `appUrl`, `restUrl` i tryb assetów; nie zawiera sesji ani nonce.
+WordPress LocalWP obsługuje dokument panelu i REST API pod jednym originem. Wtyczka `microsite-core` odpowiada za routing `/app/*`; motyw nie zawiera logiki aplikacji. Vite służy do assetów/HMR. Produkcja odczytuje manifest. Bootstrap dokumentu zawiera appUrl, restUrl, tryb assetów, sesję rozpoznaną przez WordPress, REST nonce zalogowanego użytkownika i authCsrfToken dla operacji kont. Dane są generowane przy żądaniu, nigdy w statycznym buildzie.
 
 ## Warstwy backendu
 
@@ -34,10 +34,43 @@ Klient ma `read`, `create_ms_sites`, `edit_ms_sites`. Administrator dostaje doda
 
 Sesje cookies i `X-WP-Nonce` są obsługiwane przez WordPress. Brak nonce powoduje traktowanie żądania cookies jako anonimowego; błędny nonce daje core'owy 403. Niezależnie wymagamy capability oraz własności; obsługa cudzego szkicu przez administratora wymaga dodatkowych uprawnień. Dla zalogowanego użytkownika cudzy, niedostępny i nieistniejący projekt zwracają taki sam 404. Lista zawsze zawiera wyłącznie własne szkice, również dla administratora. Odpowiedzi API mają no-store/private, także błędy. [Mechanizm cookies i nonce WordPressa](https://developer.wordpress.org/rest-api/using-the-rest-api/authentication/) oraz [walidacja schematów](https://developer.wordpress.org/rest-api/extending-the-rest-api/schema/) stanowią podstawę integracji.
 
-Typowany klient API przyjmuje restUrl i funkcję getNonce. Nie pobiera publicznego nonce, nie loguje użytkownika, nie zapisuje tokenów i nie ponawia zapisów. Bootstrap sesji oraz odnowienie nonce pozostają zadaniem etapu 3. Panel etapu 1 pozostaje bez integracji CRUD.
+Typowany klient API przyjmuje restUrl i funkcję getNonce. Nie pobiera publicznego nonce, nie loguje użytkownika, nie zapisuje tokenów i nie ponawia zapisów. Etap 3 wdraża bootstrap sesji, odczyt GET /session i dynamiczne odświeżanie nonce z nagłówków odpowiedzi WordPressa. Panel korzysta z istniejącego CRUD bez zmian jego semantyki.
 
 ## Testy i przyszłe moduły
 
-Testy HTTP uruchamiają prawdziwy WordPress z kopii istniejącego core, osobną nową bazą i tymczasowym serwerem PHP. Nie używają mocków autoryzacji. Fixtures kont/nonce istnieją tylko w tej instalacji testowej. Bezpiecznik porównuje DB_NAME z konfiguracją strony przed utworzeniem/instalacją/usunięciem bazy, dopuszcza wyłącznie nowe nazwy microsite_test_* i sprawdza marker własności. Nie używamy istniejących baz testowych. Vite i serwer LocalWP pozostają uruchomione.
+Testy HTTP uruchamiają prawdziwy WordPress z kopii istniejącego core, jedną stałą osobną bazą i tymczasowym serwerem PHP. Nazwa microsite_test_<hash-katalogu-projektu> jest stabilna. Baza powstaje raz i nie jest usuwana po testach. Przed następnym przebiegiem runner czyści wyłącznie jej tabele ms_test_*, sprawdzając DB_NAME różną od strony LocalWP, trwały marker własności poza repozytorium i blokadę równoległych uruchomień. Istniejąca baza bez właściwego markera jest odrzucana. Nie używamy mocków autoryzacji; fixture i konta są tylko testowe. Konfiguracja połączenia zmienia się wyłącznie w tymczasowej instalacji testowej, nie na stronie LocalWP. Vite pozostaje uruchomiony.
 
 RSVP, płatności, publikacja i uploady nie istnieją w etapie 2. Przyszłe zmiany danych otrzymają osobne wersjonowane migracje i testy na izolowanej bazie; nie będą wykonywane przez payload szkicu.
+
+## Konta i bootstrap — etap 3
+
+AuthService używa wp_insert_user z jawną rolą microsite_customer, wp_signon z adresem email, natywnych cookies i wp_logout. Nie ma własnego magazynu haseł ani JWT. Publiczne endpointy nie otrzymują X-WP-Nonce anonimowego użytkownika. Po wp_signon przechwytujemy natywny set_logged_in_cookie tylko na czas tej operacji, ustawiamy cookie w bieżącym kontekście PHP i current user. Dzięki temu nonce zwracany w odpowiedzi jest związany z NOWYM tokenem sesji, a nie pustym/poprzednim tokenem. To sprawdzono kolejnym prawdziwym żądaniem HTTP.
+
+Dokument /app/* jest generowany pod originem WP z Cache-Control: no-store, private, max-age=0, Vary: Cookie i X-Frame-Options: SAMEORIGIN. WordPress rozpoznaje cookies przed zbudowaniem HTML. Zalogowany bootstrap jest następnie weryfikowany przez chroniony GET /session z przekazanym nonce, bez migania loginu. Anonimowy bootstrap jawnie zawiera user:null i nonce:null; nie udajemy, że publiczny REST bez nonce odczyta sesję. Wygaśnięty nonce/sesja wymaga ponownego logowania lub świeżego dokumentu; zapisy nie są automatycznie ponawiane.
+
+## CSRF operacji kont
+
+AuthCsrf tworzy losowy 256-bitowy kontekst przeglądarki z czasem utworzenia i podpisem HMAC WordPressa. Jest przechowywany w cookie HttpOnly, SameSite=Strict, Secure przy HTTPS, z limitem 30 minut. Nazwa cookie jest specyficzna dla strony. Dokument otrzymuje oddzielny token HMAC związany z tym kontekstem. POST /auth/login i /auth/register wymagają łącznie:
+
+- Content-Type JSON i obiektu danych;
+- dokładnie originu home_url (z uwzględnieniem schematu i portu), bez zaufania do nagłówków proxy;
+- braku Sec-Fetch-Site: cross-site;
+- prawidłowego, nieprzeterminowanego podpisanego cookie oraz X-Microsite-CSRF zgodnego z nim.
+
+Samo publiczne WP nonce nie jest używane jako ochrona tych operacji. Token z innego kontekstu przeglądarki nie działa. Brak Origin jest odrzucany; klient HTTP musi najpierw pobrać shell z cookie i wysłać prawidłowy Origin i token. Błąd kontekstu wskazuje na potrzebę odświeżenia dokumentu. Nie dodano publicznego endpointu ujawniającego nonce zalogowanego użytkownika.
+
+## Limity i administracja
+
+AuthRateLimit ogranicza wszystkie zweryfikowane kontekstowo próby logowania do 10 i rejestracji do 5 na bezpośredni adres REMOTE_ADDR w stałym oknie 15 minut. Nazwa klucza IP jest hashowana, nie zapisujemy haseł ani cookies. Inicjalizacja licznika i SQL increment są atomowe, więc równoległe próby nie gubią zliczeń. Po przekroczeniu limitu jest 429 i Retry-After do końca okna. Liczniki zapisane jako wygasające opcje transient są sprzątane przez WordPress. Za reverse proxy trzeba świadomie zaprojektować zaufane źródło adresu/gateway limitujący; nie przyjmujemy dowolnego X-Forwarded-For od klienta.
+
+Rejestracja respektuje users_can_register. Zastane 0 na LocalWP nie zostało zmienione. Nowe konto zawsze jest klientem, nawet jeśli domyślna rola strony jest inna. Klient jest przekierowywany z wp-admin do /app/sites i nie widzi admin bara; admin-ajax jest pozostawiony dla natywnych mechanizmów, a administrator z manage_options zachowuje dostęp. Reset hasła i weryfikacja emaila pozostają wymagane przed publicznym uruchomieniem.
+
+## Panel i prywatny stan
+
+History API router obsługuje login/register/sites/sites/new/sites/:id, z /new przed identyfikatorem. Powrót po loginie dopuszcza wyłącznie lokalne trasy projektów pod bazą aplikacji; zewnętrzne URL i inne ścieżki są odrzucane. Anonimowy użytkownik jest kierowany do loginu, zalogowany z widoków kont do projektów.
+
+SessionProvider przechowuje stan i nonce wyłącznie w pamięci. API używa credentials:same-origin i aktualizuje nonce z X-WP-Nonce. 401 lub rest_cookie_invalid_nonce czyści tożsamość; zwykłe 403 uprawnień nie wylogowuje. BroadcastChannel przenosi tylko komunikat zmiany tożsamości, bez tokenów, i usuwa prywatny stan innych kart. Powrót fokusu ponownie sprawdza sesję (wykrywa też natywne wylogowanie poza panelem). Żądania starego nonce nie mogą wyczyścić lub nadpisać nowej sesji. Prywatne komponenty są kluczowane użytkownikiem/projektem, odczyty anulowane AbortControllerem, a odpowiedzi po odmontowaniu ignorowane. Nie ma cache prywatnych projektów w localStorage/sessionStorage. Po odczytaniu bootstrapu usuwamy także user/nonce z jego elementu DOM i statycznej konfiguracji JS; aktualna tożsamość pozostaje tylko w stanie sesji.
+
+Lista korzysta z paginacji. Tworzenie odczytuje typy i zgodne szablony z katalogu; nie zakłada basic-page we wspólnej logice. Wspólny EditorView pobiera projekt, obsługuje nazwę, dirty state, błędy i zapis. Rejestr editors/registry.ts wiąże siteType z modułem Fields/Preview. BasicPageEditor importuje istniejący schemat JSON dla limitów i palety oraz generowany typ. Nie ma drugiego schematu walidacji ani generatora całego formularza.
+
+Save changes przesyła pełny draft; pola są wyłączone do odpowiedzi. Sukces i snapshot pochodzą z odpowiedzi serwera, błędy zachowują formularz. Blokada synchroniczna chroni przed podwójnym wysłaniem. Router pyta przed opuszczeniem brudnego edytora (także historia), a beforeunload chroni reload/zamknięcie w zakresie wspieranym przez przeglądarkę. Podgląd renderuje JSX i ograniczone warianty CSS z bieżącego formularza; nie jest publicznym rendererem.
