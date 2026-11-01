@@ -1,40 +1,44 @@
 # Stan faktyczny — 2026-11-01
 
-Etap 3 zakończony. Wtyczka 0.3.0 udostępnia customowe konta i panel połączony z backendem szkiców. LocalWP działa pod http://celebrations.local. Istniejący Vite nadal działa pod adresem zapisanym w .vite-dev.json; nie uruchomiono drugiej instancji i nie zatrzymywano go do testów produkcji. Build produkcyjny jest aktualny. Nie przełączano motywu microsite-shell ani nie resetowano bazy strony.
+Etap 4 zakończony: wtyczka 0.4.0, birthday-invitation/schemaVersion 1 i birthday-party/templateVersion "1". Wersja szablonu jest stringiem zgodnym z dotychczasowym modelem. Pozostawiono istniejącą instancję Vite i konfigurację LocalWP. users_can_register nadal 0. Nie przełączano motywu i nie resetowano bazy strony.
 
-## Działające widoki i przepływy
+## Działający zakres
 
-/app/login, /app/register, /app/sites, /app/sites/new, /app/sites/{id}. /app/ wybiera login/projekty na podstawie sesji. Działa logowanie email/hasło, natywna sesja cookies, świeży nonce po loginie, rozpoznawanie po odświeżeniu i wylogowanie. Rejestracja nadaje wyłącznie rolę klienta, respektując users_can_register. Zastana i końcowa wartość na LocalWP to 0: panel jawnie informuje o zamkniętej rejestracji. Sposób świadomego włączenia opisano w README; testy włączały ją wyłącznie na nowej bazie testowej.
+Wspólne CRUD i konta pozostają bez przebudowy. Nowy kontrakt JSON i generowany BirthdayInvitationDraft obejmują solenizanta, opcjonalny wiek, treść, lokalną datę/godzinę, IANA, wyliczony UTC, miejsce/adres, opcjonalne szczegóły i trzy palety. Niekompletne szkice są dozwolone. Backend odrzuca gap/fold DST, nieprawidłową datę, strefę, wiek, paletę, HTML i nieznane pola. Po zapisie zwraca kanoniczny draft, bez ufania UTC klienta.
 
-Lista ma paginację, nazwę, typ, draft, datę i edycję. Tworzenie korzysta z katalogu i zgodnych szablonów. Edytor basic-page obsługuje wszystkie pola, pełny PATCH, jawny zapis, lokalny podgląd, ochronę niezapisanych zmian i blokadę pól podczas zapisu. Błędy zachowują formularz. Prywatny stan jest usuwany po zmianie sesji, także między kartami; zwykły brak capabilities nie jest traktowany jako wygaśnięcie sesji. Klient jest kierowany z wp-admin do panelu, bez admin bara; administrator zachowuje administrację.
+Nowy moduł edytora używa wspólnego odczytu/zapisu/dirty state. Preview invitation dla niezapisanych zmian wymaga Save and preview albo Cancel; błąd zapisu pozostawia formularz, nie otwiera starego szkicu. Prywatny HTML /app/sites/{id}/preview sprawdza sesję i własność, a wspólny GET sites/{id}/preview ponownie sprawdza uprawnienia, wersje i konfigurację. HTML nie zawiera danych projektu, podgląd ma no-store/private i noindex. Nie używa publicznego /s/ ani nonce w URL.
+
+Renderer jest niezależny od routera/API/kont. GSAP 3.15.0 i CSS szablonu są w osobnym, dynamicznie ładowanym chunku. Login/lista/edytor nie pobierają go (sprawdzone żądaniami sieciowymi w produkcyjnym E2E). Sceny: świadome intro, reveal z wiekiem i pojedynczym konfetti, zaproszenie, szczegóły i closing/mapa. Naturalny scroll bez pin/scrub/wheel interception. Skip intro, stały skrót do szczegółów, focus i dekoracje aria-hidden. Reduced motion pokazuje komplet treści bez intro i konfetti. matchMedia/revert sprząta timeliny/ScrollTrigger; catch przywraca czytelne style po nieudanej inicjalizacji.
+
+## Przykład do obejrzenia
+
+http://celebrations.local/app/sites/8/preview — prywatny projekt Demo · Birthday party, właściciel: istniejący administrator ID 1. Trzeba zalogować się na uprawnione konto. Utworzono jeden przykład przez CLI i sprawdzono idempotencję ponownego uruchomienia; istniejące projekty nie były modyfikowane. To przykład do przeglądu, nie publiczna publikacja.
+
+Nowy własny projekt: Create a site → Birthday invitation → birthday-party → uzupełnij pola → Save changes → Preview invitation. Reguły danych, czasu, renderera i skrypt demo: BIRTHDAY-INVITATION.md.
 
 ## Wykonane kontrole
 
-- npm run verify: kontrakty, ESLint, TypeScript, produkcyjny build — PASS.
-- php -l: wszystkie 18 własnych plików PHP, wraz z fixture i motywem — PASS.
-- npm run test:integration: 39 grup kontroli PASS na prawdziwym WordPressie 7.1.4, PHP 8.4.27 i nowej osobnej bazie MySQL LocalWP. 17 grup regresji backendu, 8 grup kont/HTTP i 14 grup przeglądarkowych.
-- HTTP: disabled registration, minimalna rola, próby eskalacji, walidacja, natywne cookies i nonce nowej sesji, wylogowanie, odrzucenie starego nonce, generyczne błędy loginu, limity i Retry-After. CSRF sprawdzono z obcym/brakującym/null Origin, Sec-Fetch-Site cross-site, brakującym tokenem i tokenem z innego kontekstu przeglądarki.
-- Produkcyjne E2E Chromium: rejestracja → katalog → projekt → edycja wszystkich pól → podgląd → zapis → refresh, logout/login i bezpośredni chroniony adres, izolacja B, rzeczywiste odrzucenie walidacji bez utraty pól, awaria sieci bez retry, opóźniony zapis z zablokowanymi polami, ostrzeżenie nawigacji i beforeunload, wygaśnięcie sesji i zmiana konta bez starych projektów, paginacja, zewnętrzny next, logout między kartami, odróżnienie permission denied od session expired i disabled registration UI. Sprawdzono też wyczyszczenie nonce/tożsamości z konsumowanego bootstrapu DOM.
-- TEST_HMR=1 npm run test:e2e na stronie LocalWP: 6 PASS. Anonimowe bezpośrednie wejścia/refresh /app/, sites, sites/new i sites/123, stan rejestracji oraz HMR bez utraty emaila w formularzu. Testy te nie tworzą kont ani projektów strony.
-- Oględziny zrzutów edytora desktopowego i listy mobilnej 390 px; brak poziomego overflow w sprawdzonych widokach — PASS.
-- Przed zmianą strategii testy sprzątały losowe bazy. Od aktualizacji poniżej pozostaje jedna stała baza testowa. Istniejące konto administratora, projekt użytkownika i treści strony pozostawiono bez zmian. Rejestracja LocalWP pozostała wyłączona.
+- npm run verify: aktualność kontraktów, ESLint, TypeScript i produkcyjny build — PASS.
+- php -l: 21 własnych plików PHP, w tym nowy normalizer, ochrona HTML i skrypt demo — PASS.
+- Pełny npm run test:integration: 49 grup PASS na prawdziwym WordPressie i stałej bazie microsite_test_430601248a09bf6c. W tym 39 grup regresji wcześniejszych etapów i 10 grup etapu 4. Baza jest ponownie używana, nie tworzono nowej na każdy przebieg.
+- Po końcowych korektach animacji/styli: TEST_SCOPE=birthday npm run test:integration — 10 grup PASS. Ten węższy przebieg nie jest raportowany jako ponowna pełna regresja.
+- HTTP: typ/szablon, defaults bez daty/wieku, walidacja i brak zmian po błędzie, niezgodne szablony, gap London 2027-03-28 01:30, fold London 2027-10-31 01:30, błędna data kalendarza, UTC London/Kathmandu, historyczny offset z sekundami Asia/Kolkata 1900 oraz nadpisanie UTC klienta. Właściciel i administrator odczytują preview, klient B i anonimowy użytkownik nie odczytują. HTML B ma 404 i nie ujawnia treści. Skrypt demo jest idempotentny i zachowuje właściciela.
+- Produkcyjne E2E: tworzenie z katalogu, pełna edycja/zapis/refresh, dirty preview z anulowaniem i nieudanym zapisem, keyboard open/focus, pojedyncze konfetti, shortcut details, intro/skip, ponowny mount/refresh i powrót, reduced motion, brak pustych sekcji i placeholder daty, kontrola braku żądań GSAP/chunku na loginie/liście/edytorze. Bez arbitralnych długich timeoutów animacji — asercje na stanie i widoczności.
+- LocalWP/Vite: 7 anonimowych smoke/HMR testów PASS, łącznie z bezpośrednią prywatną trasą i odświeżeniem. Moduł renderera serwowany przez Vite zwraca HTTP 200. HMR formularza zachowuje wpisany email. Nie utworzono kont testowych na stronie LocalWP.
+- Anonimowy odczyt przykładu LocalWP: 302 do loginu z bezpiecznym next, no-store/private, noindex. Rejestracja końcowo nadal wyłączona. Vite pozostaje uruchomiony.
 
-Testowy router poprawiono, aby delegował fizyczne katalogi (np. wp-admin/) do prawdziwego index.php zamiast testować stronę główną pod tym URL. Nie osłabiono zabezpieczeń aplikacji dla uzyskania PASS. Produkcyjny wariant działał na tymczasowym serwerze PHP, podczas gdy istniejący Vite strony nadal pracował. Log PHP testów nie zawierał ostrzeżeń/błędów.
+## Weryfikacja wizualna
 
-## Pominięte kontrole i ograniczenia
+Obejrzano zapisane PNG: 375×812 / electric citrus, 768×1024 / pink noir, 1440×900 / cobalt pop, maksimum tekstów i 80-znakowe imię na 375 px oraz osobny kadr intro 1440×900. Wynik: czytelne sekcje i kontrasty, brak poziomego overflow w asercjach, brak pustych sekcji wieku/dress code oraz brak mapy przy pustym adresie. Po pierwszych oględzinach poprawiono łamanie imienia na całe słowa; ekstremalnie długie słowa mogą łamać się wewnętrznie. Render nie ucina skonfigurowanej treści.
 
-PHPCS nie jest skonfigurowane i nie ma dostępnego polecenia phpcs; nie uruchomiono go. CI/workflow GitHub Actions nie jest skonfigurowane i nie zostało faktycznie uruchomione na GitHubie — brak CI PASS.
+Artefakty: wp-content/plugins/microsite-core/app/test-results/birthday/. Screenshoty treści robione są z reduced motion dla stabilnego układu. Intro jest osobnym kadrem normalnego trybu; drobne pozycje dekoracji mogą zależeć od chwili przechwycenia. Smoke tests mają oddzielny outputDir test-results/smoke, aby nie usuwać tych artefaktów. PNG są ignorowane przez Git.
 
-Reset hasła i weryfikacja emaila nie są wdrożone; wymagane przed publicznym startem. Panel nie pokazuje niedziałających linków do nich. Nie wdrożono płatności, publikacji, publicznych stron, RSVP, QR, uploadów, animacji ani szablonu urodzinowego.
+## Ograniczenia i pominięte kontrole
 
-Testowano Chromium oraz HTTP LocalWP, nie pełną macierz przeglądarek/HTTPS. Ostrzeżenie beforeunload zależy od przeglądarki i aktywacji użytkownika. Wykrywanie równoległej edycji tego samego projektu na różnych urządzeniach nie jest wdrożone (ostatni poprawny zapis wygrywa). Limity kont stosują bezpośredni REMOTE_ADDR; zaufane proxy/gateway i sprzątanie liczników przy innym modelu cron/cache wymagają oceny przed wdrożeniem publicznym. Kontekst CSRF wygasa po 30 minutach; po jego wygaśnięciu formularz prosi o odświeżenie strony.
+To etap edycji i prywatnego podglądu, nie zaproszenie gotowe do sprzedaży. Publikacja, wersjonowane opublikowane snapshoty, RSVP, płatności, QR, uploady, muzyka i AI nie są wdrożone. Przed publicznym startem pozostają reset hasła i weryfikacja emaila.
 
-Znane z poprzednich etapów: 10 moderate npm audit w drzewie ESLint/typescript-eslint, bez zmiany zależności i bez audit fix --force. Spec Kit nie jest zainstalowany (uv/specify niedostępne); plan i jedna lista zadań pozostają w Markdown. Wbudowany Browser wcześniej nie mógł się połączyć; weryfikację wykonano lokalnym Playwrightem.
+Nie konfigurowano i nie uruchomiono PHPCS ani CI zgodnie z zakresem; brak GitHub Actions PASS. Weryfikowano Chromium, nie pełną macierz Safari/Firefox/mobile hardware. Brak osobnego automatycznego testu hot refresh samego modułu GSAP; cleanup opiera się na cyklu React i oficjalnym matchMedia/revert, a wykonane testy HMR obejmują panel. Nie wykonano osobnego wstrzykiwania błędu inicjalizacji GSAP; ścieżka fail-open jest zaimplementowana, bez deklarowania testu PASS dla niej.
 
-## Następny etap
+Testy używają wersji stref serwera i Intl przeglądarki. Nie zamrażamy tzdb; preview normalizuje czas według aktualnych reguł. Powtarzającą się godzinę trzeba zmienić, nie ma wyboru pierwszego/drugiego wystąpienia. Zakres kalendarza: 1900–2200. Minimalna deklaracja PHP/WP pozostaje bez pełnej macierzy wersji. Nadal istnieje znany dług npm audit (10 moderate w narzędziach lintujących), bez audit fix --force. Spec Kit pozostaje w wariancie Markdown.
 
-Etap 4: typ birthday-invitation, jego moduł edytora i pierwszy animowany renderer. Rejestry backendu i edytorów, wspólna powłoka zapisu i kontrakty są przygotowane do rozszerzenia. Na polecenie użytkownika przygotowano commit i push etapu 3.
-
-## Aktualizacja: stała baza testowa
-
-Zgodnie z preferencją użytkownika runner tworzy jedną bazę microsite_test_<hash-projektu> i używa jej ponownie. Czyści tylko własne tabele testowe przed przebiegiem; nie usuwa bazy i nie zmienia połączenia strony LocalWP. Trwały marker własności, porównanie z bazą strony, sprawdzenie prefiksu i blokada równoległego uruchomienia chronią przed pomyłką. Pierwszy przebieg i ponowny przebieg na tej samej bazie microsite_test_430601248a09bf6c: po 39 grup kontroli PASS. Próba wskazania bazy strony LocalWP została odrzucona przed operacją na bazie.
+Nie ma blokad realizacji tego etapu. Zmiany etapu 4 pozostają lokalne, bez automatycznego commita/push.

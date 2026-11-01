@@ -1,4 +1,4 @@
-# Microsites — LocalWP, etapy 1–3
+# Microsites — LocalWP, etapy 1–4
 
 Wtyczka dostarcza niezależny od motywu panel React pod `/app/` i `/app/sites`. Motyw microsite-shell jest opcjonalny; panel działa niezależnie od aktywnego motywu.
 
@@ -63,3 +63,11 @@ Logowanie wymaga emaila i hasła istniejącego konta WP. Nowe hasło: 12–128 b
 Edytor zapisuje dopiero po Save changes i przesyła pełny draft. Błąd zachowuje formularz; wyjście z niezapisanymi zmianami wymaga potwierdzenia. Podgląd jest lokalny, strona nie jest publikowana. Reset hasła i weryfikacja emaila nie istnieją i są wymagane przed publicznym startem. Nie ma niedziałających linków do tych funkcji.
 
 `npm run test:integration` obejmuje także produkcyjne E2E kont i panelu na jednej stałej, osobnej bazie testowej. Zainstaluj przeglądarkę testową przez `npx playwright install chromium`. Istniejący Vite nie jest zatrzymywany. `npm run test:e2e` na stronie LocalWP wykonuje tylko anonimowe smoke tests; pełne konta/projekty są testowane wyłącznie w izolowanym runnerze.
+
+## Birthday invitation — etap 4
+
+W Create a site wybierz Birthday invitation / birthday-party. Edytor ma sekcje celebrant, invitation, date & location, additional details i appearance. Preview invitation otwiera prywatny, zapisany szkic pod /app/sites/{id}/preview. Niezapisane zmiany wymagają Save and preview lub Cancel. Nie ma publikacji ani płatności.
+
+Przykładowy projekt i daty/strefy/animacje: [docs/BIRTHDAY-INVITATION.md](docs/BIRTHDAY-INVITATION.md). GSAP 3.15.0 jest ładowany wyłącznie dla tego szablonu, bez CDN. Pełny zestaw testów nadal działa przez npm run test:integration na stałej bazie; szybki zakres birthday: TEST_SCOPE=birthday npm run test:integration. Screenshoty: wp-content/plugins/microsite-core/app/test-results/birthday.
+
+Przykład utworzony lokalnie dla istniejącego administratora: http://celebrations.local/app/sites/8/preview (projekt Demo · Birthday party). Wymaga logowania; nie jest publicznym zaproszeniem. Skrypt tworzący przykład jest idempotentny i opisany w dokumentacji etapu 4.

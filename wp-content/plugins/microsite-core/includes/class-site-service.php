@@ -43,7 +43,7 @@ final class SiteService {
             get_current_user_id(),
             $payload['name'],
             $selection,
-            $draft
+            $valid
         );
     }
 
@@ -89,9 +89,41 @@ final class SiteService {
             if ( is_wp_error( $valid ) ) {
                 return $valid;
             }
+
+            $payload['draft'] = $valid;
         }
 
         return $this->repository->update( $post, $payload );
+    }
+
+    public function preview( int $id ): array|WP_Error {
+        $record = $this->read( $id );
+
+        if ( is_wp_error( $record ) ) {
+            return $record;
+        }
+
+        $selection = $this->validator->selection( $record['siteType'], $record['templateId'] );
+
+        if ( is_wp_error( $selection ) ) {
+            return $selection;
+        }
+
+        $valid = $this->validator->stored_versions( $record, $selection );
+
+        if ( is_wp_error( $valid ) ) {
+            return $valid;
+        }
+
+        $draft = $this->validator->draft( $record['draft'], $selection['type'], $selection['template'] );
+
+        if ( is_wp_error( $draft ) ) {
+            return $draft;
+        }
+
+        $record['draft'] = $draft;
+
+        return $record;
     }
 
     public function list( int $page, int $per_page ): array {

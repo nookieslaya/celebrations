@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Microsite Core
  * Description: Theme-independent application shell for microsites.
- * Version: 0.3.0
+ * Version: 0.4.0
  * Requires PHP: 8.2
  * Requires at least: 6.6
  * Text Domain: microsite-core
@@ -18,6 +18,8 @@ App::boot();
 register_activation_hook( __FILE__, array( App::class, 'activate' ) );
 register_deactivation_hook( __FILE__, array( App::class, 'deactivate' ) );
 
+require_once __DIR__ . '/includes/class-event-date.php';
+require_once __DIR__ . '/includes/class-preview-access.php';
 require_once __DIR__ . '/includes/class-catalog.php';
 require_once __DIR__ . '/includes/class-site-type.php';
 require_once __DIR__ . '/includes/class-permissions.php';
@@ -45,6 +47,8 @@ function boot_backend(): void {
     $validator = new SiteValidator( $catalog );
     $service = new SiteService( $repository, $validator, $permissions );
     $controller = new SitesController( $catalog, $service, $permissions );
+
+    add_action( 'template_redirect', array( new PreviewAccess( $service ), 'check' ), -1 );
 
     $auth_controller = new AuthController( new AuthService(), new AuthRateLimit(), $permissions );
 

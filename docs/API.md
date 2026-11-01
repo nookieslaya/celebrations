@@ -145,3 +145,9 @@ Nie wymaga payloadu. Wywołuje natywne wp_logout, niszczy bieżący token i czy�
 ## Limity kont
 
 Login: 10 prób na IP/15 minut; rejestracja: 5 prób na IP/15 minut. Dotyczy również poprawnych prób po zweryfikowaniu CSRF. 429 microsite_rate_limited zawiera data.retryAfter i nagłówek Retry-After z sekundami do końca okna. IP pochodzi z REMOTE_ADDR, nie z niezaufanego X-Forwarded-For. Nie są logowane hasła ani cookies. Testy zerują liczniki tylko w izolowanej bazie, nigdy na stronie LocalWP.
+
+## Etap 4 — birthday-invitation i preview
+
+Katalog zawiera birthday-invitation/schemaVersion 1 oraz birthday-party/templateVersion "1" (string zgodny z dotychczasowym kontraktem). Tworzenie i edycja nadal używają tego samego POST/PATCH sites. Konfiguracja, limity i przykład event są w [BIRTHDAY-INVITATION.md](BIRTHDAY-INVITATION.md). Wynik zapisów zawiera kanoniczne startsAt, wyliczone przez backend z localDateTime/timeZone.
+
+`GET /sites/{id}/preview` wymaga sesji/nonce, capabilities i własności tak jak GET site. Zwraca zwalidowany DTO w data; błędna zapisana wersja daje 409, błędne dane 400, cudzy/brakujący projekt 404, brak sesji 401. Odpowiedź ma no-store/private i noindex. Endpoint jest wspólny dla typów. Prywatny adres HTML to /app/sites/{id}/preview, bez nonce w URL. Nie istnieje urodzinowy CRUD ani publikacja pod /s/.

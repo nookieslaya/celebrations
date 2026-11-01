@@ -18,7 +18,23 @@ final class Catalog {
             JSON_THROW_ON_ERROR
         );
 
+        $birthday_schema = json_decode(
+            file_get_contents( dirname( __DIR__ ) . '/contracts/birthday-invitation.v1.json' ),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
+
         $this->types = array(
+            'birthday-invitation' => array(
+                'id'            => 'birthday-invitation',
+                'name'          => 'Birthday invitation',
+                'schemaVersion' => 1,
+                'schema'        => $birthday_schema,
+                'defaults'      => $this->defaults_from_schema( $birthday_schema ),
+                'features'      => array(),
+                'normalizer'    => array( EventDate::class, 'normalise' ),
+            ),
             'basic-page' => array(
                 'id'            => 'basic-page',
                 'name'          => 'Basic page',
@@ -30,6 +46,15 @@ final class Catalog {
         );
 
         $this->templates = array(
+            'birthday-party' => array(
+                'id'                => 'birthday-party',
+                'version'           => '1',
+                'siteTypes'         => array( 'birthday-invitation' ),
+                'rendererKey'       => 'birthday-party',
+                'allowedAppearance' => array(
+                    'palette' => $birthday_schema['properties']['appearance']['properties']['palette']['enum'],
+                ),
+            ),
             'basic' => array(
                 'id'                => 'basic',
                 'version'           => '1.0.0',
@@ -86,7 +111,9 @@ final class Catalog {
         $defaults = array();
 
         foreach ( $schema['properties'] as $key => $property ) {
-            $defaults[ $key ] = $this->defaults_from_schema( $property );
+            if ( 'object' === $property['type'] || array_key_exists( 'default', $property ) ) {
+                $defaults[ $key ] = $this->defaults_from_schema( $property );
+            }
         }
 
         return $defaults;

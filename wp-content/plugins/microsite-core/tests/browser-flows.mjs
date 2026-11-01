@@ -59,6 +59,7 @@ export async function runBrowserFlows({ origin, password, check, isolatedWp }) {
           .first()
           .click();
         await expect(pageA).toHaveURL(/\/app\/sites\/new$/);
+        await pageA.getByLabel("Site type").selectOption("basic-page");
         await expect(pageA.getByLabel("Site type")).toHaveValue("basic-page");
         await expect(pageA.getByLabel("Template")).toHaveValue("basic");
         await pageA.getByLabel("Project name").fill("First browser project");
@@ -110,10 +111,12 @@ export async function runBrowserFlows({ origin, password, check, isolatedWp }) {
           pageA.getByLabel("Description", { exact: true }),
         ).toHaveValue("A description saved through the real API.");
         await expect(pageA.getByLabel("Accent color")).toHaveValue("ocean");
-        const consumedBootstrap = JSON.parse(await pageA.locator("#microsite-config").textContent());
-      assert.equal(consumedBootstrap.session.user, null);
-      assert.equal(consumedBootstrap.session.nonce, null);
-      await pageA.screenshot({
+        const consumedBootstrap = JSON.parse(
+          await pageA.locator("#microsite-config").textContent(),
+        );
+        assert.equal(consumedBootstrap.session.user, null);
+        assert.equal(consumedBootstrap.session.nonce, null);
+        await pageA.screenshot({
           path: "/tmp/microsite-stage3-desktop.png",
           fullPage: true,
         });

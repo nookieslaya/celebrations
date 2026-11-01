@@ -9,3 +9,7 @@ Dostarczyć prywatny model szkicu Site jako CPT ms_site, jawny rejestr basic-pag
 ## Etap 3: konta i panel
 
 Umożliwić rejestrację klienta zgodną z konfiguracją WP, login email/hasło, bootstrap sesji/nonce, wylogowanie, listę i tworzenie z katalogu oraz edycję basic-page. Wykorzystać natywne cookies bez JWT/storage. Chronić login/rejestrację kontekstem przeglądarki, originem i ograniczeniem prób. Zachować prywatność stanu między użytkownikami, stany błędów i bezpieczny powrót po loginie. Edytor ma jawny pełny zapis, blokadę równoległych żądań, zachowanie danych po błędzie, warning niezapisanych zmian i lokalny podgląd. Testować konta przez HTTP i cały flow w Chromium na oddzielnej bazie oraz buildzie produkcyjnym bez zatrzymywania Vite. Nie wdrażać kolejnych etapów.
+
+## Etap 4
+
+Dostarczyć birthday-invitation/schemaVersion 1 i birthday-party/templateVersion "1" przez istniejące CRUD i rejestry. Zachować basic-page. Umożliwić niekompletny szkic, pełne teksty i trzy palety. Zapisywać lokalną datę/strefę IANA i backendowy UTC; odrzucać gap/fold DST. Podgląd prywatny /app/sites/{id}/preview ma wymagać istniejącej własności/capabilities, być no-store/noindex i używać zapisanego szkicu. Renderer przyjmuje tylko dane, lazy-loaduje GSAP i obsługuje intro, reveal, treść, szczegóły, closing, klawiaturę, reduced motion, cleanup i brak animacji bez ukrytej treści. Testować izolowany HTTP/E2E i oglądać screenshoty trzech rozmiarów oraz długich tekstów. Nie wdrażać publikacji ani kolejnych modułów produktu.

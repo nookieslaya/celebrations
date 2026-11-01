@@ -15,3 +15,7 @@ Zachować istniejący backend CRUD i Vite. Dodać bootstrap sesji w dokumencie W
 ## Aktualizacja strategii bazy testowej
 
 Na polecenie użytkownika po etapie 3 używamy jednej stałej, dedykowanej bazy projektu zamiast losowej bazy na każdy przebieg. Czyścimy tylko jej tabele ms_test_* po sprawdzeniu markerów, izolacji od DB_NAME strony i wyłącznej blokady. Po testach baza pozostaje do ponownego użycia.
+
+## Etap 4
+
+Rozszerzyć istniejący kontrakt i rejestry o birthday-invitation/birthday-party, bez nowych CRUD. Dodać temporalną normalizację lokalnej daty + IANA do UTC z wykrywaniem gap/fold DST, moduł edytora i prywatny /app/sites/{id}/preview. Renderer ma otrzymywać tylko zwalidowane dane i ładować GSAP dopiero dla właściwego szablonu. Naturalny scroll, świadome intro, reduced motion, fail-open i cleanup. Zweryfikować HTTP/E2E oraz screenshoty na trzech szerokościach na stałej bazie testowej. Nie zmieniać users_can_register ani konfiguracji PHPCS/CI.

@@ -74,3 +74,7 @@ SessionProvider przechowuje stan i nonce wyłącznie w pamięci. API używa cred
 Lista korzysta z paginacji. Tworzenie odczytuje typy i zgodne szablony z katalogu; nie zakłada basic-page we wspólnej logice. Wspólny EditorView pobiera projekt, obsługuje nazwę, dirty state, błędy i zapis. Rejestr editors/registry.ts wiąże siteType z modułem Fields/Preview. BasicPageEditor importuje istniejący schemat JSON dla limitów i palety oraz generowany typ. Nie ma drugiego schematu walidacji ani generatora całego formularza.
 
 Save changes przesyła pełny draft; pola są wyłączone do odpowiedzi. Sukces i snapshot pochodzą z odpowiedzi serwera, błędy zachowują formularz. Blokada synchroniczna chroni przed podwójnym wysłaniem. Router pyta przed opuszczeniem brudnego edytora (także historia), a beforeunload chroni reload/zamknięcie w zakresie wspieranym przez przeglądarkę. Podgląd renderuje JSX i ograniczone warianty CSS z bieżącego formularza; nie jest publicznym rendererem.
+
+## Etap 4
+
+Kontrakt, temporalna normalizacja, routing prywatnego preview i niezależne renderery są opisane w [BIRTHDAY-INVITATION.md](BIRTHDAY-INVITATION.md). SiteValidator zwraca teraz zwalidowany i znormalizowany draft; SiteService zapisuje ten wynik. Opcjonalny zaufany normalizer jest przypisany do definicji typu w PHP, a nie wskazywany przez żądanie. basic-page nie wymaga normalizera. Publiczny katalog nadal nie ujawnia callbacków, schematów ani rendererKey. Generator TS obsługuje także number/integer i pola optional.

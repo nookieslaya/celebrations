@@ -68,6 +68,27 @@ final class SitesController {
 
         register_rest_route(
             'microsites/v1',
+            '/sites/(?P<id>[1-9][0-9]*)/preview',
+            array(
+                'methods'             => 'GET',
+                'permission_callback' => array( $this->permissions, 'require_session' ),
+                'callback'            => function ( WP_REST_Request $request ): WP_REST_Response|WP_Error {
+                    $result = $this->service->preview( (int) $request->get_url_params()['id'] );
+
+                    if ( is_wp_error( $result ) ) {
+                        return $result;
+                    }
+
+                    $response = $this->response( $result );
+                    $response->header( 'X-Robots-Tag', 'noindex, nofollow' );
+
+                    return $response;
+                },
+            )
+        );
+
+        register_rest_route(
+            'microsites/v1',
             '/sites/(?P<id>[1-9][0-9]*)',
             array(
                 array(

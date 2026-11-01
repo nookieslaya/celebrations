@@ -9,6 +9,10 @@ function typescriptType(schema, indentation = 0) {
     return schema.enum.map((value) => JSON.stringify(value)).join(" | ");
   }
 
+  if (schema.type === "integer" || schema.type === "number") {
+    return "number";
+  }
+
   if (schema.type === "string") {
     return "string";
   }

@@ -213,6 +213,8 @@ export function createApiClient(options: ApiClientOptions) {
         true,
         signal,
       ),
+    preview: (id: number, signal?: AbortSignal) =>
+      request<Site>(`sites/${id}/preview`, "GET", undefined, true, signal),
     read: (id: number, signal?: AbortSignal) =>
       request<Site>(`sites/${id}`, "GET", undefined, true, signal),
     create: <Type extends SiteTypeId>(payload: CreateSite<Type>) =>

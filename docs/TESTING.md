@@ -47,3 +47,7 @@ Przepływy przeglądarkowe obejmują rejestrację → katalog → utworzenie →
 Smoke tests w app/tests są anonimowe, więc nie tworzą danych LocalWP i respektują zastane ustawienie rejestracji. Test HMR chwilowo zmienia moduł AuthView.tsx i sprawdza aktualizację bez utraty emaila. Nie edytuj tego pliku równolegle z TEST_HMR=1. Nie ma potrzeby zatrzymywania istniejącego Vite do testów produkcji.
 
 PHPCS nie było skonfigurowane w poprzednim etapie i nie jest raportowane jako uruchomione. CI nie ma skonfigurowanego workflow i nie zostało uruchomione na GitHubie; lokalny PASS nie oznacza CI PASS. Nie uruchomiono testów resetu hasła, weryfikacji emaila ani funkcji kolejnych etapów, ponieważ nie są implementowane.
+
+## Etap 4
+
+Pełny runner zawiera birthday.mjs: kontrakt/rejestry, defaults i szkic bez daty, wiek/palety/limity/HTML/unknown fields, DST gap/fold i offset Kathmandu, prywatny HTML/REST, zachowanie basic-page, tworzenie i zapis, dirty preview (także błędny zapis), intro/skip/focus/confetti, details shortcut, reduced motion i screenshoty trzech viewportów oraz maksymalnych treści. Sprawdza również brak żądań chunku BirthdayParty na loginie/liście/edytorze i działanie produkcyjne bez Vite. TEST_SCOPE=birthday uruchamia tylko ten zakres, na tej samej bazie. PHPCS i CI pozostają istniejącym długiem i nie są konfigurowane w tym etapie.

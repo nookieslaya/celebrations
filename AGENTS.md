@@ -25,3 +25,7 @@ Bootstrap sesji i nonce generuje WordPress w prywatnym dokumencie /app/*. Operac
 ## Ponowne używanie środowiska testowego
 
 Nie twórz nowej bazy przy każdym przebiegu. Używaj stałej bazy microsite_test_<identyfikator-projektu>, tworzonej tylko raz. Runner przełącza połączenie we własnej tymczasowej konfiguracji, nie zmienia wp-config.php strony LocalWP. Przed czyszczeniem wyłącznie tabel ms_test_* sprawdza różną DB_NAME, marker własności projektu i blokadę równoległych testów. Nie usuwaj bazy po testach. Nie przejmuj istniejącej bazy bez markera.
+
+## Renderer i podgląd od etapu 4
+
+Schemat birthday-invitation jest źródłem limitów/defaults/typów; reguły DST wykonuje EventDate przez zaufany normalizer w Catalog. Nie wyliczaj momentu przez domyślną strefę przeglądarki/serwera. Renderer nie importuje routera, API ani kont; mapowanie wersji i lazy loading jest w renderers/registry.ts. Preview używa zapisanych, zwalidowanych danych i kontroli właściciela, nigdy przyszłej publicznej trasy /s/. GSAP musi mieć cleanup i reduced motion. TEST_SCOPE=birthday jest węższym testem na tej samej bazie, nie pełną regresją. Artefakty birthday w test-results/birthday mają pozostać dostępne po smoke tests; nie commituj PNG ani builda. PHPCS/CI pozostają długiem, nie konfiguruj ich bez zmiany zakresu.

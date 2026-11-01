@@ -36,9 +36,17 @@
 - [x] Stała dedykowana baza, marker własności i blokada współbieżności.
 - [x] Pierwszy przebieg oraz ponowne użycie tej samej bazy.
 
-## Dalsze etapy
+## Etap 4 — zaproszenie urodzinowe i prywatny podgląd
 
-- [ ] Etap 4: birthday-invitation, jego edytor i pierwszy animowany renderer.
+- [x] Kontrakt birthday-invitation i rejestr birthday-party; defaults i typy TS.
+- [x] Daty/strefy IANA i odrzucanie nieistniejących/niejednoznacznych godzin DST.
+- [x] Moduł edytora, palety, liczniki i zapis przed podglądem.
+- [x] Prywatny routing i walidowany odczyt podglądu z kontrolą właściciela.
+- [x] Niezależny, lazy-loaded renderer GSAP, sceny, cleanup i reduced motion.
+- [x] Integracja HTTP/E2E i regresja na stałej bazie testowej.
+- [x] Screenshoty i oględziny 375×812, 768×1024, 1440×900 oraz długich tekstów.
+- [x] Kontrole jakości, dokumentacja i wyniki.
+
+## Dalsze etapy
 - [ ] PHPCS i CI, prywatny podgląd basic-page.
-- [ ] Pierwszy animowany szablon urodzinowy na wspólnym silniku.
 - [ ] Media, publikacja i snapshoty; później płatności, RSVP i QR jako osobne moduły.

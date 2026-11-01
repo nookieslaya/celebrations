@@ -8,6 +8,7 @@ import { AuthView } from "./views/AuthView";
 import { SitesView } from "./views/SitesView";
 import { NewSiteView } from "./views/NewSiteView";
 import { EditorView } from "./views/EditorView";
+import { PreviewView } from "./views/PreviewView";
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ function Workspace() {
   const suffix = path.slice(appBase.length);
   const authPage = suffix === "/login" || suffix === "/register";
   const protectedPage = suffix === "/sites" || suffix.startsWith("/sites/");
+  const previewMatch = /^\/sites\/([1-9][0-9]*)\/preview$/.exec(suffix);
   const editorMatch = /^\/sites\/([1-9][0-9]*)$/.exec(suffix);
 
   useEffect(() => {
@@ -106,6 +108,13 @@ function Workspace() {
     view = <SitesView key={`${session.user.id}:${url.search}`} />;
   } else if (session.user && suffix === "/sites/new") {
     view = <NewSiteView key={session.user.id} />;
+  } else if (session.user && previewMatch) {
+    view = (
+      <PreviewView
+        key={`${session.user.id}:${previewMatch[1]}`}
+        id={Number(previewMatch[1])}
+      />
+    );
   } else if (session.user && editorMatch) {
     view = (
       <EditorView
@@ -122,6 +131,10 @@ function Workspace() {
         </Link>
       </>
     );
+  }
+
+  if (previewMatch && ready && session.user) {
+    return view;
   }
 
   return (

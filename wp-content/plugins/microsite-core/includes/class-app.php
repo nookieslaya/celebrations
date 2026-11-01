@@ -30,7 +30,7 @@ final class App {
         if ( ! get_query_var( 'microsite_app' ) ) {
             return;
         }
-        status_header( 200 );
+        status_header( (int) apply_filters( 'microsite_app_status', 200 ) );
         nocache_headers();
         header( 'X-Robots-Tag: noindex, nofollow', true );
         $base = plugin_dir_url( dirname( __FILE__ ) ) . 'app/';

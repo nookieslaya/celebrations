@@ -69,7 +69,11 @@ final class SiteValidator {
         return array( 'type' => $type, 'template' => $template );
     }
 
-    public function draft( mixed $draft, array $type, array $template ): true|WP_Error {
+    public function draft( mixed $draft, array $type, array $template ): array|WP_Error {
+        if ( ! $this->strict_integer_types( $draft, $type['schema'] ) ) {
+            return $this->invalid( 'Integer fields must contain JSON integers, not text.' );
+        }
+
         $valid = rest_validate_value_from_schema( $draft, $type['schema'], 'draft' );
 
         if ( is_wp_error( $valid ) ) {
@@ -86,7 +90,11 @@ final class SiteValidator {
             }
         }
 
-        return true;
+        if ( isset( $type['normalizer'] ) ) {
+            return call_user_func( $type['normalizer'], $draft );
+        }
+
+        return $draft;
     }
 
     public function stored_versions( array $record, array $selection ): true|WP_Error {
@@ -99,6 +107,22 @@ final class SiteValidator {
                 'This draft requires an explicit version migration before it can be edited.',
                 array( 'status' => 409 )
             );
+        }
+
+        return true;
+    }
+
+    private function strict_integer_types( mixed $value, array $schema ): bool {
+        if ( 'integer' === $schema['type'] ) {
+            return is_int( $value );
+        }
+
+        if ( 'object' === $schema['type'] && is_array( $value ) ) {
+            foreach ( $schema['properties'] as $key => $property ) {
+                if ( array_key_exists( $key, $value ) && ! $this->strict_integer_types( $value[ $key ], $property ) ) {
+                    return false;
+                }
+            }
         }
 
         return true;

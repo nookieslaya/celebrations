@@ -57,7 +57,7 @@ function DraftEditor<Type extends SiteTypeId>({
   initial: Site<Type>;
 }) {
   const { api } = useSession();
-  const { setDirty } = useRouter();
+  const { setDirty, navigate } = useRouter();
   const [site, setSite] = useState(initial);
   const [savedSnapshot, setSavedSnapshot] = useState(
     JSON.stringify({ name: initial.name, draft: initial.draft }),
@@ -65,6 +65,7 @@ function DraftEditor<Type extends SiteTypeId>({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [success, setSuccess] = useState(false);
+  const [previewChoice, setPreviewChoice] = useState(false);
   const submitting = useRef(false);
   const mounted = useMounted();
   const module = getEditor(site.siteType);
@@ -76,8 +77,8 @@ function DraftEditor<Type extends SiteTypeId>({
     return () => setDirty(false);
   }, [dirty, setDirty]);
 
-  async function save(event: FormEvent) {
-    event.preventDefault();
+  async function save(event?: FormEvent, openPreview = false) {
+    event?.preventDefault();
     if (submitting.current || !dirty || !module) {
       return;
     }
@@ -97,6 +98,9 @@ function DraftEditor<Type extends SiteTypeId>({
         );
         setDirty(false);
         setSuccess(true);
+        if (openPreview) {
+          navigate(`${appBase}/sites/${saved.id}/preview`, false, true);
+        }
       }
     } catch (failure) {
       if (mounted.current) {
@@ -134,7 +138,7 @@ function DraftEditor<Type extends SiteTypeId>({
         <span className="badge">{copy.draft}</span>
       </div>
       <div className="editor-layout">
-        <form className="panel-card" onSubmit={save}>
+        <form className="panel-card" onSubmit={(event) => void save(event)}>
           <fieldset disabled={busy}>
             <label htmlFor="project-name">{copy.name}</label>
             <input
@@ -145,6 +149,7 @@ function DraftEditor<Type extends SiteTypeId>({
               onChange={(event) => {
                 setSite({ ...site, name: event.target.value });
                 setSuccess(false);
+                setError(null);
               }}
             />
             <Fields
@@ -152,9 +157,10 @@ function DraftEditor<Type extends SiteTypeId>({
               onChange={(draft) => {
                 setSite({ ...site, draft });
                 setSuccess(false);
+                setError(null);
               }}
             />
-            {error !== null && <ErrorNotice error={error} />}
+            {error !== null && !previewChoice && <ErrorNotice error={error} />}
             {success && (
               <p className="notice success" role="status">
                 {copy.saved}
@@ -171,6 +177,50 @@ function DraftEditor<Type extends SiteTypeId>({
         <div>
           <p className="eyebrow">{copy.preview}</p>
           <Preview value={site.draft} />
+          {module.fullPreview && (
+            <>
+              <button
+                className="button primary"
+                disabled={busy}
+                onClick={() => {
+                  if (dirty) {
+                    setPreviewChoice(true);
+                  } else {
+                    navigate(`${appBase}/sites/${site.id}/preview`);
+                  }
+                }}
+              >
+                Preview invitation
+              </button>
+              {previewChoice && (
+                <div
+                  className="preview-choice"
+                  role="dialog"
+                  aria-label="Save before preview"
+                >
+                  <p>
+                    The preview uses your last saved draft. Save your changes
+                    before opening it?
+                  </p>
+                  {error !== null && <ErrorNotice error={error} />}
+                  <button
+                    className="button primary"
+                    disabled={busy}
+                    onClick={() => void save(undefined, true)}
+                  >
+                    Save and preview
+                  </button>
+                  <button
+                    className="button"
+                    disabled={busy}
+                    onClick={() => setPreviewChoice(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </>
+          )}
           <p className="field-help">{copy.previewHelp}</p>
         </div>
       </div>

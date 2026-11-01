@@ -30,7 +30,7 @@ export function safeReturn(value: string | null): string {
     if (
       url.origin === window.location.origin &&
       url.pathname.startsWith(`${appBase}/`) &&
-      /^\/sites(?:\/(?:new|[1-9][0-9]*))?\/?$/.test(suffix)
+      /^\/sites(?:\/(?:new|[1-9][0-9]*(?:\/preview)?))?\/?$/.test(suffix)
     ) {
       return url.pathname + url.search;
     }

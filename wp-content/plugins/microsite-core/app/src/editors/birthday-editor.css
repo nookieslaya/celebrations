@@ -1,0 +1,109 @@
+.birthday-fields section {
+  border-top: 1px solid #e1e7db;
+  margin-top: 24px;
+  padding-top: 15px;
+}
+.birthday-fields h2 {
+  font-size: 16px;
+  margin: 0 0 15px;
+}
+.character-count {
+  display: block;
+  text-align: right;
+  font-size: 10px;
+  color: #71846d;
+  margin-top: 6px;
+}
+.palette-samples {
+  display: flex;
+  gap: 12px;
+  margin-top: 15px;
+}
+.palette-samples > span {
+  display: flex;
+  padding: 6px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+.palette-samples > .selected {
+  border-color: #334e36;
+}
+.palette-samples i {
+  width: 24px;
+  height: 24px;
+  background: #d8f233;
+}
+.palette-samples i:nth-child(2) {
+  background: #191b16;
+}
+.palette-samples i:nth-child(3) {
+  background: #ff7b42;
+}
+.palette-samples [data-palette="pink-noir"] i:first-child {
+  background: #f9b5da;
+}
+.palette-samples [data-palette="pink-noir"] i:nth-child(2) {
+  background: #29152e;
+}
+.palette-samples [data-palette="pink-noir"] i:nth-child(3) {
+  background: #dbff68;
+}
+.palette-samples [data-palette="cobalt-pop"] i:first-child {
+  background: #263fe9;
+}
+.palette-samples [data-palette="cobalt-pop"] i:nth-child(2) {
+  background: #fff4d8;
+}
+.palette-samples [data-palette="cobalt-pop"] i:nth-child(3) {
+  background: #ff8c4c;
+}
+.birthday-summary {
+  --summary-bg: #d8f233;
+  --summary-ink: #191b16;
+  padding: 35px 25px;
+  background: var(--summary-bg);
+  color: var(--summary-ink);
+  border: 2px solid var(--summary-ink);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.birthday-summary[data-palette="pink-noir"] {
+  --summary-bg: #f9b5da;
+  --summary-ink: #29152e;
+}
+.birthday-summary[data-palette="cobalt-pop"] {
+  --summary-bg: #263fe9;
+  --summary-ink: #fff4d8;
+}
+.birthday-summary h2 {
+  font:
+    900 clamp(28px, 4vw, 55px) / 1 system-ui,
+    sans-serif;
+  text-transform: uppercase;
+  letter-spacing: -2px;
+}
+.birthday-summary p {
+  white-space: pre-wrap;
+  line-height: 1.7;
+  font-size: 13px;
+}
+.birthday-summary small {
+  font-size: 11px;
+}
+.birthday-summary-star {
+  font-size: 65px;
+}
+.birthday-summary-age {
+  font-size: 12px;
+  letter-spacing: 3px;
+}
+.preview-choice {
+  border: 1px solid #d5dfcb;
+  background: #f4f7ee;
+  border-radius: 8px;
+  padding: 18px;
+  margin-top: 18px;
+}
+.preview-choice .button {
+  margin: 8px 8px 0 0;
+}

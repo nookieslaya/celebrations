@@ -1,0 +1,120 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "BirthdayInvitationDraft",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "content",
+        "appearance"
+    ],
+    "properties": {
+        "content": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "celebrantName",
+                "heading",
+                "message",
+                "event",
+                "venueName",
+                "address"
+            ],
+            "properties": {
+                "celebrantName": {
+                    "type": "string",
+                    "maxLength": 80,
+                    "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                    "default": ""
+                },
+                "age": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 120
+                },
+                "heading": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                    "default": "Good people. Great night."
+                },
+                "message": {
+                    "type": "string",
+                    "maxLength": 600,
+                    "pattern": "^[^<>\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]*$",
+                    "default": "Join me for a night of good music, big laughs and a little birthday magic."
+                },
+                "event": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "localDateTime",
+                        "timeZone",
+                        "startsAt"
+                    ],
+                    "properties": {
+                        "localDateTime": {
+                            "type": "string",
+                            "maxLength": 16,
+                            "pattern": "^$|^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}$",
+                            "default": ""
+                        },
+                        "timeZone": {
+                            "type": "string",
+                            "maxLength": 64,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Europe/London"
+                        },
+                        "startsAt": {
+                            "type": "string",
+                            "maxLength": 20,
+                            "pattern": "^$|^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+                            "default": ""
+                        }
+                    }
+                },
+                "venueName": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                    "default": ""
+                },
+                "address": {
+                    "type": "string",
+                    "maxLength": 240,
+                    "pattern": "^[^<>\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]*$",
+                    "default": ""
+                },
+                "dressCode": {
+                    "type": "string",
+                    "maxLength": 120,
+                    "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                    "default": ""
+                },
+                "additionalInfo": {
+                    "type": "string",
+                    "maxLength": 500,
+                    "pattern": "^[^<>\\x00-\\x08\\x0B\\x0C\\x0E-\\x1F\\x7F]*$",
+                    "default": ""
+                }
+            }
+        },
+        "appearance": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "palette"
+            ],
+            "properties": {
+                "palette": {
+                    "type": "string",
+                    "enum": [
+                        "electric-citrus",
+                        "pink-noir",
+                        "cobalt-pop"
+                    ],
+                    "default": "electric-citrus"
+                }
+            }
+        }
+    }
+}

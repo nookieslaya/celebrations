@@ -1,3 +1,4 @@
+import { runBirthdayTests } from "./birthday.mjs";
 import { runBrowserFlows } from "./browser-flows.mjs";
 import { runAccountTests } from "./accounts.mjs";
 import assert from "node:assert/strict";
@@ -439,495 +440,541 @@ try {
     return body;
   }
 
-  await check(
-    "production shell serves both app paths and manifest assets independently of the running Vite",
-    async () => {
-      for (const path of ["/app/", "/app/sites"]) {
-        const response = await anonymous.get(path);
-        assert.equal(response.status(), 200);
-        const html = await response.text();
-        assert.match(html, /"mode":"production"/);
-        assert.doesNotMatch(html, /@vite\/client|@react-refresh/);
-        const assets = [
-          ...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g),
-        ];
-        assert.equal(assets.length >= 2, true);
-        for (const asset of assets) {
-          assert.equal((await anonymous.get(asset[1])).ok(), true);
+  if (process.env.TEST_SCOPE !== "birthday") {
+    await check(
+      "production shell serves both app paths and manifest assets independently of the running Vite",
+      async () => {
+        for (const path of ["/app/", "/app/sites"]) {
+          const response = await anonymous.get(path);
+          assert.equal(response.status(), 200);
+          const html = await response.text();
+          assert.match(html, /"mode":"production"/);
+          assert.doesNotMatch(html, /@vite\/client|@react-refresh/);
+          const assets = [
+            ...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css))"/g),
+          ];
+          assert.equal(assets.length >= 2, true);
+          for (const asset of assets) {
+            assert.equal((await anonymous.get(asset[1])).ok(), true);
+          }
         }
-      }
-    },
-  );
-
-  let siteA;
-  let siteB;
-  const createPayload = {
-    name: "Internal project name",
-    siteType: "basic-page",
-    templateId: "basic",
-  };
-
-  await check(
-    "public catalog exposes active metadata without renderer internals",
-    async () => {
-      const catalog = await api(null, "GET", "/catalog");
-      assert.equal(catalog.data.siteTypes[0].id, "basic-page");
-      assert.equal(catalog.data.templates[0].id, "basic");
-      assert.equal("rendererKey" in catalog.data.templates[0], false);
-      assert.equal("schema" in catalog.data.siteTypes[0], false);
-    },
-  );
-
-  await check(
-    "anonymous requests cannot list, create, read or update projects",
-    async () => {
-      await api(null, "GET", "/sites", undefined, 401);
-      await api(null, "POST", "/sites", createPayload, 401);
-      await api(null, "GET", "/sites/123", undefined, 401);
-      await api(null, "PATCH", "/sites/123", { name: "Changed" }, 401);
-    },
-  );
-
-  await check(
-    "real cookie session without nonce or with invalid nonce cannot write",
-    async () => {
-      await api(a, "POST", "/sites", createPayload, 401, null);
-      await api(a, "POST", "/sites", createPayload, 403, "incorrect-nonce");
-      await api(a, "GET", "/sites", undefined, 401, null);
-      const list = await api(a, "GET", "/sites");
-      assert.equal(list.data.pagination.total, 0);
-    },
-  );
-
-  await check(
-    "creation uses schema defaults, backend versions, unique public IDs and session owner",
-    async () => {
-      siteA = (await api(a, "POST", "/sites", createPayload, 201)).data;
-      siteB = (
-        await api(
-          b,
-          "POST",
-          "/sites",
-          { ...createPayload, name: "B project" },
-          201,
-        )
-      ).data;
-      assert.equal(siteA.draft.content.heading, "A new beginning");
-      assert.equal(siteA.draft.appearance.accent, "sage");
-      assert.notEqual(siteA.name, siteA.draft.content.heading);
-      assert.equal(siteA.schemaVersion, 1);
-      assert.equal(siteA.templateVersion, "1.0.0");
-      assert.equal(siteA.status, "draft");
-      assert.match(siteA.publicId, /^[a-f0-9]{32}$/);
-      assert.notEqual(siteA.publicId, siteB.publicId);
-      assert.equal(Number.isFinite(Date.parse(siteA.createdAt)), true);
-      assert.equal(
-        Number(
-          isolatedWp(["post", "get", String(siteA.id), "--field=post_author"]),
-        ),
-        userA,
-      );
-      assert.equal(
-        Number(
-          isolatedWp(["post", "get", String(siteB.id), "--field=post_author"]),
-        ),
-        userB,
-      );
-      assert.equal("owner" in siteA, false);
-      assert.equal("post_author" in siteA, false);
-      assert.equal("published" in siteA, false);
-    },
-  );
-
-  await check("list is owner-scoped, including administrators", async () => {
-    assert.deepEqual(
-      (await api(a, "GET", "/sites")).data.items.map((site) => site.id),
-      [siteA.id],
+      },
     );
-    assert.deepEqual(
-      (await api(b, "GET", "/sites")).data.items.map((site) => site.id),
-      [siteB.id],
-    );
-    assert.equal((await api(admin, "GET", "/sites")).data.items.length, 0);
-  });
 
-  await check(
-    "foreign and nonexistent projects return the same 404 for read and edit",
-    async () => {
-      for (const method of ["GET", "PATCH"]) {
-        const payload = method === "PATCH" ? { name: "Stolen" } : undefined;
-        const foreign = await api(
-          a,
-          method,
-          `/sites/${siteB.id}`,
-          payload,
-          404,
+    let siteA;
+    let siteB;
+    const createPayload = {
+      name: "Internal project name",
+      siteType: "basic-page",
+      templateId: "basic",
+    };
+
+    await check(
+      "public catalog exposes active metadata without renderer internals",
+      async () => {
+        const catalog = await api(null, "GET", "/catalog");
+        assert.equal(
+          catalog.data.siteTypes.some((type) => type.id === "basic-page"),
+          true,
         );
-        const absent = await api(a, method, "/sites/99999999", payload, 404);
-        assert.deepEqual(foreign, absent);
-        await api(b, method, `/sites/${siteA.id}`, payload, 404);
-      }
-    },
-  );
+        assert.equal(
+          catalog.data.templates.some((template) => template.id === "basic"),
+          true,
+        );
+        assert.equal("rendererKey" in catalog.data.templates[0], false);
+        assert.equal("schema" in catalog.data.siteTypes[0], false);
+      },
+    );
 
-  await check(
-    "capabilities independently restrict logged-in accounts",
-    async () => {
-      await api(subscriber, "GET", "/sites", undefined, 403);
-      await api(subscriber, "POST", "/sites", createPayload, 403);
-      await api(subscriber, "GET", `/sites/${siteA.id}`, undefined, 404);
-      isolatedWp([
-        "eval",
-        `get_user_by('id', ${userA})->add_cap('edit_ms_sites', false);`,
-      ]);
-      await api(a, "GET", `/sites/${siteA.id}`, undefined, 404);
-      await api(a, "PATCH", `/sites/${siteA.id}`, { name: "Denied" }, 404);
-      isolatedWp(["user", "remove-cap", String(userA), "edit_ms_sites"]);
-    },
-  );
+    await check(
+      "anonymous requests cannot list, create, read or update projects",
+      async () => {
+        await api(null, "GET", "/sites", undefined, 401);
+        await api(null, "POST", "/sites", createPayload, 401);
+        await api(null, "GET", "/sites/123", undefined, 401);
+        await api(null, "PATCH", "/sites/123", { name: "Changed" }, 401);
+      },
+    );
 
-  const editedDraft = {
-    content: {
-      heading: "A customer's new page",
-      description: "Plain text with a newline\nand a backslash \\.",
-    },
-    appearance: { accent: "rose" },
-  };
+    await check(
+      "real cookie session without nonce or with invalid nonce cannot write",
+      async () => {
+        await api(a, "POST", "/sites", createPayload, 401, null);
+        await api(a, "POST", "/sites", createPayload, 403, "incorrect-nonce");
+        await api(a, "GET", "/sites", undefined, 401, null);
+        const list = await api(a, "GET", "/sites");
+        assert.equal(list.data.pagination.total, 0);
+      },
+    );
 
-  await check(
-    "valid own draft update is persisted, with name independent from heading",
-    async () => {
-      await api(
-        a,
-        "PATCH",
-        `/sites/${siteA.id}`,
-        { name: "No nonce" },
-        401,
-        null,
+    await check(
+      "creation uses schema defaults, backend versions, unique public IDs and session owner",
+      async () => {
+        siteA = (await api(a, "POST", "/sites", createPayload, 201)).data;
+        siteB = (
+          await api(
+            b,
+            "POST",
+            "/sites",
+            { ...createPayload, name: "B project" },
+            201,
+          )
+        ).data;
+        assert.equal(siteA.draft.content.heading, "A new beginning");
+        assert.equal(siteA.draft.appearance.accent, "sage");
+        assert.notEqual(siteA.name, siteA.draft.content.heading);
+        assert.equal(siteA.schemaVersion, 1);
+        assert.equal(siteA.templateVersion, "1.0.0");
+        assert.equal(siteA.status, "draft");
+        assert.match(siteA.publicId, /^[a-f0-9]{32}$/);
+        assert.notEqual(siteA.publicId, siteB.publicId);
+        assert.equal(Number.isFinite(Date.parse(siteA.createdAt)), true);
+        assert.equal(
+          Number(
+            isolatedWp([
+              "post",
+              "get",
+              String(siteA.id),
+              "--field=post_author",
+            ]),
+          ),
+          userA,
+        );
+        assert.equal(
+          Number(
+            isolatedWp([
+              "post",
+              "get",
+              String(siteB.id),
+              "--field=post_author",
+            ]),
+          ),
+          userB,
+        );
+        assert.equal("owner" in siteA, false);
+        assert.equal("post_author" in siteA, false);
+        assert.equal("published" in siteA, false);
+      },
+    );
+
+    await check("list is owner-scoped, including administrators", async () => {
+      assert.deepEqual(
+        (await api(a, "GET", "/sites")).data.items.map((site) => site.id),
+        [siteA.id],
       );
-      await api(
-        a,
-        "PATCH",
-        `/sites/${siteA.id}`,
-        { name: "Bad nonce" },
-        403,
-        "incorrect",
+      assert.deepEqual(
+        (await api(b, "GET", "/sites")).data.items.map((site) => site.id),
+        [siteB.id],
       );
-      assert.equal(
-        (await api(a, "GET", `/sites/${siteA.id}`)).data.name,
-        createPayload.name,
-      );
-      const updated = (
-        await api(a, "PATCH", `/sites/${siteA.id}`, { draft: editedDraft })
-      ).data;
-      assert.equal(updated.name, createPayload.name);
-      assert.deepEqual(updated.draft, editedDraft);
-      const read = (await api(a, "GET", `/sites/${siteA.id}`)).data;
-      assert.deepEqual(read.draft, editedDraft);
-      assert.equal(read.createdAt, siteA.createdAt);
-      const renamed = (
-        await api(a, "PATCH", `/sites/${siteA.id}`, {
-          name: "New internal name",
-        })
-      ).data;
-      assert.equal(renamed.name, "New internal name");
-      assert.deepEqual(renamed.draft, editedDraft);
-    },
-  );
+      assert.equal((await api(admin, "GET", "/sites")).data.items.length, 0);
+    });
 
-  await check(
-    "administrator with explicit capabilities can read and edit another owner's draft",
-    async () => {
-      await api(admin, "GET", `/sites/${siteB.id}`);
-      const result = await api(admin, "PATCH", `/sites/${siteB.id}`, {
-        name: "Admin edit",
-      });
-      assert.equal(result.data.name, "Admin edit");
-      assert.equal(
-        Number(
-          isolatedWp(["post", "get", String(siteB.id), "--field=post_author"]),
-        ),
-        userB,
-      );
-      isolatedWp([
-        "eval",
-        "get_user_by('login', 'test_admin')->add_cap('manage_ms_sites', false);",
-      ]);
-      await api(admin, "GET", `/sites/${siteB.id}`, undefined, 404);
-      isolatedWp(["user", "remove-cap", "test_admin", "manage_ms_sites"]);
-    },
-  );
+    await check(
+      "foreign and nonexistent projects return the same 404 for read and edit",
+      async () => {
+        for (const method of ["GET", "PATCH"]) {
+          const payload = method === "PATCH" ? { name: "Stolen" } : undefined;
+          const foreign = await api(
+            a,
+            method,
+            `/sites/${siteB.id}`,
+            payload,
+            404,
+          );
+          const absent = await api(a, method, "/sites/99999999", payload, 404);
+          assert.deepEqual(foreign, absent);
+          await api(b, method, `/sites/${siteA.id}`, payload, 404);
+        }
+      },
+    );
 
-  await check(
-    "system fields and immutable selection/versions are rejected",
-    async () => {
-      const forbidden = {
-        owner: userB,
-        post_author: userB,
-        publicId: "chosen",
-        status: "publish",
-        capabilities: ["manage_options"],
-        createdAt: "now",
-        updatedAt: "now",
-        paymentStatus: "paid",
-        published: editedDraft,
-        unknown: true,
-        schemaVersion: 2,
-        templateVersion: "2.0.0",
-      };
-      const before = await api(a, "GET", `/sites/${siteA.id}`);
-      for (const [key, value] of Object.entries(forbidden)) {
-        await api(a, "POST", "/sites", { ...createPayload, [key]: value }, 400);
-        await api(a, "PATCH", `/sites/${siteA.id}`, { [key]: value }, 400);
-      }
-      for (const key of ["siteType", "templateId"]) {
-        await api(a, "PATCH", `/sites/${siteA.id}`, { [key]: "basic" }, 400);
-      }
-      assert.deepEqual(await api(a, "GET", `/sites/${siteA.id}`), before);
-    },
-  );
+    await check(
+      "capabilities independently restrict logged-in accounts",
+      async () => {
+        await api(subscriber, "GET", "/sites", undefined, 403);
+        await api(subscriber, "POST", "/sites", createPayload, 403);
+        await api(subscriber, "GET", `/sites/${siteA.id}`, undefined, 404);
+        isolatedWp([
+          "eval",
+          `get_user_by('id', ${userA})->add_cap('edit_ms_sites', false);`,
+        ]);
+        await api(a, "GET", `/sites/${siteA.id}`, undefined, 404);
+        await api(a, "PATCH", `/sites/${siteA.id}`, { name: "Denied" }, 404);
+        isolatedWp(["user", "remove-cap", String(userA), "edit_ms_sites"]);
+      },
+    );
 
-  await check(
-    "unknown IDs, path-like IDs, wrong types and missing selection are rejected",
-    async () => {
-      for (const payload of [
-        { ...createPayload, siteType: "unknown" },
-        { ...createPayload, templateId: "../basic.php" },
-        { ...createPayload, siteType: 1 },
-        { ...createPayload, templateId: null },
-        { name: "Missing selection" },
-        { ...createPayload, name: " " },
-        { ...createPayload, name: "x".repeat(121) },
-        { ...createPayload, name: "<script>alert(1)</script>" },
-      ]) {
-        await api(a, "POST", "/sites", payload, 400);
-      }
-    },
-  );
+    const editedDraft = {
+      content: {
+        heading: "A customer's new page",
+        description: "Plain text with a newline\nand a backslash \\.",
+      },
+      appearance: { accent: "rose" },
+    };
 
-  await check(
-    "full draft validation rejects partial merges, HTML, unknown properties and invalid text/appearance",
-    async () => {
-      const invalidDrafts = [
-        null,
-        [],
-        "text",
-        {},
-        { content: editedDraft.content },
-        { ...editedDraft, unknown: 1 },
-        { ...editedDraft, content: { ...editedDraft.content, unknown: 1 } },
-        { ...editedDraft, appearance: { accent: "purple" } },
-        {
-          ...editedDraft,
-          appearance: { ...editedDraft.appearance, css: "body{}" },
-        },
-        { ...editedDraft, content: { ...editedDraft.content, heading: "" } },
-        {
-          ...editedDraft,
-          content: { ...editedDraft.content, heading: "x".repeat(161) },
-        },
-        {
-          ...editedDraft,
-          content: { ...editedDraft.content, description: "x".repeat(2001) },
-        },
-        {
-          ...editedDraft,
-          content: {
-            ...editedDraft.content,
-            heading: "<img src=x onerror=alert(1)>",
-          },
-        },
-        {
-          ...editedDraft,
-          content: {
-            ...editedDraft.content,
-            description: "&lt;script&gt;alert(1)&lt;/script&gt;",
-          },
-        },
-        { ...editedDraft, content: { ...editedDraft.content, heading: 123 } },
-      ];
-      const before = await api(a, "GET", `/sites/${siteA.id}`);
-      for (const draft of invalidDrafts) {
+    await check(
+      "valid own draft update is persisted, with name independent from heading",
+      async () => {
         await api(
           a,
           "PATCH",
           `/sites/${siteA.id}`,
-          { name: "Must not be saved", draft },
-          400,
+          { name: "No nonce" },
+          401,
+          null,
         );
-        await api(a, "POST", "/sites", { ...createPayload, draft }, 400);
-        assert.deepEqual(await api(a, "GET", `/sites/${siteA.id}`), before);
-      }
-    },
-  );
+        await api(
+          a,
+          "PATCH",
+          `/sites/${siteA.id}`,
+          { name: "Bad nonce" },
+          403,
+          "incorrect",
+        );
+        assert.equal(
+          (await api(a, "GET", `/sites/${siteA.id}`)).data.name,
+          createPayload.name,
+        );
+        const updated = (
+          await api(a, "PATCH", `/sites/${siteA.id}`, { draft: editedDraft })
+        ).data;
+        assert.equal(updated.name, createPayload.name);
+        assert.deepEqual(updated.draft, editedDraft);
+        const read = (await api(a, "GET", `/sites/${siteA.id}`)).data;
+        assert.deepEqual(read.draft, editedDraft);
+        assert.equal(read.createdAt, siteA.createdAt);
+        const renamed = (
+          await api(a, "PATCH", `/sites/${siteA.id}`, {
+            name: "New internal name",
+          })
+        ).data;
+        assert.equal(renamed.name, "New internal name");
+        assert.deepEqual(renamed.draft, editedDraft);
+      },
+    );
 
-  await check(
-    "incompatible stored schema/template versions block edits until explicit migration",
-    async () => {
-      const original = JSON.parse(
+    await check(
+      "administrator with explicit capabilities can read and edit another owner's draft",
+      async () => {
+        await api(admin, "GET", `/sites/${siteB.id}`);
+        const result = await api(admin, "PATCH", `/sites/${siteB.id}`, {
+          name: "Admin edit",
+        });
+        assert.equal(result.data.name, "Admin edit");
+        assert.equal(
+          Number(
+            isolatedWp([
+              "post",
+              "get",
+              String(siteB.id),
+              "--field=post_author",
+            ]),
+          ),
+          userB,
+        );
         isolatedWp([
-          "post",
-          "meta",
-          "get",
-          String(siteA.id),
-          "_microsite_data",
-          "--format=json",
-        ]),
-      );
-      for (const property of [
-        "schemaVersion",
-        "templateVersion",
-        "siteType",
-        "templateId",
-      ]) {
-        const invalid = {
-          ...original,
-          [property]: property === "schemaVersion" ? 999 : "unknown",
+          "eval",
+          "get_user_by('login', 'test_admin')->add_cap('manage_ms_sites', false);",
+        ]);
+        await api(admin, "GET", `/sites/${siteB.id}`, undefined, 404);
+        isolatedWp(["user", "remove-cap", "test_admin", "manage_ms_sites"]);
+      },
+    );
+
+    await check(
+      "system fields and immutable selection/versions are rejected",
+      async () => {
+        const forbidden = {
+          owner: userB,
+          post_author: userB,
+          publicId: "chosen",
+          status: "publish",
+          capabilities: ["manage_options"],
+          createdAt: "now",
+          updatedAt: "now",
+          paymentStatus: "paid",
+          published: editedDraft,
+          unknown: true,
+          schemaVersion: 2,
+          templateVersion: "2.0.0",
         };
+        const before = await api(a, "GET", `/sites/${siteA.id}`);
+        for (const [key, value] of Object.entries(forbidden)) {
+          await api(
+            a,
+            "POST",
+            "/sites",
+            { ...createPayload, [key]: value },
+            400,
+          );
+          await api(a, "PATCH", `/sites/${siteA.id}`, { [key]: value }, 400);
+        }
+        for (const key of ["siteType", "templateId"]) {
+          await api(a, "PATCH", `/sites/${siteA.id}`, { [key]: "basic" }, 400);
+        }
+        assert.deepEqual(await api(a, "GET", `/sites/${siteA.id}`), before);
+      },
+    );
+
+    await check(
+      "unknown IDs, path-like IDs, wrong types and missing selection are rejected",
+      async () => {
+        for (const payload of [
+          { ...createPayload, siteType: "unknown" },
+          { ...createPayload, templateId: "../basic.php" },
+          { ...createPayload, siteType: 1 },
+          { ...createPayload, templateId: null },
+          { name: "Missing selection" },
+          { ...createPayload, name: " " },
+          { ...createPayload, name: "x".repeat(121) },
+          { ...createPayload, name: "<script>alert(1)</script>" },
+        ]) {
+          await api(a, "POST", "/sites", payload, 400);
+        }
+      },
+    );
+
+    await check(
+      "full draft validation rejects partial merges, HTML, unknown properties and invalid text/appearance",
+      async () => {
+        const invalidDrafts = [
+          null,
+          [],
+          "text",
+          {},
+          { content: editedDraft.content },
+          { ...editedDraft, unknown: 1 },
+          { ...editedDraft, content: { ...editedDraft.content, unknown: 1 } },
+          { ...editedDraft, appearance: { accent: "purple" } },
+          {
+            ...editedDraft,
+            appearance: { ...editedDraft.appearance, css: "body{}" },
+          },
+          { ...editedDraft, content: { ...editedDraft.content, heading: "" } },
+          {
+            ...editedDraft,
+            content: { ...editedDraft.content, heading: "x".repeat(161) },
+          },
+          {
+            ...editedDraft,
+            content: { ...editedDraft.content, description: "x".repeat(2001) },
+          },
+          {
+            ...editedDraft,
+            content: {
+              ...editedDraft.content,
+              heading: "<img src=x onerror=alert(1)>",
+            },
+          },
+          {
+            ...editedDraft,
+            content: {
+              ...editedDraft.content,
+              description: "&lt;script&gt;alert(1)&lt;/script&gt;",
+            },
+          },
+          { ...editedDraft, content: { ...editedDraft.content, heading: 123 } },
+        ];
+        const before = await api(a, "GET", `/sites/${siteA.id}`);
+        for (const draft of invalidDrafts) {
+          await api(
+            a,
+            "PATCH",
+            `/sites/${siteA.id}`,
+            { name: "Must not be saved", draft },
+            400,
+          );
+          await api(a, "POST", "/sites", { ...createPayload, draft }, 400);
+          assert.deepEqual(await api(a, "GET", `/sites/${siteA.id}`), before);
+        }
+      },
+    );
+
+    await check(
+      "incompatible stored schema/template versions block edits until explicit migration",
+      async () => {
+        const original = JSON.parse(
+          isolatedWp([
+            "post",
+            "meta",
+            "get",
+            String(siteA.id),
+            "_microsite_data",
+            "--format=json",
+          ]),
+        );
+        for (const property of [
+          "schemaVersion",
+          "templateVersion",
+          "siteType",
+          "templateId",
+        ]) {
+          const invalid = {
+            ...original,
+            [property]: property === "schemaVersion" ? 999 : "unknown",
+          };
+          isolatedWp([
+            "post",
+            "meta",
+            "update",
+            String(siteA.id),
+            "_microsite_data",
+            JSON.stringify(invalid),
+            "--format=json",
+          ]);
+          await api(
+            a,
+            "PATCH",
+            `/sites/${siteA.id}`,
+            { name: "Blocked" },
+            property.endsWith("Version") ? 409 : 400,
+          );
+        }
         isolatedWp([
           "post",
           "meta",
           "update",
           String(siteA.id),
           "_microsite_data",
-          JSON.stringify(invalid),
+          JSON.stringify(original),
           "--format=json",
         ]);
-        await api(
-          a,
-          "PATCH",
-          `/sites/${siteA.id}`,
-          { name: "Blocked" },
-          property.endsWith("Version") ? 409 : 400,
-        );
-      }
-      isolatedWp([
-        "post",
-        "meta",
-        "update",
-        String(siteA.id),
-        "_microsite_data",
-        JSON.stringify(original),
-        "--format=json",
-      ]);
-    },
-  );
+      },
+    );
 
-  await check(
-    "list pagination is bounded and stable, without leaking other owners",
-    async () => {
-      for (let index = 0; index < 3; index++) {
-        await api(
-          a,
-          "POST",
-          "/sites",
-          { ...createPayload, name: `Extra ${index}` },
-          201,
+    await check(
+      "list pagination is bounded and stable, without leaking other owners",
+      async () => {
+        for (let index = 0; index < 3; index++) {
+          await api(
+            a,
+            "POST",
+            "/sites",
+            { ...createPayload, name: `Extra ${index}` },
+            201,
+          );
+        }
+        const first = (await api(a, "GET", "/sites&page=1&per_page=2")).data;
+        const second = (await api(a, "GET", "/sites&page=2&per_page=2")).data;
+        assert.equal(first.pagination.total, 4);
+        assert.equal(first.pagination.totalPages, 2);
+        assert.equal(first.items.length, 2);
+        assert.equal(second.items.length, 2);
+        assert.equal(
+          new Set([...first.items, ...second.items].map((site) => site.id))
+            .size,
+          4,
         );
-      }
-      const first = (await api(a, "GET", "/sites&page=1&per_page=2")).data;
-      const second = (await api(a, "GET", "/sites&page=2&per_page=2")).data;
-      assert.equal(first.pagination.total, 4);
-      assert.equal(first.pagination.totalPages, 2);
-      assert.equal(first.items.length, 2);
-      assert.equal(second.items.length, 2);
-      assert.equal(
-        new Set([...first.items, ...second.items].map((site) => site.id)).size,
-        4,
-      );
-      assert.equal(
-        [...first.items, ...second.items].some((site) => site.id === siteB.id),
-        false,
-      );
-      await api(a, "GET", "/sites&per_page=51", undefined, 400);
-      await api(a, "GET", "/sites&page=0", undefined, 400);
-      await api(a, "GET", "/sites&per_page=-1", undefined, 400);
-      await api(a, "GET", "/sites&page=1.5", undefined, 400);
-    },
-  );
+        assert.equal(
+          [...first.items, ...second.items].some(
+            (site) => site.id === siteB.id,
+          ),
+          false,
+        );
+        await api(a, "GET", "/sites&per_page=51", undefined, 400);
+        await api(a, "GET", "/sites&page=0", undefined, 400);
+        await api(a, "GET", "/sites&per_page=-1", undefined, 400);
+        await api(a, "GET", "/sites&page=1.5", undefined, 400);
+      },
+    );
 
-  await check(
-    "CPT has no default REST route, public single, archive or search disclosure",
-    async () => {
-      const rest = await anonymous.get("/index.php?rest_route=/wp/v2/ms_site");
-      assert.equal(rest.status(), 404);
-      for (const path of [
-        `/index.php?post_type=ms_site&p=${siteA.id}`,
-        `/index.php?p=${siteA.id}`,
-        `/index.php?ms_site=${siteA.publicId}`,
-        "/index.php?post_type=ms_site",
-        "/index.php?s=New%20internal%20name",
-      ]) {
-        const response = await anonymous.get(path);
-        const html = await response.text();
-        assert.equal(html.includes(editedDraft.content.heading), false);
-        assert.equal(html.includes("New internal name"), false);
-        assert.equal(response.status() >= 500, false);
-      }
-      const single = await anonymous.get(
-        `/index.php?post_type=ms_site&p=${siteA.id}`,
-      );
-      assert.equal(single.status(), 404);
-      const publicIdUrl = await anonymous.get(`/s/${siteA.publicId}/`);
-      assert.equal(
-        (await publicIdUrl.text()).includes(editedDraft.content.heading),
-        false,
-      );
-      const publicSlug = await anonymous.get(`/${siteA.publicId}/`);
-      assert.equal(
-        (await publicSlug.text()).includes(editedDraft.content.heading),
-        false,
-      );
-      const typeMetadata = await anonymous.get(
-        "/index.php?rest_route=/wp/v2/types/ms_site",
-      );
-      assert.equal(typeMetadata.status(), 401);
-      assert.equal((await typeMetadata.json()).code, "rest_cannot_read_type");
-      const settings = JSON.parse(
+    await check(
+      "CPT has no default REST route, public single, archive or search disclosure",
+      async () => {
+        const rest = await anonymous.get(
+          "/index.php?rest_route=/wp/v2/ms_site",
+        );
+        assert.equal(rest.status(), 404);
+        for (const path of [
+          `/index.php?post_type=ms_site&p=${siteA.id}`,
+          `/index.php?p=${siteA.id}`,
+          `/index.php?ms_site=${siteA.publicId}`,
+          "/index.php?post_type=ms_site",
+          "/index.php?s=New%20internal%20name",
+        ]) {
+          const response = await anonymous.get(path);
+          const html = await response.text();
+          assert.equal(html.includes(editedDraft.content.heading), false);
+          assert.equal(html.includes("New internal name"), false);
+          assert.equal(response.status() >= 500, false);
+        }
+        const single = await anonymous.get(
+          `/index.php?post_type=ms_site&p=${siteA.id}`,
+        );
+        assert.equal(single.status(), 404);
+        const publicIdUrl = await anonymous.get(`/s/${siteA.publicId}/`);
+        assert.equal(
+          (await publicIdUrl.text()).includes(editedDraft.content.heading),
+          false,
+        );
+        const publicSlug = await anonymous.get(`/${siteA.publicId}/`);
+        assert.equal(
+          (await publicSlug.text()).includes(editedDraft.content.heading),
+          false,
+        );
+        const typeMetadata = await anonymous.get(
+          "/index.php?rest_route=/wp/v2/types/ms_site",
+        );
+        assert.equal(typeMetadata.status(), 401);
+        assert.equal((await typeMetadata.json()).code, "rest_cannot_read_type");
+        const settings = JSON.parse(
+          isolatedWp([
+            "eval",
+            "echo wp_json_encode(get_post_type_object('ms_site')); ",
+          ]),
+        );
+        assert.equal(settings.public, false);
+        assert.equal(settings.publicly_queryable, false);
+        assert.equal(settings.show_in_rest, false);
+        assert.equal(settings.has_archive, false);
+      },
+    );
+
+    await check(
+      "role setup is idempotent and runs on plugin updates without reactivation",
+      async () => {
+        const before = JSON.parse(
+          isolatedWp(["eval", "echo wp_json_encode(wp_roles()->roles);"]),
+        );
+        isolatedWp(["option", "delete", "microsite_permissions_version"]);
         isolatedWp([
           "eval",
-          "echo wp_json_encode(get_post_type_object('ms_site')); ",
-        ]),
-      );
-      assert.equal(settings.public, false);
-      assert.equal(settings.publicly_queryable, false);
-      assert.equal(settings.show_in_rest, false);
-      assert.equal(settings.has_archive, false);
-    },
-  );
+          "Microsite\\Core\\Permissions::install(); Microsite\\Core\\Permissions::install();",
+        ]);
+        const after = JSON.parse(
+          isolatedWp(["eval", "echo wp_json_encode(wp_roles()->roles);"]),
+        );
+        assert.deepEqual(after, before);
+        assert.deepEqual(
+          Object.keys(after.microsite_customer.capabilities).sort(),
+          ["create_ms_sites", "edit_ms_sites", "read"],
+        );
+        assert.equal(after.subscriber.capabilities.create_ms_sites, undefined);
+      },
+    );
 
-  await check(
-    "role setup is idempotent and runs on plugin updates without reactivation",
-    async () => {
-      const before = JSON.parse(
-        isolatedWp(["eval", "echo wp_json_encode(wp_roles()->roles);"]),
-      );
-      isolatedWp(["option", "delete", "microsite_permissions_version"]);
-      isolatedWp([
-        "eval",
-        "Microsite\\Core\\Permissions::install(); Microsite\\Core\\Permissions::install();",
-      ]);
-      const after = JSON.parse(
-        isolatedWp(["eval", "echo wp_json_encode(wp_roles()->roles);"]),
-      );
-      assert.deepEqual(after, before);
-      assert.deepEqual(
-        Object.keys(after.microsite_customer.capabilities).sort(),
-        ["create_ms_sites", "edit_ms_sites", "read"],
-      );
-      assert.equal(after.subscriber.capabilities.create_ms_sites, undefined);
-    },
-  );
+    await runAccountTests({
+      origin,
+      request,
+      contexts,
+      check,
+      isolatedWp,
+      password,
+    });
+    await runBrowserFlows({ origin, password, check, isolatedWp });
+  }
 
-  await runAccountTests({
+  await runBirthdayTests({
     origin,
-    request,
-    contexts,
+    api,
+    a,
+    b,
+    admin,
     check,
-    isolatedWp,
     password,
+    pluginDirectory,
+    isolatedWp,
   });
-  await runBrowserFlows({ origin, password, check, isolatedWp });
 
   if (existsSync(join(temporaryDirectory, "php-errors.log"))) {
     const log = readFileSync(
