@@ -1,29 +1,31 @@
 # Stan faktyczny — 2026-11-01
 
-Etap 1 dostarczony. Wtyczka microsite-core jest aktywna. Adresy: http://celebrations.local/app/ oraz http://celebrations.local/app/sites. Zostawiono działający build produkcyjny; Vite jest zatrzymany, marker usunięty. Aktywny motyw pozostaje twentytwentyfive. Zachowano istniejące wpisy/strony i bazę; jedyne zmiany konfiguracyjne WP to aktywacja wtyczki i odświeżenie reguł rewrite.
+Etap 2 zakończony. Backend 0.2.0 jest aktywny na istniejącej stronie LocalWP. Panel pozostaje pod http://celebrations.local/app/ i http://celebrations.local/app/sites. Istniejący Vite nadal działa; nie uruchomiono drugiej instancji ani nie zatrzymano go. Produkcyjny build jest aktualny. Końcowy odczyt konfiguracji wskazuje aktywny motyw microsite-shell. Podczas tego etapu nie przełączano motywu; istniejące treści pozostały bez zmian.
+
+## Co działa
+
+Prywatny CPT ms_site, rola microsite_customer z minimalnymi capabilities oraz idempotentna konfiguracja uprawnień administratora. Rejestr basic-page/basic. Kontrakt JSON Schema, backendowa walidacja i generowane typy TS z kontrolą aktualności. Repozytorium i serwis szkiców, właściciel z sesji, backendowe publicId i wersje, pełne zastępowanie draft bez merge. Publiczny katalog i chronione API list/create/read/patch z paginacją, izolacją właścicieli, cookies/REST nonce i no-store. Typowany klient API przygotowany do modułu sesji etapu 3; panel nadal nie loguje użytkownika ani nie edytuje projektów.
 
 ## Wykonane kontrole
 
-- PHP 8.4.27 LocalWP: php -l dla wszystkich pięciu własnych plików PHP — PASS.
-- npm run verify: ESLint, TypeScript, Vite build — PASS.
-- Playwright produkcja bez Vite: bezpośrednie wejście i refresh obu adresów, nawigacja i stan React — 3 PASS. Test HMR w tym trybie jest jawnie pomijany.
-- Playwright z Vite i TEST_HMR=1: oba adresy/refresh, nawigacja i HMR — 4 PASS. Zmiana komponentu zachowuje notatkę i nie nawiguje dokumentu. Pierwsze próby wykryły problem ze wspólnym entrypointem/komponentem; po rozdzieleniu i restarcie runtime test przeszedł.
-- Zatrzymanie Vite ujawniło pozostający marker development; dodano sprzątanie SIGINT/SIGTERM i sprawdzono ponownie start/zatrzymanie. Po poprawce końcowe testy produkcyjne: 3 PASS, 1 celowo pominięty test HMR.
-- Osobna kontrola produkcji w Chromium: konfiguracja production, assety manifestu, brak żądań do loopback Vite — PASS.
-- Oględziny zrzutów 1440 px i 390 px, kontrola braku overflow poziomego na mobile — PASS.
+- Testy integracyjne HTTP na prawdziwym WordPressie 7.1.4, PHP 8.4.27 i osobnej nowej bazie MySQL LocalWP: 17 grup kontroli PASS. Produkcyjny shell i assety bez zależności od Vite, publiczny katalog, anonimowy dostęp, rzeczywiste cookies i brak/błędny nonce POST/PATCH, defaults, właściciel sesji, publicId, izolacja A/B, capabilities, administrator, pola systemowe, walidacja bez zmian po błędzie, konflikty wersji, paginacja, ukrycie CPT i idempotentne role. Bez ostrzeżeń PHP w logu testowym.
+- Końcowa kontrola wykazała 0 pozostałych baz microsite_test_*. Runner tworzył wyłącznie nowe bazy microsite_test_* i tymczasową instalację; sprzątanie po udanych i nieudanych przebiegach wykonane. Nie instalowano WordPressa ani fixture kont/projektów w bazie strony LocalWP.
+- Próba guard-only z DB_NAME strony: PASS, odmowa przed operacją na bazie.
+- Celowo zmieniony wygenerowany plik TS: PASS, contracts:check wykrył nieaktualny wynik; plik przywrócono.
+- php -l dla wszystkich 14 własnych plików PHP: PASS.
+- npm run verify (kontrakty, ESLint, TypeScript, build): PASS.
+- Dotychczasowe E2E z TEST_HMR=1 na działającym LocalWP/Vite: 4 PASS (obie trasy i refresh, nawigacja, HMR ze stanem bez reloadu).
 
-## Ograniczenia
+Przy przygotowaniu testów poprawiono wykrywanie socketu MySQL, wyłączono Local auto_prepend wyłącznie w testowym procesie PHP i skorygowano oczekiwanie dla domyślnego endpointu metadanych CPT: WordPress odmawia 401 rest_cannot_read_type. Końcowy zestaw przeszedł w całości.
 
-Wbudowany Browser nie mógł się połączyć: „privileged native pipe bridge is not available; browser-client is not trusted”. Użyto lokalnego Playwright Chromium.
+## Ograniczenia i pominięte kontrole
 
-Spec Kit: uv/specify nie są dostępne, konfiguracja nie istniała. Sprawdzono oficjalny README i integrację Codex; użyto dozwolonego fallbacku Markdown. Jedyna lista zadań: specs/001-app-shell/tasks.md.
+Nie skonfigurowano PHPCS ani GitHub Actions; nie raportujemy ich jako PASS. Nie wdrożono rendererów, podglądu, customowych kont, kreatora, animacji, publikacji, płatności, mediów, QR i RSVP. Bootstrap sesji/nonce w panelu jest jawną zależnością etapu 3, nie blokadą backendu — autoryzację sprawdzono rzeczywistymi sesjami testowymi.
 
-npm audit: 10 wpisów moderate wynikających z minimatch <11.0.1 w drzewie ESLint/typescript-eslint. Dotyczy zależności development; npm proponuje niekompatybilne downgrade'y narzędzi. Nie wykonano audit fix --force. Wymaga ponownej oceny przy etapie CI i aktualizacji zależności. Produkcyjne zależności React nie są objęte tym raportem.
+Jednoczesna edycja stosuje ostatni poprawny zapis; brak wykrywania konfliktów edycji. Zmiana wersji schematu/szablonu wymaga przyszłej jawnej migracji. Minimum PHP 8.2/WP 6.6 jest deklaracją; sprawdzono wersje LocalWP. HTTPS development i pełna macierz przeglądarek nie były testowane.
 
-Nie uruchomiono testów integracyjnych PHP, PHPCS, Vitest ani CI; nie skonfigurowano ich w tym ograniczonym etapie. Nie ma logiki domenowej do testów jednostkowych. HTTPS development nie był testowany. Nie aktywowano microsite-shell; jego składnia PHP została sprawdzona, panel zweryfikowano pod istniejącym motywem.
+Znane z etapu 1: npm audit zgłasza 10 moderate w drzewie ESLint/typescript-eslint (minimatch). Zależności nie zmieniły się w tym etapie. Nie wykonywano audit fix --force. Spec Kit nie jest zainstalowany (brak uv/specify); używamy Markdown i jednej listy zadań specs/001-app-shell/tasks.md. Wbudowany Browser nie połączył się w poprzednim etapie; kontrolę wykonano przez lokalny Playwright.
 
-Następny krok: narzędzia i odizolowana baza testowa, potem konta/sesje oraz uniwersalny model Site/basic-page. Animowany szablon urodzinowy dopiero po wspólnym silniku. Nie wdrożono logowania, projektów, płatności ani zaproszeń.
+## Następny etap
 
-## Czytelność kodu
-
-Rozpisano HTML/PHP/JSX, CSS i konfigurację na czytelne bloki. Zasadę zapisano w AGENTS.md. Po zmianach: php -l dla pięciu własnych plików — PASS; npm run verify — PASS; E2E produkcyjne — 3 PASS, HMR jawnie pominięty (Vite zatrzymany).
+Etap 3: customowe konta WordPress, bezpieczny bootstrap i odnowienie sesji/nonce, lista własnych projektów i prosty edytor szkicu React. Backend, kontrakty i klient API są przygotowane. Zmiany etapu 2 pozostają lokalne; nie wykonano automatycznego commita ani push.

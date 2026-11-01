@@ -1,6 +1,6 @@
-# Microsites — LocalWP, etap 1
+# Microsites — LocalWP, etapy 1–2
 
-Wtyczka dostarcza niezależny od motywu panel React pod `/app/` i `/app/sites`. Motyw microsite-shell pozostaje opcjonalny i nie został aktywowany.
+Wtyczka dostarcza niezależny od motywu panel React pod `/app/` i `/app/sites`. Motyw microsite-shell jest opcjonalny; panel działa niezależnie od aktywnego motywu.
 
 ## Uruchomienie na istniejącej stronie
 
@@ -33,10 +33,21 @@ npx playwright install chromium
 WP_SITE_URL="$(wp option get home)" npm run test:e2e
 ```
 
-`verify` wykonuje ESLint, TypeScript i build. Testy E2E są tylko odczytowe wobec WP i nie resetują bazy. Składnię PHP sprawdź `php -l` dla własnych plików PHP. Nie skonfigurowano jeszcze PHPCS ani testów integracyjnych — to kolejny etap narzędziowy.
+`verify` sprawdza również aktualność wygenerowanych kontraktów, ESLint, TypeScript i build. Testy E2E są tylko odczytowe wobec WP i nie resetują bazy. Składnię PHP sprawdź `php -l` dla własnych plików PHP. Testy integracyjne uruchom poleceniem `npm run test:integration`; wymagają uprawnień do osobnej, nowej bazy. Szczegóły i bezpieczniki: [docs/TESTING.md](docs/TESTING.md). PHPCS i CI pozostają kolejnym etapem narzędziowym.
 
 Zweryfikowane środowisko: PHP LocalWP 8.4.27, WP-CLI 2.12.0, Composer 2.8.6, MySQL LocalWP 8.4.0, Node 26.0.0, npm 11.12.1. WordPress 7.1.4. Minimalne PHP 8.2 / WP 6.6 są deklaracją kompatybilności, nie pełną macierzą testów. Zależności przypięte w package.json i package-lock.json: React 19.3.1, Vite 8.3.5, TypeScript 6.0.3 (zgodny z typescript-eslint; TS 7 odrzucony przez peer dependencies).
 
 Struktura: `includes/` — routing PHP, `templates/` — dokument panelu, `app/src/` — React, `app/tests/` — E2E, `wp-content/themes/microsite-shell/` — opcjonalny motyw, `docs/` — decyzje, `specs/001-app-shell/` — zakres/plan/jedyna lista zadań.
 
 HMR można sprawdzić automatycznie: uruchom `npm run dev`, a w drugim Open site shell w katalogu app wykonaj `TEST_HMR=1 WP_SITE_URL="$(wp option get home)" npm run test:e2e`. Test chwilowo zmienia tekst w `src/App.tsx` i przywraca plik w finally; nie edytuj tego pliku podczas testu. Po zmianie samego entrypointu lub preamble uruchom ponownie Vite, żeby odtworzyć spójny runtime React Refresh.
+
+## Backend etapu 2
+
+Wtyczka rejestruje prywatne szkice ms_site, rolę microsite_customer oraz `/wp-json/microsites/v1/catalog` i chronione CRUD `/sites`. Nie musisz reaktywować wtyczki: uprawnienia konfigurowane są idempotentnie przy aktualizacji kodu. Panel nie ma jeszcze logowania ani integracji CRUD. Typowany klient API wymaga nonce od modułu sesji, który powstanie w etapie 3.
+
+- [Kontrakt API i przykładowe JSON](docs/API.md)
+- [Architektura i model danych](docs/ARCHITECTURE.md)
+- [Dodawanie typu i szablonu](docs/ADDING-A-SITE-TYPE.md)
+- [Testy i izolacja bazy](docs/TESTING.md)
+
+Kontrakty: `npm run contracts:generate`, kontrola: `npm run contracts:check` (również w verify). Integracja: `npm run test:integration` z Open site shell w katalogu app. Testowe konta powstają wyłącznie w tymczasowej bazie i są usuwane razem z nią. Nie tworzymy kont klientów ani szkiców testowych na stronie LocalWP.

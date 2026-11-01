@@ -13,3 +13,7 @@ Jedyną listą zadań jest `specs/001-app-shell/tasks.md`. Stan weryfikacji zapi
 ## Czytelność kodu
 
 Pisz pełny, zrozumiały kod. Stosuj konsekwentne wcięcia, opisowe nazwy oraz osobne linie dla instrukcji i elementów HTML/JSX. Nie minifikuj ręcznie kodu źródłowego ani konfiguracji. Warunki kończące wykonanie zapisuj jako jawne bloki `if`, zamiast skrótów typu `defined(...) || exit`. Oddzielaj logiczne części pustymi liniami. Skracanie zapisu nie jest celem; kod ma być łatwy do czytania i rozwijania.
+
+## Backend od etapu 2
+
+`npm run contracts:generate` generuje TS ze schematów JSON, a `npm run verify` sprawdza aktualność wyniku, lint, typy i build. `npm run test:integration` uruchamia rzeczywiste testy HTTP na nowej, izolowanej bazie; szczegóły i bezpieczniki są w docs/TESTING.md. Nie zastępuj testów właściciela lub sesji mockami. Nie dodawaj fixture nonce do działającej strony. Działającego Vite nie uruchamiaj ponownie i nie zatrzymuj bez potrzeby. Drobne zmiany zostawiaj lokalnie; commit/push wykonuj po większych etapach lub na wyraźne polecenie, nie po każdej poprawce.

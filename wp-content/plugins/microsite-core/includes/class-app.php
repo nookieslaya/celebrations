@@ -39,7 +39,7 @@ final class App {
         if ( 'local' === wp_get_environment_type() && is_readable( $marker ) ) {
             $candidate = json_decode( file_get_contents( $marker ), true );
             if ( isset( $candidate['origin'] ) && preg_match( '#^https?://(localhost|127\.0\.0\.1):[0-9]+$#', $candidate['origin'] ) ) {
-    $dev = $candidate['origin'];
+                $dev = $candidate['origin'];
             }
         }
         $manifest_path = dirname( __DIR__ ) . '/app/dist/.vite/manifest.json';
