@@ -1,0 +1,13 @@
+/*
+Theme Name: Microsite Shell
+Description: Minimal optional shell. Application routing belongs to Microsite Core.
+Version: 0.1.0
+Requires PHP: 8.2
+Text Domain: microsite-shell
+*/
+body {
+	max-width: 64rem;
+	margin: 4rem auto;
+	padding: 1.5rem;
+	font-family: system-ui, sans-serif;
+}
