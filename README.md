@@ -83,3 +83,6 @@ Birthday invitation ma opcjonalne RSVP: konfiguracja w edytorze → zapis → ak
 ## Birthday Celebration
 
 Nowy szablon birthday-celebration ma warianty Midnight Gold, Disco Rose i Stardust Silver, własną choreografię i wspólny formularz RSVP. Dotychczasowy birthday-party pozostaje dostępny. Demo i opis: [docs/BIRTHDAY-CELEBRATION.md](docs/BIRTHDAY-CELEBRATION.md); źródła/licencje: [docs/THIRD-PARTY-ASSETS.md](docs/THIRD-PARTY-ASSETS.md).
+
+
+Galeria i kreator (0.7.0): `/app/sites/new`, zaproszenie `/app/sites/{id}?step=about`. [Instrukcja galerii, demo, miniatur i kroków](docs/GALLERY-WIZARD.md). Demo nie tworzy projektów ani odpowiedzi RSVP. Podstawowa weryfikacja tego etapu: `TEST_SCOPE=gallery npm run test:integration` w LocalWP Open site shell z katalogu wtyczki app, na istniejącej oddzielnej bazie testowej.

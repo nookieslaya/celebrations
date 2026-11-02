@@ -1,3 +1,4 @@
+import { runGalleryTests } from "./gallery.mjs";
 import { runCelebrationTests } from "./celebration.mjs";
 import { runRsvpTests } from "./rsvp.mjs";
 import { runPublicationTests } from "./publication.mjs";
@@ -444,7 +445,7 @@ try {
   }
 
   if (
-    !["birthday", "publication", "rsvp", "celebration"].includes(
+    !["birthday", "publication", "rsvp", "celebration", "gallery"].includes(
       process.env.TEST_SCOPE,
     )
   ) {
@@ -972,7 +973,9 @@ try {
   }
 
   if (
-    !["publication", "rsvp", "celebration"].includes(process.env.TEST_SCOPE)
+    !["publication", "rsvp", "celebration", "gallery"].includes(
+      process.env.TEST_SCOPE,
+    )
   ) {
     await runBirthdayTests({
       origin,
@@ -987,7 +990,11 @@ try {
     });
   }
 
-  if (!["birthday", "rsvp", "celebration"].includes(process.env.TEST_SCOPE)) {
+  if (
+    !["birthday", "rsvp", "celebration", "gallery"].includes(
+      process.env.TEST_SCOPE,
+    )
+  ) {
     await runPublicationTests({
       origin,
       api,
@@ -1016,6 +1023,19 @@ try {
 
   if (!process.env.TEST_SCOPE || process.env.TEST_SCOPE === "celebration") {
     await runCelebrationTests({
+      origin,
+      api,
+      a,
+      b,
+      check,
+      password,
+      pluginDirectory,
+      isolatedWp,
+    });
+  }
+
+  if (!process.env.TEST_SCOPE || process.env.TEST_SCOPE === "gallery") {
+    await runGalleryTests({
       origin,
       api,
       a,

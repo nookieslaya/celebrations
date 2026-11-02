@@ -1,3 +1,4 @@
+import { chooseTemplate, goStep } from "./editor-navigation.mjs";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { mkdirSync } from "node:fs";
@@ -745,30 +746,39 @@ async function runRsvpBrowser({
           .click();
         await expect(organizer).toHaveURL(/\/app\/sites\/?$/);
         await organizer.goto("/app/sites/new");
-        await organizer
-          .getByLabel("Site type")
-          .selectOption("birthday-invitation");
+        await chooseTemplate(
+          organizer,
+          "birthday-invitation",
+          "Birthday Party",
+        );
         await organizer.getByLabel("Project name").fill("Browser RSVP event");
         await organizer
           .getByRole("button", { name: "Create project", exact: true })
           .click();
         await expect(organizer.getByLabel("Celebrant name")).toBeVisible();
         id = Number(new URL(organizer.url()).pathname.match(/sites\/(\d+)/)[1]);
+        await goStep(organizer, "about");
         await organizer.getByLabel("Celebrant name").fill("RSVP Host");
+        await goStep(organizer, "event");
         await organizer
           .getByLabel("Local date and time")
           .fill("2030-07-10T19:30");
+        await goStep(organizer, "event");
         await organizer.getByLabel("Venue name").fill("RSVP venue");
+        await goStep(organizer, "event");
         await organizer.getByLabel("Address", { exact: true }).fill("London");
+        await goStep(organizer, "responses");
         await organizer.getByLabel("Accept RSVP responses").check();
+        await goStep(organizer, "responses");
         await organizer
           .getByLabel("Maximum people per response, including the guest")
           .fill("5");
+        await goStep(organizer, "responses");
         await organizer
           .getByLabel("RSVP deadline (optional)")
           .fill("2030-07-09T19:30");
         await organizer
-          .getByRole("button", { name: "Save changes", exact: true })
+          .getByRole("button", { name: "Save draft", exact: true })
           .click();
         await expect(
           organizer.getByText("All changes saved.", { exact: true }),
@@ -781,6 +791,7 @@ async function runRsvpBrowser({
           "--user=test_admin",
         ]);
         await organizer.reload();
+        await goStep(organizer, "review");
         await organizer
           .getByRole("button", { name: "Publish", exact: true })
           .click();

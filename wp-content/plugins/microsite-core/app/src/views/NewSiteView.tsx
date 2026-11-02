@@ -1,5 +1,13 @@
-import { useCallback, useRef, useState, type FormEvent } from "react";
-import { type SiteTypeId } from "../api/client";
+import {
+  Component,
+  Suspense,
+  useCallback,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
+import { ApiError, type SiteTypeId } from "../api/client";
 import { useSession } from "../auth/SessionProvider";
 import { appBase } from "../config";
 import { copy } from "../copy";
@@ -10,49 +18,90 @@ import {
   useResource,
 } from "../components/Async";
 import { Link, useRouter } from "../routing/Router";
+import { getRenderer } from "../renderers/registry";
+import {
+  PalettePicker,
+  selectedPalette,
+  withPalette,
+  type Template,
+} from "../gallery/PalettePicker";
+import "../gallery/gallery.css";
+
+class DemoBoundary extends Component<
+  { children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? (
+      <p className="notice error" role="alert">
+        This demo could not load. Return to the gallery and try again.
+      </p>
+    ) : (
+      this.props.children
+    );
+  }
+}
 
 export function NewSiteView() {
   const { api, session } = useSession();
-  const { navigate } = useRouter();
+  const { navigate, location } = useRouter();
   const load = useCallback((signal: AbortSignal) => api.catalog(signal), [api]);
   const catalog = useResource(load);
+  const query = new URL(location, window.location.origin).searchParams;
   const [name, setName] = useState("");
-  const [chosenType, setChosenType] = useState("");
-  const [chosenTemplate, setChosenTemplate] = useState("");
+  const [confirmTemplate, setConfirmTemplate] = useState<Template | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  const [uncertain, setUncertain] = useState(false);
   const submitting = useRef(false);
   const mounted = useMounted();
+  const nameInput = useRef<HTMLInputElement>(null);
   const types =
     catalog.data?.siteTypes.filter((type) =>
       catalog.data!.templates.some((template) =>
         template.siteTypes.includes(type.id),
       ),
     ) ?? [];
-  const typeId = chosenType || types[0]?.id || "";
+  const typeId = types.some((type) => type.id === query.get("type"))
+    ? query.get("type")!
+    : types[0]?.id;
   const templates =
     catalog.data?.templates.filter((template) =>
       template.siteTypes.includes(typeId),
     ) ?? [];
-  const templateId = templates.some(
-    (template) => template.id === chosenTemplate,
-  )
-    ? chosenTemplate
-    : (templates[0]?.id ?? "");
+  const demo = templates.find((template) => template.id === query.get("demo"));
+
+  function galleryUrl(template?: Template, palette?: string, showDemo = false) {
+    const next = new URLSearchParams({ type: typeId });
+    if (template) {
+      next.set(showDemo ? "demo" : "template", template.id);
+      next.set(
+        "palette",
+        palette ?? selectedPalette(template, query.get("palette")),
+      );
+    }
+    return `${appBase}/sites/new?${next}`;
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (submitting.current || !typeId || !templateId) {
+    if (submitting.current || uncertain || !confirmTemplate) {
       return;
     }
     submitting.current = true;
     setBusy(true);
     setError(null);
     try {
+      const palette = selectedPalette(confirmTemplate, query.get("palette"));
       const site = await api.create({
         name,
         siteType: typeId as SiteTypeId,
-        templateId,
+        templateId: confirmTemplate.id,
+        draft: withPalette(confirmTemplate, palette),
       });
       if (mounted.current) {
         navigate(`${appBase}/sites/${site.id}`, true);
@@ -60,6 +109,13 @@ export function NewSiteView() {
     } catch (failure) {
       if (mounted.current) {
         setError(failure);
+        // A lost or malformed success response does not prove the write failed.
+        setUncertain(
+          !(failure instanceof ApiError) ||
+            failure.status === 0 ||
+            failure.status >= 500 ||
+            failure.code === "invalid_response",
+        );
       }
     } finally {
       submitting.current = false;
@@ -69,76 +125,211 @@ export function NewSiteView() {
     }
   }
 
+  if (catalog.loading) {
+    return <Loading />;
+  }
+  if (catalog.error !== null) {
+    return (
+      <>
+        <ErrorNotice error={catalog.error} />
+        <button className="button" onClick={catalog.retry}>
+          {copy.retry}
+        </button>
+      </>
+    );
+  }
+  if (query.has("demo") && !demo) {
+    return (
+      <div className="panel-card">
+        <h1>Demo unavailable</h1>
+        <p>Please choose an available template from the gallery.</p>
+        <Link className="button" href={galleryUrl()}>
+          Back to templates
+        </Link>
+      </div>
+    );
+  }
+  if (demo) {
+    const definition = getRenderer(demo.id, demo.version);
+    const Renderer = definition?.Component;
+    const palette = selectedPalette(demo, query.get("palette"));
+    return (
+      <div className="template-demo">
+        <div className="template-demo-toolbar">
+          <Link href={galleryUrl(demo, palette)}>← Back to templates</Link>
+          <strong>Demo · {demo.name}</strong>
+          <PalettePicker
+            template={demo}
+            value={palette}
+            onChange={(next) => navigate(galleryUrl(demo, next, true), true)}
+          />
+        </div>
+        <p className="demo-notice">
+          Sample invitation. No project is created and guest responses cannot be
+          sent.
+        </p>
+        <div className="template-demo-stage">
+          {Renderer && definition.siteType === typeId ? (
+            <DemoBoundary key={`${demo.id}:${palette}`}>
+              <Suspense fallback={<Loading />}>
+                <Renderer
+                  value={withPalette(demo, palette, true)}
+                  preview
+                  introKey={`demo:${demo.id}:${palette}`}
+                  rsvp={
+                    <p className="celebration-rsvp-notice">
+                      Demo · Guest responses are disabled.
+                    </p>
+                  }
+                  rsvpAvailable={false}
+                />
+              </Suspense>
+            </DemoBoundary>
+          ) : (
+            <p className="notice">This demo is currently unavailable.</p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Link className="text-link" href={`${appBase}/sites`}>
         ← {copy.back}
       </Link>
-      <h1>{copy.newSite}</h1>
-      {!session.user?.canCreateSites ? (
-        <p className="notice error" role="alert">
-          {copy.noCreate}
-        </p>
-      ) : (
-        <>
-          {catalog.loading && <Loading />}
-          {catalog.error !== null && (
-            <>
-              <ErrorNotice error={catalog.error} />
-              <button className="button" onClick={catalog.retry}>
-                {copy.retry}
-              </button>
-            </>
-          )}
-          {catalog.data &&
-            (types.length === 0 ? (
-              <p className="notice">{copy.noCatalog}</p>
-            ) : (
-              <form className="panel-card" onSubmit={submit}>
-                <fieldset disabled={busy}>
-                  <label htmlFor="project-name">{copy.name}</label>
-                  <input
-                    id="project-name"
-                    required
-                    maxLength={120}
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                  />
-                  <label htmlFor="site-type">{copy.type}</label>
-                  <select
-                    id="site-type"
-                    value={typeId}
-                    onChange={(event) => {
-                      setChosenType(event.target.value);
-                      setChosenTemplate("");
+      <div className="page-title">
+        <div>
+          <p className="eyebrow">MAKE IT YOURS</p>
+          <h1>Choose your template</h1>
+        </div>
+      </div>
+      <p className="intro">
+        Find the right mood. Explore a demo, choose your colors, then make it
+        personal.
+      </p>
+      {!session.user?.canCreateSites && (
+        <p className="notice">{copy.noCreate}</p>
+      )}
+      {types.length > 1 && (
+        <label className="gallery-type">
+          What are you making?
+          <select
+            value={typeId}
+            onChange={(event) => {
+              setConfirmTemplate(null);
+              navigate(`${appBase}/sites/new?type=${event.target.value}`, true);
+            }}
+          >
+            {types.map((type) => (
+              <option key={type.id} value={type.id}>
+                {type.name}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+      {templates.length === 0 && <p className="notice">{copy.noCatalog}</p>}
+      <div className="template-gallery">
+        {templates.map((template) => {
+          const palette = selectedPalette(
+            template,
+            query.get("template") === template.id ? query.get("palette") : null,
+          );
+          return (
+            <article className="template-card" key={template.id}>
+              <img
+                src={template.thumbnailUrls[palette] ?? template.thumbnailUrl}
+                width="390"
+                height="640"
+                loading="lazy"
+                alt={`${template.name} invitation preview`}
+              />
+              <div className="template-card-copy">
+                <h2>{template.name}</h2>
+                <p>{template.description}</p>
+                <PalettePicker
+                  template={template}
+                  value={palette}
+                  onChange={(next) =>
+                    navigate(galleryUrl(template, next), true)
+                  }
+                />
+                <div className="gallery-actions">
+                  <Link
+                    className="button"
+                    href={galleryUrl(template, palette, true)}
+                  >
+                    View demo
+                  </Link>
+                  <button
+                    className="button primary"
+                    disabled={
+                      !session.user?.canCreateSites || busy || uncertain
+                    }
+                    onClick={() => {
+                      setConfirmTemplate(template);
+                      setError(null);
+                      navigate(galleryUrl(template, palette), true);
+                      requestAnimationFrame(() => nameInput.current?.focus());
                     }}
                   >
-                    {types.map((type) => (
-                      <option key={type.id} value={type.id}>
-                        {type.name}
-                      </option>
-                    ))}
-                  </select>
-                  <label htmlFor="template">{copy.template}</label>
-                  <select
-                    id="template"
-                    value={templateId}
-                    onChange={(event) => setChosenTemplate(event.target.value)}
-                  >
-                    {templates.map((template) => (
-                      <option key={template.id} value={template.id}>
-                        {template.id} · {template.version}
-                      </option>
-                    ))}
-                  </select>
-                  {error !== null && <ErrorNotice error={error} />}
-                  <button className="button primary" type="submit">
-                    {busy ? copy.creating : copy.create}
+                    Use this template
                   </button>
-                </fieldset>
-              </form>
-            ))}
-        </>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+      {confirmTemplate && (
+        <form
+          className="panel-card gallery-confirm"
+          onSubmit={submit}
+          aria-labelledby="confirm-project-title"
+        >
+          <h2 id="confirm-project-title">Make {confirmTemplate.name} yours</h2>
+          <p>
+            {
+              confirmTemplate.paletteLabels[
+                selectedPalette(confirmTemplate, query.get("palette"))
+              ]
+            }{" "}
+            · You can save an unfinished invitation and come back later.
+          </p>
+          <fieldset disabled={busy || uncertain}>
+            <label htmlFor="project-name">Project name</label>
+            <input
+              ref={nameInput}
+              id="project-name"
+              required
+              maxLength={120}
+              placeholder="Alex’s birthday"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+            <div className="gallery-actions">
+              <button className="button primary" type="submit">
+                {busy ? copy.creating : "Create project"}
+              </button>
+              <button
+                className="button"
+                type="button"
+                onClick={() => setConfirmTemplate(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </fieldset>
+          {error !== null && <ErrorNotice error={error} />}
+          {uncertain && (
+            <p className="notice" role="alert">
+              We could not confirm the result. Your project may already exist.{" "}
+              <Link href={`${appBase}/sites`}>Check your projects</Link> before
+              creating another.
+            </p>
+          )}
+        </form>
       )}
     </>
   );

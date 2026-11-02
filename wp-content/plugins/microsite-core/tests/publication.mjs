@@ -1,3 +1,4 @@
+import { chooseTemplate, goStep } from "./editor-navigation.mjs";
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -137,7 +138,7 @@ export async function runPublicationTests({
           .click();
         await expect(page).toHaveURL(/\/app\/sites\/?$/);
         await page.goto("/app/sites/new");
-        await page.getByLabel("Site type").selectOption("birthday-invitation");
+        await chooseTemplate(page, "birthday-invitation", "Birthday Party");
         await page
           .getByLabel("Project name")
           .fill("Browser publication private name");
@@ -146,27 +147,35 @@ export async function runPublicationTests({
         const id = Number(
           new URL(page.url()).pathname.match(/sites\/(\d+)/)[1],
         );
+        await goStep(page, "about");
         await page.getByLabel("Celebrant name").fill("Publication Alex");
+        await goStep(page, "about");
         await page
           .getByLabel("Invitation heading")
           .fill("Published birthday heading");
+        await goStep(page, "about");
         await page
           .getByLabel("Invitation message")
           .fill("Only this published message is public.");
+        await goStep(page, "event");
         await page.getByLabel("Local date and time").fill("2027-07-10T19:30");
+        await goStep(page, "event");
         await page.getByLabel("Time zone").fill("Europe/London");
+        await goStep(page, "event");
         await page.getByLabel("Venue name").fill("Publication Loft");
+        await goStep(page, "event");
         await page
           .getByLabel("Address", { exact: true })
           .fill("London\nUnited Kingdom");
         await page
-          .getByRole("button", { name: "Save changes", exact: true })
+          .getByRole("button", { name: "Save draft", exact: true })
           .click();
         await expect(
           page.getByText("All changes saved.", { exact: true }),
         ).toBeVisible();
         grant(id);
         await page.reload();
+        await goStep(page, "review");
         await page
           .getByRole("button", { name: "Publish", exact: true })
           .click();
@@ -239,9 +248,11 @@ export async function runPublicationTests({
     await check(
       "draft edits remain private; failed save never publishes; dirty publish can cancel or save and publish",
       async () => {
+        await goStep(page, "about");
         await page
           .getByLabel("Invitation message")
           .fill("Secret unsaved message");
+        await goStep(page, "review");
         await page
           .getByRole("button", { name: "Update live page", exact: true })
           .click();
@@ -250,6 +261,7 @@ export async function runPublicationTests({
         ).toBeVisible();
         await page.getByRole("button", { name: "Cancel", exact: true }).click();
         assert.doesNotMatch(await readLive(), /Secret unsaved message/);
+        await goStep(page, "about");
         await page.getByLabel("Invitation heading").fill("<b>invalid</b>");
         let publishRequests = 0;
         const watch = (request) => {
@@ -257,6 +269,7 @@ export async function runPublicationTests({
             publishRequests++;
         };
         page.on("request", watch);
+        await goStep(page, "review");
         await page
           .getByRole("button", { name: "Update live page", exact: true })
           .click();
@@ -271,19 +284,22 @@ export async function runPublicationTests({
         assert.equal(publishRequests, 0);
         assert.doesNotMatch(await readLive(), /Secret unsaved message/);
         await page.getByRole("button", { name: "Cancel", exact: true }).click();
+        await goStep(page, "about");
         await page
           .getByLabel("Invitation heading")
           .fill("Published birthday heading");
         await page
-          .getByRole("button", { name: "Save changes", exact: true })
+          .getByRole("button", { name: "Save draft", exact: true })
           .click();
         await expect(
           page.getByText("All changes saved.", { exact: true }),
         ).toBeVisible();
+        await goStep(page, "review");
         await expect(
           page.getByText("Unpublished changes", { exact: true }),
         ).toBeVisible();
         assert.doesNotMatch(await readLive(), /Secret unsaved message/);
+        await goStep(page, "review");
         await page
           .getByRole("button", { name: "Update live page", exact: true })
           .click();
@@ -291,9 +307,11 @@ export async function runPublicationTests({
           page.getByText("Your live page is up to date.", { exact: true }),
         ).toBeVisible();
         assert.match(await readLive(), /Secret unsaved message/);
+        await goStep(page, "about");
         await page
           .getByLabel("Invitation message")
           .fill("Saved and published together");
+        await goStep(page, "review");
         await page
           .getByRole("button", { name: "Update live page", exact: true })
           .click();
@@ -382,11 +400,13 @@ export async function runPublicationTests({
         await expect(
           page.getByRole("button", { name: "Update live page", exact: true }),
         ).toBeDisabled();
+        await goStep(page, "review");
         await page
           .getByRole("button", { name: "Unpublish", exact: true })
           .click();
         await page.getByRole("button", { name: "Cancel", exact: true }).click();
         await readLive();
+        await goStep(page, "review");
         await page
           .getByRole("button", { name: "Unpublish", exact: true })
           .click();

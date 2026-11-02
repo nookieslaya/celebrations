@@ -13,7 +13,12 @@ import { copy } from "../copy";
 
 interface RouterValue {
   location: string;
-  navigate: (path: string, replace?: boolean, force?: boolean) => void;
+  navigate: (
+    path: string,
+    replace?: boolean,
+    force?: boolean,
+    preserveDirty?: boolean,
+  ) => void;
   setDirty: (dirty: boolean) => void;
   confirmLeave: () => boolean;
 }
@@ -30,7 +35,9 @@ export function safeReturn(value: string | null): string {
     if (
       url.origin === window.location.origin &&
       url.pathname.startsWith(`${appBase}/`) &&
-      /^\/sites(?:\/(?:new|[1-9][0-9]*(?:\/(?:preview|responses))?))?\/?$/.test(suffix)
+      /^\/sites(?:\/(?:new|[1-9][0-9]*(?:\/(?:preview|responses))?))?\/?$/.test(
+        suffix,
+      )
     ) {
       return url.pathname + url.search;
     }
@@ -57,7 +64,7 @@ export function Router({ children }: { children: ReactNode }) {
   }, []);
 
   const navigate = useCallback(
-    (path: string, replace = false, force = false) => {
+    (path: string, replace = false, force = false, preserveDirty = false) => {
       const target = new URL(path, window.location.origin);
       if (
         target.origin !== window.location.origin ||
@@ -68,7 +75,7 @@ export function Router({ children }: { children: ReactNode }) {
       if (!force && !confirmLeave()) {
         return;
       }
-      if (force) {
+      if (force && !preserveDirty) {
         dirty.current = false;
       }
       position.current += replace ? 0 : 1;
@@ -98,7 +105,11 @@ export function Router({ children }: { children: ReactNode }) {
       const nextPosition = Number(
         event.state?.micrositeIndex ?? position.current,
       );
-      if (!confirmLeave()) {
+      if (
+        window.location.pathname !==
+          new URL(current.current, window.location.origin).pathname &&
+        !confirmLeave()
+      ) {
         const difference = position.current - nextPosition;
         if (difference) {
           restoring.current = true;

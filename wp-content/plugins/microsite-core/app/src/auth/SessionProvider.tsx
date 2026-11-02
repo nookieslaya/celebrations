@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { createApiClient, type ApiClient, type Session } from "../api/client";
+import { clearRememberedSteps } from "../editors/navigation";
 import { config } from "../config";
 import { copy } from "../copy";
 
@@ -35,6 +36,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const channel = useRef<BroadcastChannel | null>(null);
 
   const clearSession = useCallback((reason: string) => {
+    clearRememberedSteps();
     nonce.current = null;
     setSession((current) => ({ ...current, user: null, nonce: null }));
     setMessage(reason);
@@ -43,6 +45,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const applySession = useCallback((next: Session, announce = false) => {
+    if (!next.user) {
+      clearRememberedSteps();
+    }
     nonce.current = next.nonce;
     setSession(next);
     setMessage("");

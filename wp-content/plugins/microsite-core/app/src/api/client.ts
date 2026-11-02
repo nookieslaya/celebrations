@@ -33,12 +33,20 @@ export interface Catalog {
     name: string;
     schemaVersion: number;
     features: string[];
+    publishRequired: string[];
   }>;
   templates: Array<{
     id: string;
     version: string;
     siteTypes: string[];
     allowedAppearance: Record<string, string[]>;
+    name: string;
+    description: string;
+    thumbnailUrl: string;
+    thumbnailUrls: Record<string, string>;
+    paletteLabels: Record<string, string>;
+    initialDraft: Site["draft"];
+    demoDraft: Site["draft"];
   }>;
 }
 

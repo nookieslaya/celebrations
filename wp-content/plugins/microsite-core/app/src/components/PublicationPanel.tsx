@@ -11,6 +11,8 @@ interface PublicationPanelProps {
   save: () => Promise<Site | null>;
   onChange: (site: Site) => void;
   onBusy: (busy: boolean) => void;
+  fieldLabels?: Record<string, string>;
+  onField?: (path: string) => void;
 }
 
 async function copyLink(url: string) {
@@ -44,6 +46,8 @@ export function PublicationPanel({
   save,
   onChange,
   onBusy,
+  fieldLabels,
+  onField,
 }: PublicationPanelProps) {
   const { api } = useSession();
   const [choice, setChoice] = useState<"publish" | "unpublish" | null>(null);
@@ -206,7 +210,18 @@ export function PublicationPanel({
         <ul className="publication-fields">
           {Object.entries(fields).map(([path, message]) => (
             <li key={path}>
-              <strong>{path}</strong>: {message}
+              {onField ? (
+                <button
+                  type="button"
+                  className="text-link"
+                  onClick={() => onField(path)}
+                >
+                  {fieldLabels?.[path] ?? "Invitation details"}
+                </button>
+              ) : (
+                <strong>{fieldLabels?.[path] ?? "Invitation details"}</strong>
+              )}
+              : {message}
             </li>
           ))}
         </ul>

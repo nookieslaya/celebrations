@@ -1,5 +1,32 @@
 # Stan faktyczny — 2026-11-02
 
+
+## Aktualny etap: galeria i kreator — 0.7.0
+
+Działa galeria z katalogu, dziewięć rzeczywistych miniatur dla wszystkich palet, prywatne demo bez projektu/odpowiedzi oraz potwierdzenie nazwy przed utworzeniem. Zaproszenia mają pięć kroków z jednym stanem i dotychczasowym PATCH. Basic-page zachowuje prosty edytor. Podsumowanie korzysta z istniejącego read-only GET projektu, Publication::describe i walidatora backendu, a publikacja/link/QR z dotychczasowego PublicationPanel. Szablonu istniejącego projektu nie można zmienić.
+
+Adresy LocalWP (wymagana sesja):
+
+- Galeria: http://celebrations.local/app/sites/new
+- Przykładowy kreator istniejącego projektu: http://celebrations.local/app/sites/10?step=about
+- Demo bez tworzenia: http://celebrations.local/app/sites/new?type=birthday-invitation&demo=birthday-celebration&palette=midnight-gold
+
+**Weryfikacja aktualnego etapu:**
+
+- npm run verify — PASS: kontrakty, ESLint, TypeScript i produkcyjny build.
+- php -l includes/class-catalog.php i microsite-core.php — PASS; git diff --check — PASS.
+- TEST_SCOPE=gallery npm run test:integration — pięć grup PASS na prawdziwym WordPressie i tej samej stałej bazie microsite_test_430601248a09bf6c. Końcowy przebieg z UPDATE_TEMPLATE_THUMBNAILS=1 wygenerował dziewięć PNG z rzeczywistych rendererów. Początkowe klatki loadera wykryto podczas oględzin i zastąpiono po poprawieniu oczekiwania na renderer; nie są końcowymi assetami.
+- Nowe konto → galeria → demo bez POST/RSVP → wybór i zachowanie palety → pojedyncze utworzenie mimo double-click → pięć kroków → częściowy zapis i reload → preview → administracyjne prawo tylko w teście → publikacja → anonimowy odczyt → odpowiedź gościa → panel odpowiedzi — PASS.
+- Opóźniony i nieudany zapis, zachowanie danych/kroku, Back, dirty leave, nieznany krok, wyłączenie RSVP i brak funkcji RSVP w katalogu/fallback, brak prawa publikacji, read-only gotowość, focus braków, niezależny szkic/live, basic-page oraz utracona odpowiedź POST (projekt rzeczywiście istnieje, bez ponowienia) — PASS.
+- Krytyczny przebieg używał produkcyjnego manifestu i nie pobierał Vite. Dotychczasowego Vite strony LocalWP nie zatrzymywano ani nie uruchamiano ponownie. users_can_register strony LocalWP nadal 0; żadnych testowych projektów lub odpowiedzi nie tworzono na jej bazie.
+- Galeria, formularz, review i błąd zapisane w 390×844 i 1440×900. Brak poziomego overflow w sprawdzanych widokach. Obejrzano końcowe zrzuty galerii desktop/mobile, formularza mobile, review desktop/mobile, błędu mobile i miniatury prawdziwych zaproszeń.
+
+Artefakty: wp-content/plugins/microsite-core/app/test-results/gallery/{gallery,form,review,error}-{desktop,mobile}.png. Są ignorowane przez Git. Źródłowe miniatury w assets/template-previews są wersjonowanymi assetami wtyczki.
+
+**Ograniczenia zakresu:** wykonano skoncentrowany test krytycznego przepływu, nie ponawiano całej historycznej regresji 74 grup ani macierzy Safari/WebKit. Wcześniejsze scenariusze dostały wspólną nawigację galerii/kroków; nie są raportowane jako ponownie uruchomione. PHPCS/CI, fizyczne urządzenia i pełny audyt dostępności nie były wykonywane. Demo pozostaje prywatnym widokiem panelu. Bez nowych efektów, szablonów, płatności, hostingu lub resetu LocalWP. Szczegóły implementacji i regeneracji miniatur: [GALLERY-WIZARD.md](GALLERY-WIZARD.md).
+
+## Historia poprzednich etapów
+
 Birthday Celebration: dopracowanie koperty, konfetti i fotografii kuli, wtyczka 0.6.2. templateId birthday-celebration/templateVersion "1", schemaVersion 1 bez zmiany kontraktów danych. Zachowano układ po otwarciu, trzy palety, edytowalne treści, konta, publikację/snapshoty, RSVP i wcześniejsze szablony. Płatności nie są wdrażane. Istniejący Vite pozostaje uruchomiony, baza LocalWP nie była resetowana, ustawień rejestracji nie zmieniano.
 
 ## Zmiany

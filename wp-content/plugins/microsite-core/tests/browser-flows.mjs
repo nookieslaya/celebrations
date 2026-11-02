@@ -1,3 +1,4 @@
+import { chooseTemplate } from "./editor-navigation.mjs";
 import assert from "node:assert/strict";
 import {
   chromium,
@@ -59,9 +60,7 @@ export async function runBrowserFlows({ origin, password, check, isolatedWp }) {
           .first()
           .click();
         await expect(pageA).toHaveURL(/\/app\/sites\/new$/);
-        await pageA.getByLabel("Site type").selectOption("basic-page");
-        await expect(pageA.getByLabel("Site type")).toHaveValue("basic-page");
-        await expect(pageA.getByLabel("Template")).toHaveValue("basic");
+        await chooseTemplate(pageA, "basic-page", "Simple Page");
         await pageA.getByLabel("Project name").fill("First browser project");
         await pageA
           .getByRole("button", { name: "Create project", exact: true })
@@ -95,7 +94,7 @@ export async function runBrowserFlows({ origin, password, check, isolatedWp }) {
           pageA.getByRole("region", { name: "Live draft preview" }),
         ).toHaveAttribute("data-accent", "ocean");
         await pageA
-          .getByRole("button", { name: "Save changes", exact: true })
+          .getByRole("button", { name: "Save draft", exact: true })
           .click();
         await expect(
           pageA.getByText("Changes saved.", { exact: true }),
@@ -130,7 +129,7 @@ export async function runBrowserFlows({ origin, password, check, isolatedWp }) {
           .getByLabel("Heading", { exact: true })
           .fill("<b>Not allowed</b>");
         await pageA
-          .getByRole("button", { name: "Save changes", exact: true })
+          .getByRole("button", { name: "Save draft", exact: true })
           .click();
         await expect(pageA.getByRole("alert")).toBeVisible();
         await expect(pageA.getByLabel("Heading", { exact: true })).toHaveValue(
@@ -173,7 +172,7 @@ export async function runBrowserFlows({ origin, password, check, isolatedWp }) {
             .getByLabel("Project name")
             .fill("Retained after a network failure");
           await pageA
-            .getByRole("button", { name: "Save changes", exact: true })
+            .getByRole("button", { name: "Save draft", exact: true })
             .click();
           await expect(pageA.getByRole("alert")).toContainText(
             "Connection failed",
@@ -208,7 +207,7 @@ export async function runBrowserFlows({ origin, password, check, isolatedWp }) {
             .getByLabel("Description", { exact: true })
             .fill("Saved after a deliberately delayed request.");
           await pageA
-            .getByRole("button", { name: "Save changes", exact: true })
+            .getByRole("button", { name: "Save draft", exact: true })
             .click();
           await expect(
             pageA.getByLabel("Heading", { exact: true }),

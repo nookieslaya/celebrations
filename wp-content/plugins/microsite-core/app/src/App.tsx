@@ -142,7 +142,12 @@ function Workspace() {
     );
   }
 
-  if (previewMatch && ready && session.user) {
+  if (
+    (previewMatch ||
+      (suffix === "/sites/new" && url.searchParams.has("demo"))) &&
+    ready &&
+    session.user
+  ) {
     return view;
   }
 

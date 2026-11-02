@@ -6,7 +6,12 @@ import {
   type FormEvent,
 } from "react";
 import { PublicationPanel } from "../components/PublicationPanel";
-import { ApiError, type Site, type SiteTypeId } from "../api/client";
+import {
+  ApiError,
+  type Catalog,
+  type Site,
+  type SiteTypeId,
+} from "../api/client";
 import { useSession } from "../auth/SessionProvider";
 import {
   ErrorNotice,
@@ -17,12 +22,20 @@ import {
 import { appBase } from "../config";
 import { copy } from "../copy";
 import { getEditor } from "../editors/registry";
+import { rememberStep, rememberedStep } from "../editors/navigation";
 import { Link, useRouter } from "../routing/Router";
+import "../gallery/gallery.css";
 
 export function EditorView({ id }: { id: number }) {
   const { api } = useSession();
   const load = useCallback(
-    (signal: AbortSignal) => api.read(id, signal),
+    async (signal: AbortSignal) => {
+      const [site, catalog] = await Promise.all([
+        api.read(id, signal),
+        api.catalog(signal),
+      ]);
+      return { site, catalog };
+    },
     [api, id],
   );
   const resource = useResource(load);
@@ -48,43 +61,119 @@ export function EditorView({ id }: { id: number }) {
     );
   }
   return resource.data ? (
-    <DraftEditor key={resource.data.id} initial={resource.data} />
+    <DraftEditor
+      key={resource.data.site.id}
+      initial={resource.data.site}
+      catalog={resource.data.catalog}
+    />
   ) : null;
+}
+
+function snapshot(site: Site) {
+  return JSON.stringify({ name: site.name, draft: site.draft });
+}
+
+function hasContent(value: unknown, path: string): boolean {
+  let current = value;
+  for (const segment of path.split(".")) {
+    if (!current || typeof current !== "object") {
+      return false;
+    }
+    current = (current as Record<string, unknown>)[segment];
+  }
+  return typeof current === "string" && current.trim().length > 0;
 }
 
 function DraftEditor<Type extends SiteTypeId>({
   initial,
+  catalog,
 }: {
   initial: Site<Type>;
+  catalog: Catalog;
 }) {
-  const { api } = useSession();
-  const { setDirty, navigate } = useRouter();
+  const { api, session } = useSession();
+  const { setDirty, navigate, location } = useRouter();
   const [site, setSite] = useState(initial);
-  const [savedSnapshot, setSavedSnapshot] = useState(
-    JSON.stringify({ name: initial.name, draft: initial.draft }),
-  );
+  const [savedSnapshot, setSavedSnapshot] = useState(snapshot(initial));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [success, setSuccess] = useState(false);
   const [previewChoice, setPreviewChoice] = useState(false);
   const submitting = useRef(false);
   const mounted = useMounted();
+  const stepHeading = useRef<HTMLHeadingElement>(null);
   const module = getEditor(site.siteType);
-  const dirty =
-    JSON.stringify({ name: site.name, draft: site.draft }) !== savedSnapshot;
+  const type = catalog.siteTypes.find((item) => item.id === site.siteType);
+  const template = catalog.templates.find(
+    (item) => item.id === site.templateId,
+  );
+  const steps =
+    module?.steps?.filter(
+      (step) => !step.feature || type?.features.includes(step.feature),
+    ) ?? [];
+  const query = new URL(location, window.location.origin).searchParams;
+  const requested =
+    query.get("step") ?? rememberedStep(session.user!.id, site.id);
+  const step = steps.find((item) => item.id === requested) ?? steps[0];
+  const stepIndex = steps.findIndex((item) => item.id === step?.id);
+  const focusField = query.get("field");
+  const dirty = snapshot(site) !== savedSnapshot;
+  const required = type?.publishRequired ?? [];
+  const filled = required.filter((path) => hasContent(site.draft, path)).length;
+  const fields = module?.fields ?? {};
+  const labels = Object.fromEntries(
+    Object.entries(fields).map(([path, field]) => [path, field.label]),
+  );
 
   useEffect(() => {
     setDirty(dirty);
     return () => setDirty(false);
   }, [dirty, setDirty]);
 
+  useEffect(() => {
+    if (!step) {
+      return;
+    }
+    rememberStep(session.user!.id, site.id, step.id);
+    if (query.get("step") !== step.id) {
+      navigate(`${appBase}/sites/${site.id}?step=${step.id}`, true, true, true);
+    }
+    const frame = requestAnimationFrame(() => {
+      const target =
+        focusField && fields[focusField]?.step === step.id
+          ? document.getElementById(fields[focusField].input)
+          : stepHeading.current;
+      target?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+    // Step identity controls focus, never normal changes to form fields.
+  }, [step?.id, focusField]);
+
+  function goStep(id: string, field?: string) {
+    const next = new URLSearchParams({ step: id });
+    if (field) {
+      next.set("field", field);
+    }
+    navigate(`${appBase}/sites/${site.id}?${next}`, false, true, true);
+  }
+
+  function goField(path: string) {
+    const target = fields[path];
+    if (target) {
+      goStep(target.step, path);
+    }
+  }
+
   async function save(
     event?: FormEvent,
     openPreview = false,
   ): Promise<Site | null> {
     event?.preventDefault();
-    if (submitting.current || !dirty || !module) {
+    if (submitting.current || busy || !module) {
       return null;
+    }
+    if (!dirty) {
+      return site;
     }
     submitting.current = true;
     setBusy(true);
@@ -97,9 +186,7 @@ function DraftEditor<Type extends SiteTypeId>({
       });
       if (mounted.current) {
         setSite(saved as Site<Type>);
-        setSavedSnapshot(
-          JSON.stringify({ name: saved.name, draft: saved.draft }),
-        );
+        setSavedSnapshot(snapshot(saved));
         setDirty(false);
         setSuccess(true);
         if (openPreview) {
@@ -120,19 +207,55 @@ function DraftEditor<Type extends SiteTypeId>({
     }
   }
 
+  async function continueAfterSave(event: FormEvent) {
+    event.preventDefault();
+    const saved = await save();
+    if (saved && mounted.current && steps[stepIndex + 1]) {
+      goStep(steps[stepIndex + 1].id);
+    }
+  }
+
   if (!module) {
     return (
       <>
         <h1>{site.name}</h1>
         <p className="notice">{copy.unsupportedEditor}</p>
-        <Link className="text-link" href={`${appBase}/sites`}>
-          {copy.back}
-        </Link>
+        <Link href={`${appBase}/sites`}>{copy.back}</Link>
       </>
     );
   }
   const Fields = module.Fields;
   const Preview = module.Preview;
+  const appearance = site.draft.appearance as Record<string, string>;
+  const palette = Object.values(appearance)[0];
+  const content = site.draft.content as Record<string, unknown>;
+  const event = content.event as
+    | { localDateTime?: string; timeZone?: string }
+    | undefined;
+  const rsvp = content.rsvp as
+    | { enabled?: boolean; maxPartySize?: number }
+    | undefined;
+  const missing = Object.entries(site.publication.fieldErrors);
+
+  function publicationPanel() {
+    return (
+      <PublicationPanel
+        site={site}
+        dirty={dirty}
+        busy={busy}
+        save={() => save()}
+        onBusy={setBusy}
+        fieldLabels={labels}
+        onField={steps.length ? goField : undefined}
+        onChange={(updated) =>
+          setSite((current) => ({
+            ...current,
+            publication: updated.publication,
+          }))
+        }
+      />
+    );
+  }
 
   return (
     <>
@@ -140,51 +263,209 @@ function DraftEditor<Type extends SiteTypeId>({
         ← {copy.back}
       </Link>
       <div className="page-title">
-        <h1>{copy.edit}</h1>
+        <h1>{steps.length ? site.name : copy.edit}</h1>
         <span className="badge">
           {site.publication.published ? "Published" : copy.draft}
         </span>
       </div>
+      {steps.length > 0 && (
+        <>
+          <p className="wizard-progress">
+            {filled} of {required.length} publishing details filled in
+            <progress
+              value={filled}
+              max={Math.max(1, required.length)}
+              aria-label="Publishing details filled in"
+            />
+          </p>
+          <ol className="wizard-stepper" aria-label="Invitation steps">
+            {steps.map((item, index) => {
+              const paths = required.filter(
+                (path) => fields[path]?.step === item.id,
+              );
+              const count = paths.filter((path) =>
+                hasContent(site.draft, path),
+              ).length;
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    aria-label={`Step ${index + 1}: ${item.title}`}
+                    aria-current={item.id === step?.id ? "step" : undefined}
+                    onClick={() => goStep(item.id)}
+                  >
+                    <span>{index + 1}</span>{" "}
+                    <span className="wizard-step-name">{item.title}</span>
+                    <small>
+                      {paths.length
+                        ? `${count}/${paths.length} details`
+                        : item.feature
+                          ? "Optional"
+                          : item.review
+                            ? "Saved draft status"
+                            : "Your chosen palette"}
+                    </small>
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        </>
+      )}
       <div className="editor-layout">
-        <form className="panel-card" onSubmit={(event) => void save(event)}>
-          <fieldset disabled={busy}>
-            <label htmlFor="project-name">{copy.name}</label>
-            <input
-              id="project-name"
-              required
-              maxLength={120}
-              value={site.name}
-              onChange={(event) => {
-                setSite({ ...site, name: event.target.value });
-                setSuccess(false);
-                setError(null);
-              }}
-            />
-            <Fields
-              templateId={site.templateId}
-              value={site.draft}
-              onChange={(draft) => {
-                setSite({ ...site, draft });
-                setSuccess(false);
-                setError(null);
-              }}
-            />
-            {error !== null && !previewChoice && <ErrorNotice error={error} />}
-            {success && (
-              <p className="notice success" role="status">
-                {copy.saved}
-              </p>
-            )}
-            <p className="changes-state" role="status">
-              {dirty ? copy.unsaved : copy.upToDate}
-            </p>
-            <button className="button primary" type="submit" disabled={!dirty}>
-              {busy ? copy.saving : copy.save}
-            </button>
-          </fieldset>
-        </form>
         <div>
-          {site.siteType === "birthday-invitation" && (
+          <form
+            className="panel-card"
+            onSubmit={
+              step && !step.review
+                ? continueAfterSave
+                : (event) => void save(event)
+            }
+          >
+            {step && (
+              <>
+                <p className="eyebrow">
+                  Step {stepIndex + 1} of {steps.length}
+                </p>
+                <h2 ref={stepHeading} tabIndex={-1}>
+                  {step.title}
+                </h2>
+              </>
+            )}
+            <fieldset disabled={busy}>
+              {(!step || step.projectName) && (
+                <>
+                  <label htmlFor="project-name">{copy.name}</label>
+                  <input
+                    id="project-name"
+                    required
+                    maxLength={120}
+                    value={site.name}
+                    onChange={(change) => {
+                      setSite({ ...site, name: change.target.value });
+                      setSuccess(false);
+                      setError(null);
+                    }}
+                  />
+                </>
+              )}
+              {!step?.review && (
+                <Fields
+                  templateId={site.templateId}
+                  section={step?.id}
+                  availablePalettes={template?.allowedAppearance.palette}
+                  value={site.draft}
+                  onChange={(draft) => {
+                    setSite({ ...site, draft });
+                    setSuccess(false);
+                    setError(null);
+                  }}
+                />
+              )}
+              {step?.review && (
+                <div className="wizard-summary">
+                  <dl>
+                    <dt>Template</dt>
+                    <dd>{template?.name ?? "Invitation"}</dd>
+                    <dt>Color palette</dt>
+                    <dd>
+                      {template?.paletteLabels[palette] ?? "Selected palette"}
+                    </dd>
+                    <dt>Celebration</dt>
+                    <dd>{String(content.celebrantName || "Not set yet")}</dd>
+                    <dt>When</dt>
+                    <dd>
+                      {event?.localDateTime?.replace("T", " · ") ||
+                        "Not set yet"}{" "}
+                      {event?.timeZone}
+                    </dd>
+                    <dt>Where</dt>
+                    <dd>
+                      {String(content.venueName || "Not set yet")}
+                      <br />
+                      {String(content.address ?? "")}
+                    </dd>
+                    {type?.features.includes("rsvp") && (
+                      <>
+                        <dt>Guest responses</dt>
+                        <dd>
+                          {rsvp?.enabled
+                            ? `Enabled · up to ${rsvp.maxPartySize} guests`
+                            : "Disabled"}
+                        </dd>
+                      </>
+                    )}
+                    <dt>Publication</dt>
+                    <dd>
+                      {site.publication.published
+                        ? "Published"
+                        : "Not published"}
+                    </dd>
+                  </dl>
+                  <h3>Still needed before publishing</h3>
+                  <p className="field-help">
+                    {dirty
+                      ? "This check is for your last saved draft. Save your changes to refresh it."
+                      : "Checked against your saved draft."}
+                  </p>
+                  {missing.length ? (
+                    <ul className="wizard-missing">
+                      {missing.map(([path, message]) => (
+                        <li key={path}>
+                          <button type="button" onClick={() => goField(path)}>
+                            {labels[path] ?? "Invitation details"}
+                          </button>{" "}
+                          · {message}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="notice success">
+                      Your saved invitation has all required publishing details.
+                    </p>
+                  )}
+                </div>
+              )}
+              {error !== null && <ErrorNotice error={error} />}
+              {success && (
+                <p className="notice success" role="status">
+                  {copy.saved}
+                </p>
+              )}
+              <p className="changes-state" role="status">
+                {dirty ? copy.unsaved : copy.upToDate}
+              </p>
+              <div className="wizard-actions">
+                {stepIndex > 0 && (
+                  <button
+                    className="button"
+                    type="button"
+                    onClick={() => goStep(steps[stepIndex - 1].id)}
+                  >
+                    Back
+                  </button>
+                )}
+                <button
+                  className="button"
+                  type="button"
+                  disabled={!dirty}
+                  onClick={() => void save()}
+                >
+                  {busy ? copy.saving : "Save draft"}
+                </button>
+                {step && !step.review && (
+                  <button className="button primary" type="submit">
+                    {busy ? copy.saving : "Save & continue"}
+                  </button>
+                )}
+              </div>
+            </fieldset>
+          </form>
+          {step?.review && publicationPanel()}
+        </div>
+        <div>
+          {type?.features.includes("rsvp") && (
             <Link
               className="button"
               href={`${appBase}/sites/${site.id}/responses`}
@@ -193,6 +474,15 @@ function DraftEditor<Type extends SiteTypeId>({
             </Link>
           )}
           <p className="eyebrow">{copy.preview}</p>
+          {step?.id === "style" && template && (
+            <img
+              className="wizard-template-thumbnail"
+              src={template.thumbnailUrls[palette] ?? template.thumbnailUrl}
+              alt={`${template.name} preview`}
+              width="390"
+              height="640"
+            />
+          )}
           <Preview value={site.draft} />
           {module.fullPreview && (
             <>
@@ -240,23 +530,10 @@ function DraftEditor<Type extends SiteTypeId>({
           )}
           <p className="field-help">
             {site.publication.published
-              ? "This preview shows your current form. Your live page changes only when you publish."
+              ? "Your live page changes only when you publish an update."
               : copy.previewHelp}
           </p>
-          <PublicationPanel
-            site={site}
-            dirty={dirty}
-            busy={busy}
-            save={() => save()}
-            onBusy={setBusy}
-            onChange={(updated) => {
-              // Publication may be withdrawn while a form still has unsaved edits.
-              setSite((current) => ({
-                ...current,
-                publication: updated.publication,
-              }));
-            }}
-          />
+          {!step && publicationPanel()}
         </div>
       </div>
     </>

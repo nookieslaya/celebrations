@@ -1,3 +1,4 @@
+import { chooseTemplate, goStep } from "./editor-navigation.mjs";
 import assert from "node:assert/strict";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -126,15 +127,18 @@ export async function runCelebrationTests({
           .click();
         await expect(editor).toHaveURL(/\/app\/sites\/?$/);
         await editor.goto("/app/sites/new");
-        await editor
-          .getByLabel("Template")
-          .selectOption("birthday-celebration");
+        await chooseTemplate(
+          editor,
+          "birthday-invitation",
+          "Birthday Celebration",
+        );
         await editor
           .getByLabel("Project name")
           .fill("New celebration from catalog");
         await editor
           .getByRole("button", { name: "Create project", exact: true })
           .click();
+        await goStep(editor, "style");
         await expect(editor.getByLabel("Color palette")).toHaveValue(
           "midnight-gold",
         );
@@ -144,7 +148,7 @@ export async function runCelebrationTests({
         );
         await editor.getByLabel("Color palette").selectOption("disco-rose");
         await editor
-          .getByRole("button", { name: "Save changes", exact: true })
+          .getByRole("button", { name: "Save draft", exact: true })
           .click();
         await expect(
           editor.getByText("All changes saved.", { exact: true }),

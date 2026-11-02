@@ -1,3 +1,4 @@
+import { chooseTemplate, goStep } from "./editor-navigation.mjs";
 import assert from "node:assert/strict";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -141,8 +142,13 @@ export async function runBirthdayTests({
       const historical = structuredClone(defaultDraft);
       historical.content.event.localDateTime = "1900-01-01T12:00";
       historical.content.event.timeZone = "Asia/Kolkata";
-      const precise = (await api(a, "PATCH", `/sites/${saved.id}`, { draft: historical })).data;
-      assert.equal(precise.draft.content.event.startsAt, "1900-01-01T06:38:50Z");
+      const precise = (
+        await api(a, "PATCH", `/sites/${saved.id}`, { draft: historical })
+      ).data;
+      assert.equal(
+        precise.draft.content.event.startsAt,
+        "1900-01-01T06:38:50Z",
+      );
       await api(a, "PATCH", `/sites/${saved.id}`, { draft: saved.draft });
     },
   );
@@ -223,8 +229,7 @@ export async function runBirthdayTests({
           .getByRole("link", { name: "Create a site", exact: true })
           .first()
           .click();
-        await page.getByLabel("Site type").selectOption("birthday-invitation");
-        await expect(page.getByLabel("Template")).toHaveValue("birthday-party");
+        await chooseTemplate(page, "birthday-invitation", "Birthday Party");
         await page.getByLabel("Project name").fill("Browser birthday");
         await page
           .getByRole("button", { name: "Create project", exact: true })
@@ -236,49 +241,64 @@ export async function runBirthdayTests({
           requests.some((url) => url.includes("BirthdayParty-")),
           false,
         );
+        await goStep(page, "about");
         await page.getByLabel("Celebrant name").fill("Alex Morgan");
+        await goStep(page, "about");
         await page.getByLabel("Age (optional)").fill("30");
+        await goStep(page, "about");
         await page
           .getByLabel("Invitation heading")
           .fill("Good people. Great night.");
+        await goStep(page, "about");
         await page
           .getByLabel("Invitation message")
           .fill(
             "A little older. A lot more to celebrate. Join me for a night with my favourite people.",
           );
+        await goStep(page, "event");
         await page.getByLabel("Local date and time").fill("2027-07-10T19:30");
+        await goStep(page, "event");
         await page.getByLabel("Time zone").fill("Europe/London");
+        await goStep(page, "event");
         await page.getByLabel("Venue name").fill("The Loft");
+        await goStep(page, "event");
         await page
           .getByLabel("Address", { exact: true })
           .fill("London\nUnited Kingdom");
+        await goStep(page, "event");
         await page
           .getByLabel("Dress code (optional)")
           .fill("A little colour. A little sparkle.");
+        await goStep(page, "event");
         await page
           .getByLabel("Additional information (optional)")
           .fill("Bring your best stories. We’ll take care of the rest.");
         await page
-          .getByRole("button", { name: "Save changes", exact: true })
+          .getByRole("button", { name: "Save draft", exact: true })
           .click();
         await expect(
           page.getByText("Changes saved.", { exact: true }),
         ).toBeVisible();
         await page.reload();
+        await goStep(page, "about");
         await expect(page.getByLabel("Celebrant name")).toHaveValue(
           "Alex Morgan",
         );
+        await goStep(page, "event");
         await expect(page.getByLabel("Local date and time")).toHaveValue(
           "2027-07-10T19:30",
         );
         await expect(page.getByLabel("Time zone")).toHaveValue("Europe/London");
-        await expect(page.getByLabel("Address", { exact: true })).toHaveValue("London\nUnited Kingdom");
+        await expect(page.getByLabel("Address", { exact: true })).toHaveValue(
+          "London\nUnited Kingdom",
+        );
       },
     );
 
     await check(
       "birthday Preview explains unsaved data; cancellation and failed save never open a stale preview",
       async () => {
+        await goStep(page, "about");
         await page.getByLabel("Invitation heading").fill("<b>Invalid</b>");
         await page
           .getByRole("button", { name: "Preview invitation", exact: true })
@@ -287,7 +307,7 @@ export async function runBirthdayTests({
           page.getByRole("dialog", { name: "Save before preview" }),
         ).toBeVisible();
         await page.getByRole("button", { name: "Cancel", exact: true }).click();
-        await expect(page).toHaveURL(new RegExp(`${path}$`));
+        await expect(page).toHaveURL(new RegExp(`${path}(?:\\?.*)?$`));
         await page
           .getByRole("button", { name: "Preview invitation", exact: true })
           .click();
@@ -295,7 +315,8 @@ export async function runBirthdayTests({
           .getByRole("button", { name: "Save and preview", exact: true })
           .click();
         await expect(page.getByRole("alert")).toBeInViewport();
-        await expect(page).toHaveURL(new RegExp(`${path}$`));
+        await expect(page).toHaveURL(new RegExp(`${path}(?:\\?.*)?$`));
+        await goStep(page, "about");
         await page
           .getByLabel("Invitation heading")
           .fill("One unforgettable night.");
@@ -353,6 +374,7 @@ export async function runBirthdayTests({
         await page
           .getByRole("link", { name: "Back to editor", exact: true })
           .click();
+        await goStep(page, "about");
         await expect(page.getByLabel("Celebrant name")).toHaveValue(
           "Alex Morgan",
         );

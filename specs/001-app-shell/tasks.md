@@ -111,6 +111,19 @@
 - [x] Stały układ sceny podczas przejścia koperta → hero oraz rezerwacja miejsca na scrollbar.
 - [x] Kontrole kodu i produkcyjny build; bez sprawdzania widoków zgodnie z prośbą użytkownika.
 
+## Galeria i kreator — 0.7.0
+
+- [x] Inwentaryzacja katalogu, edytorów, szkiców, gotowości, publikacji i działającego RSVP.
+- [x] Metadane prezentacyjne w Catalog, palety i dziewięć miniatur z rzeczywistych rendererów.
+- [x] Lekkie karty oraz prywatne demo bez tworzenia projektów, publikacji i odpowiedzi.
+- [x] Potwierdzenie nazwy, wybrany szablon i paleta w POST, blokada podwójnego kliknięcia i nieznanego wyniku.
+- [x] Wspólny stan edytora, istniejące sekcje pól, pięć stabilnych kroków w definicji typu.
+- [x] Save draft / Save & continue, Back, dirty guard, focus, URL/fallback i pamięć ostatniego kroku bez treści formularza.
+- [x] Podsumowanie i linki braków z istniejącej backendowej walidacji read-only; dotychczasowy PublicationPanel i QR.
+- [x] Basic-page bez kroków wydarzenia; RSVP tylko według rzeczywistej funkcji katalogu.
+- [x] Krytyczne E2E na buildzie produkcyjnym i dotychczasowej bazie testowej; screenshoty desktop/mobile.
+- [x] Dokumentacja metadanych, miniatur, kroków, zapisu, demo i ograniczeń.
+
 ## Dalsze etapy
 
 - [ ] PHPCS i CI, prywatny podgląd basic-page.

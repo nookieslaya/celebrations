@@ -90,3 +90,8 @@ Kontrakt, temporalna normalizacja, routing prywatnego preview i niezależne rend
 ## Birthday Celebration — etap wizualny
 
 Nowy lazy renderer birthday-celebration@1 współdzieli typ, edytor i kontrakt birthday-invitation. Kompatybilne rozszerzenie enum palet jest ograniczone per template w Catalog; template defaults nie zmieniają starych projektów. Opcjonalny slot RSVP pozwala publicznej powłoce osadzić istniejący formularz wewnątrz nowego renderera. Callback stanu służy tylko prezentacji CTA; renderer nie importuje API. [BIRTHDAY-CELEBRATION.md](BIRTHDAY-CELEBRATION.md) opisuje podział modułów, motion/cleanup, demo i weryfikację.
+
+
+## Galeria i kreator — 0.7.0
+
+[Galeria i kreator](GALLERY-WIZARD.md) rozszerzają istniejący katalog o metadane prezentacji, schematowe defaults, fikcyjne demo i publiczne URL miniatur. Nie wprowadzają drugiego systemu zapisu lub publikacji. Rejestr edytorów definiuje kroki i mapę pól; EditorView nadal posiada jeden stan i pełny PATCH. Gotowość pochodzi z istniejącego chronionego GET projektu i Publication::describe. Nawigacja między krokami tego samego projektu zachowuje dirty state, a sessionStorage pamięta wyłącznie krok; wylogowanie czyści tę pamięć. Demo jest odrębnym stanem galerii za sesją i korzysta z istniejącego lazy renderera bez aktywnego RSVP.
