@@ -1,10 +1,14 @@
+import {
+  celebrationCopyFields,
+  type CelebrationCopyKey,
+} from "../renderers/birthday-celebration/copy";
 import { RsvpSettings } from "../rsvp/RsvpSettings";
 import schema from "../../../contracts/birthday-invitation.v1.json";
 import type { BirthdayInvitationDraft } from "../generated/drafts";
 import "./birthday-editor.css";
 
 const contentSchema = schema.properties.content.properties;
-const palettes = schema.properties.appearance.properties.palette.enum;
+const allPalettes = schema.properties.appearance.properties.palette.enum;
 export const birthdayCopy = {
   name: "Celebrant name",
   age: "Age (optional)",
@@ -24,15 +28,27 @@ export const birthdayCopy = {
     "electric-citrus": "Electric citrus",
     "pink-noir": "Pink noir",
     "cobalt-pop": "Cobalt pop",
+    "midnight-gold": "Midnight Gold",
+    "disco-rose": "Disco Rose",
+    "stardust-silver": "Stardust Silver",
   },
 };
 
 interface Props {
+  templateId?: string;
   value: BirthdayInvitationDraft;
   onChange: (value: BirthdayInvitationDraft) => void;
 }
 
-export function BirthdayInvitationFields({ value, onChange }: Props) {
+export function BirthdayInvitationFields({
+  value,
+  onChange,
+  templateId,
+}: Props) {
+  const palettes =
+    templateId === "birthday-celebration"
+      ? allPalettes.slice(3)
+      : allPalettes.slice(0, 3);
   const content = value.content;
   function update(changes: Partial<BirthdayInvitationDraft["content"]>) {
     onChange({ ...value, content: { ...content, ...changes } });
@@ -169,6 +185,37 @@ export function BirthdayInvitationFields({ value, onChange }: Props) {
           {contentSchema.additionalInfo.maxLength}
         </small>
       </section>
+      {templateId === "birthday-celebration" && (
+        <section aria-labelledby="celebration-copy-fields">
+          <h2 id="celebration-copy-fields">Template wording</h2>
+          <p className="field-help">
+            All fields start with ready-to-use text. Use {"{name}"} and {"{age}"}
+            to insert the celebrant’s name and age automatically. Use {"{palette}"}
+            for the palette name.
+          </p>
+          {Object.entries(celebrationCopyFields).map(([key, field]) => {
+            const copyKey = key as CelebrationCopyKey;
+            return (
+              <div key={key}>
+                <label htmlFor={`celebration-copy-${key}`}>{field.title}</label>
+                <input
+                  id={`celebration-copy-${key}`}
+                  maxLength={field.maxLength}
+                  value={content.celebrationCopy?.[copyKey] ?? field.default}
+                  onChange={(event) =>
+                    update({
+                      celebrationCopy: {
+                        ...content.celebrationCopy,
+                        [key]: event.target.value,
+                      },
+                    })
+                  }
+                />
+              </div>
+            );
+          })}
+        </section>
+      )}
       <RsvpSettings value={value} onChange={onChange} />
       <section aria-labelledby="appearance-fields">
         <h2 id="appearance-fields">Appearance</h2>

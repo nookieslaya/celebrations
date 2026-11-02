@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Microsite Core
  * Description: Theme-independent application shell for microsites.
- * Version: 0.6.0
+ * Version: 0.6.2
  * Requires PHP: 8.2
  * Requires at least: 6.6
  * Text Domain: microsite-core

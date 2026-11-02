@@ -1,3 +1,4 @@
+import { InvitationLoader } from "../components/InvitationLoader";
 import { Component, Suspense, useCallback, type ReactNode } from "react";
 import { useSession } from "../auth/SessionProvider";
 import { appBase } from "../config";
@@ -42,7 +43,9 @@ export function PreviewView({ id }: { id: number }) {
   return (
     <div className="private-preview-shell">
       <div className="private-preview-toolbar">
-        <Link href={`${appBase}/sites/${id}`}><span aria-hidden="true">← </span>Back to editor</Link>
+        <Link href={`${appBase}/sites/${id}`}>
+          <span aria-hidden="true">← </span>Back to editor
+        </Link>
         <span>Private draft · Not published</span>
       </div>
       {resource.loading && (
@@ -64,12 +67,21 @@ export function PreviewView({ id }: { id: number }) {
           <RendererBoundary key={`${id}:${resource.data.updatedAt}`}>
             <Suspense
               fallback={
-                <div className="private-preview-message">
-                  <Loading message="Opening your invitation…" />
-                </div>
+                <InvitationLoader
+                  templateId={resource.data.templateId}
+                  palette={
+                    "palette" in resource.data.draft.appearance
+                      ? resource.data.draft.appearance.palette
+                      : undefined
+                  }
+                />
               }
             >
-              <Renderer value={resource.data.draft} />
+              <Renderer
+                value={resource.data.draft}
+                preview
+                introKey={resource.data.publicId}
+              />
             </Suspense>
           </RendererBoundary>
         ) : (

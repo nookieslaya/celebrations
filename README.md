@@ -79,3 +79,7 @@ Edytor obsługuje publikację, osobny snapshot, wycofanie, link i QR SVG/PNG. Ka
 ## Etap 6 — RSVP
 
 Birthday invitation ma opcjonalne RSVP: konfiguracja w edytorze → zapis → aktualizacja publikacji. Odpowiedzi organizatora: /app/sites/{id}/responses. Gość nie potrzebuje konta i otrzymuje prywatny link do swojej odpowiedzi. [docs/RSVP.md](docs/RSVP.md) opisuje czas, sekrety, idempotencję, usuwanie i ograniczenia. Starsze projekty/snapshoty pozostają z wyłączonym RSVP.
+
+## Birthday Celebration
+
+Nowy szablon birthday-celebration ma warianty Midnight Gold, Disco Rose i Stardust Silver, własną choreografię i wspólny formularz RSVP. Dotychczasowy birthday-party pozostaje dostępny. Demo i opis: [docs/BIRTHDAY-CELEBRATION.md](docs/BIRTHDAY-CELEBRATION.md); źródła/licencje: [docs/THIRD-PARTY-ASSETS.md](docs/THIRD-PARTY-ASSETS.md).

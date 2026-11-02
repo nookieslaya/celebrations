@@ -86,3 +86,7 @@ Kontrakt, temporalna normalizacja, routing prywatnego preview i niezależne rend
 ## Etap 6 — RSVP
 
 [RSVP.md](RSVP.md) opisuje opcjonalną funkcję birthday-invitation, kompatybilne rozszerzenie kontraktu v1, osobne tabele odpowiedzi i usuniętych operacji, idempotencję, sekret zarządzania i zasady czasowe. Publication i RSVP współdzielą ProjectLock. Publiczne formularze i oddzielna powłoka /rsvp/manage/ nie importują kont/routera panelu. Prywatny widok /app/sites/:id/responses korzysta z tego samego klienta sesji i nonce co CRUD. AssetManifest zbiera CSS także z importowanych statycznie chunków Vite, co jest konieczne przy trzech entry i współdzielonych stylach. Nie zmieniano animacji ani własnych SVG.
+
+## Birthday Celebration — etap wizualny
+
+Nowy lazy renderer birthday-celebration@1 współdzieli typ, edytor i kontrakt birthday-invitation. Kompatybilne rozszerzenie enum palet jest ograniczone per template w Catalog; template defaults nie zmieniają starych projektów. Opcjonalny slot RSVP pozwala publicznej powłoce osadzić istniejący formularz wewnątrz nowego renderera. Callback stanu służy tylko prezentacji CTA; renderer nie importuje API. [BIRTHDAY-CELEBRATION.md](BIRTHDAY-CELEBRATION.md) opisuje podział modułów, motion/cleanup, demo i weryfikację.

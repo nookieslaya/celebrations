@@ -25,7 +25,9 @@ function randomHex() {
 
 export function GuestForm({
   configuration,
+  onStatus,
 }: {
+  onStatus?: (status: RsvpStatus) => void;
   configuration: PublicRsvpConfig;
 }) {
   const [status, setStatus] = useState<RsvpStatus | null>(null);
@@ -71,14 +73,17 @@ export function GuestForm({
       undefined,
       controller.signal,
     )
-      .then(setStatus)
+      .then((current) => {
+        setStatus(current);
+        onStatus?.(current);
+      })
       .catch((failure) => {
         if (!controller.signal.aborted) {
           setError(failure);
         }
       });
     return () => controller.abort();
-  }, [configuration.statusUrl, reload]);
+  }, [configuration.statusUrl, reload, onStatus]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();

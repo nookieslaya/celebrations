@@ -54,7 +54,18 @@ final class Catalog {
                 'siteTypes'         => array( 'birthday-invitation' ),
                 'rendererKey'       => 'birthday-party',
                 'allowedAppearance' => array(
-                    'palette' => $birthday_schema['properties']['appearance']['properties']['palette']['enum'],
+                    'palette' => array_slice( $birthday_schema['properties']['appearance']['properties']['palette']['enum'], 0, 3 ),
+                ),
+            ),
+            'birthday-celebration' => array(
+                'id' => 'birthday-celebration',
+                'name' => 'Birthday Celebration',
+                'version' => '1',
+                'siteTypes' => array( 'birthday-invitation' ),
+                'rendererKey' => 'birthday-celebration',
+                'defaults' => array( 'appearance' => array( 'palette' => 'midnight-gold' ) ),
+                'allowedAppearance' => array(
+                    'palette' => array_slice( $birthday_schema['properties']['appearance']['properties']['palette']['enum'], 3 ),
                 ),
             ),
             'basic' => array(

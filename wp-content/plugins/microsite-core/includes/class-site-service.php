@@ -33,6 +33,10 @@ final class SiteService {
         $draft = array_key_exists( 'draft', $payload )
             ? $payload['draft']
             : $selection['type']['defaults'];
+        if ( ! array_key_exists( 'draft', $payload ) && isset( $selection['template']['defaults']['appearance'] ) ) {
+            $draft['appearance'] = array_replace( $draft['appearance'], $selection['template']['defaults']['appearance'] );
+        }
+
         $valid = $this->validator->draft( $draft, $selection['type'], $selection['template'] );
 
         if ( is_wp_error( $valid ) ) {

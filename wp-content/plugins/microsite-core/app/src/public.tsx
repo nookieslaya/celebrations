@@ -1,5 +1,12 @@
+import { InvitationLoader } from "./components/InvitationLoader";
 import { GuestForm, type PublicRsvpConfig } from "./rsvp/GuestForm";
-import { Component, Suspense, type ReactNode } from "react";
+import {
+  Component,
+  Suspense,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
 import { createRoot } from "react-dom/client";
 import type { Site } from "./api/client";
 import { getRenderer } from "./renderers/registry";
@@ -47,21 +54,49 @@ if (root && data?.textContent) {
 
   if (renderer && renderer.siteType === snapshot.siteType) {
     const Renderer = renderer.Component;
-    createRoot(root).render(
-      <PublicBoundary>
-        <Suspense fallback={<p role="status">Opening your page…</p>}>
-          <Renderer
-            value={
-              {
-                content: snapshot.content,
-                appearance: snapshot.appearance,
-              } as Site["draft"]
+    function PublicInvitation() {
+      const [rsvpOpen, setRsvpOpen] = useState(false);
+      const updateRsvpStatus = useCallback(
+        (status: { open: boolean }) => setRsvpOpen(status.open),
+        [],
+      );
+      const form = rsvpConfiguration ? (
+        <GuestForm
+          configuration={rsvpConfiguration}
+          onStatus={renderer?.embeddedRsvp ? updateRsvpStatus : undefined}
+        />
+      ) : undefined;
+      return (
+        <PublicBoundary>
+          <Suspense
+            fallback={
+              <InvitationLoader
+                templateId={snapshot.templateId}
+                palette={
+                  "palette" in snapshot.appearance
+                    ? snapshot.appearance.palette
+                    : undefined
+                }
+              />
             }
-          />
-        </Suspense>
-        {rsvpConfiguration && <GuestForm configuration={rsvpConfiguration} />}
-      </PublicBoundary>,
-    );
+          >
+            <Renderer
+              value={
+                {
+                  content: snapshot.content,
+                  appearance: snapshot.appearance,
+                } as Site["draft"]
+              }
+              introKey={window.location.pathname}
+              rsvpAvailable={rsvpOpen}
+              rsvp={renderer?.embeddedRsvp ? form : undefined}
+            />
+          </Suspense>
+          {!renderer?.embeddedRsvp && form}
+        </PublicBoundary>
+      );
+    }
+    createRoot(root).render(<PublicInvitation />);
   } else {
     root.textContent = "This page design is unavailable.";
   }

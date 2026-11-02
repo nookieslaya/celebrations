@@ -1,0 +1,31 @@
+.invitation-loader {
+  --loader-bg: #0a0d18;
+  --loader-accent: #dfb96d;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 25px;
+  background: var(--loader-bg);
+  color: var(--loader-accent);
+  text-align: center;
+}
+.invitation-loader[data-palette="disco-rose"] { --loader-bg: #200c1d; --loader-accent: #eb93bb; }
+.invitation-loader[data-palette="stardust-silver"] { --loader-bg: #091727; --loader-accent: #aecdee; }
+.invitation-loader[data-template="birthday-party"] { --loader-bg: #191b16; --loader-accent: #d8f233; }
+.invitation-loader[data-palette="pink-noir"] { --loader-bg: #29152e; --loader-accent: #f9b5da; }
+.invitation-loader[data-palette="cobalt-pop"] { --loader-bg: #263fe9; --loader-accent: #fff4d8; }
+.invitation-loader-symbol { display: grid; place-items: center; width: 76px; height: 76px; border: 1px solid currentColor; border-radius: 50%; box-shadow: 0 0 35px color-mix(in srgb, var(--loader-accent) 9%, transparent); }
+.invitation-loader-symbol::before { content: "c."; font: italic 48px/1 Georgia, serif; transform: translate(-2px, -2px); }
+.invitation-loader[data-template="birthday-party"] .invitation-loader-symbol { border-radius: 22px; transform: rotate(-8deg); }
+.invitation-loader[data-template="birthday-party"] .invitation-loader-symbol::before { content: "✳"; font: 38px/1 system-ui, sans-serif; transform: rotate(8deg); }
+.invitation-loader-copy { font: 500 10px/1.8 system-ui, sans-serif; letter-spacing: .22em; text-transform: uppercase; }
+.invitation-loader-line { width: 110px; height: 1px; overflow: hidden; background: color-mix(in srgb, var(--loader-accent) 18%, transparent); }
+.invitation-loader-line::after { content: ""; display: block; width: 45%; height: 1px; background: currentColor; animation: invitation-loader-travel 1.8s ease-in-out infinite alternate; }
+@keyframes invitation-loader-travel { from { transform: translateX(-30%); opacity: .3; } to { transform: translateX(160%); opacity: .9; } }
+.invitation-assets-body[aria-hidden="true"] { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) { .invitation-loader-line::after { animation: none; width: 100%; opacity: .55; } }

@@ -9,6 +9,7 @@ import {
 
 export interface EditorModule<Type extends SiteTypeId> {
   Fields: ComponentType<{
+    templateId?: string;
     value: DraftBySiteType[Type];
     onChange: (draft: DraftBySiteType[Type]) => void;
   }>;

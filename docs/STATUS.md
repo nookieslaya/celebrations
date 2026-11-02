@@ -1,53 +1,81 @@
-# Stan faktyczny — 2026-11-01
+# Stan faktyczny — 2026-11-02
 
-Etap 6: wtyczka 0.6.0. RSVP i panel odpowiedzi są wdrożone jako rozszerzenie istniejącej publikacji. Pozostawiono istniejący Vite, aktywny motyw i konfigurację LocalWP. users_can_register nadal 0. Nie resetowano bazy strony. Testy ponownie używają microsite_test_430601248a09bf6c.
+Birthday Celebration: dopracowanie koperty, konfetti i fotografii kuli, wtyczka 0.6.2. templateId birthday-celebration/templateVersion "1", schemaVersion 1 bez zmiany kontraktów danych. Zachowano układ po otwarciu, trzy palety, edytowalne treści, konta, publikację/snapshoty, RSVP i wcześniejsze szablony. Płatności nie są wdrażane. Istniejący Vite pozostaje uruchomiony, baza LocalWP nie była resetowana, ustawień rejestracji nie zmieniano.
 
-## Działający zakres
+## Zmiany
 
-Opcjonalne content.rsvp w birthday-invitation/schemaVersion 1: enabled, limit 1–20 (włącznie z odpowiadającym), deadline lokalny w strefie wydarzenia i kanoniczny UTC. Rozszerzenie jest kompatybilne: starsze szkice i snapshoty bez RSVP pozostają wyłączone i nie są przepisywane. JSON Schema jest źródłem limitów/defaults/typów; generator obsługuje boolean. basic-page nie obsługuje RSVP. Termin korzysta z istniejącego EventDate/IANA/DST i nie może być po wydarzeniu, także po zmianie jego daty/strefy.
+**Koperta:** osobny Envelope.tsx i envelope.css z warstwami shadow/back/card/front pocket/flap/seal, fakturą papieru, tłoczeniem, metalicznymi krawędziami, światłem i grubością. Grafit/ivory, śliwka/blush i granat/ice według palety. Karta początkowo niewidoczna, z danymi projektu (YOU’RE INVITED, imię, opcjonalny wiek), zasłaniana przez kieszeń. Klapka ma obie strony/backface visibility, zawias i perspective; po przekroczeniu płaszczyzny przechodzi za kartę. Żaden globalny overflow nie ucina wysuniętej karty.
 
-Dwie wersjonowane tabele InnoDB z prefiksem WordPressa: odpowiedzi oraz nieosobowe znaczniki usuniętych operacji. Unique sekretu i operacji projektu, indeks listy/filtra. Migracja jest idempotentna i sprawdza kluczowe indeksy/engine przed oznaczeniem wersji. Trwałe usunięcie projektu usuwa odpowiedzi i sekrety; zwykła dezaktywacja niczego nie usuwa.
+useInvitationIntro.ts obsługuje jawne closed/opening/opened i jeden timeline: pieczęć 0–0.24s, klapka 0.18–0.85s, karta 0.7–1.44s, przejście do prawdziwego hero 1.48–2.48s. Synchronous ref blokuje wielokrotne rozpoczęcie. Skip działa przed i w trakcie, resetuje konfetti, sprząta timeline i odsłania pełną treść. Hero jest inert/aria-hidden pod inline intro, bez modalnej pułapki focusu lub blokady scrolla. Po otwarciu focus trafia na imię bez przewijania; Skip kieruje do szczegółów. sessionStorage przechowuje tylko "skipped", osobno według projektu i envelope-v2. Preview ignoruje tę pamięć i ma Replay intro. Błąd GSAP lub HMR w trakcie otwierania odsłania treść zamiast pozostawiać stan blokujący.
 
-Gość podaje imię, yes/no i liczbę osób. Bez konta, emaila, telefonu i danych wrażliwych. Wyłącznie publikacja określa ustawienia formularza. Niekompletny draft pozostaje prywatny. Czas serwera zamyka tworzenie/zmiany/wycofanie przy równości deadline lub startu; usunięcie przez sekret pozostaje dostępne. Wycofanie publikacji i wyłączenie RSVP nie kasuje odpowiedzi. Obniżenie limitu nie zmienia historycznych rekordów.
+**Konfetti:** canvas-confetti 1.9.4, ISC, jedyny silnik burstów. Oficjalny Realistic Look przeczytano wraz z parametrami i kodem pięciu profili. Zaadaptowano proporcje .25/.20/.35/.10/.10, różne spread/startVelocity/decay/scalar, flat:false, wyłącznie square. Dwa dolne boczne początki, kierunek do środka/w górę, odstęp 110ms, 80 cząstek na telefonie i 168 na desktopie. Emisja przy odsłonięciu hero (1.85s), skończony efekt bez deszczu w pętli. Palety gold/champagne/ivory, rose/rose-gold/blush i silver/blue/white; nie deklarujemy metalicznego renderowania. Pause blokuje nowe emisje, usuwa timeouty i resetuje aktualny burst, nie obiecuje wznowienia tych samych cząstek. Hidden/unmount/reduced motion również resetują. Własny Canvas rysuje teraz wyłącznie rzadkie spokojne tło, bez drugiego konfetti. Canvas i dekoracje mają pointer-events:none.
 
-Sekret i losowa część klucza po 256 bitów, Web Crypto. Baza przechowuje tylko hash sekretu/klucza i fingerprint pierwotnego payloadu. Bez surowych IP/user-agent w odpowiedziach. Idempotentne retry odzyskuje istniejące id także po zamknięciu, konflikt sekretu/payloadu daje 409. Usunięcie trwale kasuje dane i transakcyjnie zapisuje znacznik operacji na 48 godzin; klucz nowej operacji jest ważny maksymalnie 24 godziny, więc po sprzątnięciu znacznika nie odtworzy danych. WP-Cron sprząta tylko znaczniki, nie odpowiedzi.
+**Kula:** prawdziwa fotografia Reginy Valetovej z podanej strony Unsplash. Obejrzano źródłowy plik 1600px i wynikowy lokalny WebP. Zapisano centralny crop kuli z oryginalnymi kolorowymi refleksami, 640×640, 148,840 bajtów (aktualizacja 2026-11-02). Plik jest nieprzezroczysty: miękka maska CSS i blend usuwają prostokątną granicę, bez fałszywej szachownicy/claimu alpha. Lustra zachowują fotograficzne błękitne/złote odbicia; otoczenie i bliki dopasowano do palety. Kula jest wyłącznie dekoracją hero, ma małe wahnięcie ±1.4°, ruch 1–2px i spokojne refleksy; nie obraca się o 360° ani rotateY. Usunięto poprzedni sztuczny wzór SVG.
 
-Prywatny link /rsvp/manage/#{id}.{secret} używa fragmentu i dedykowanego nagłówka. Osobna produkcyjna powłoka działa po wycofaniu zaproszenia, nie ujawnia jego treści, ma no-store/no-referrer/CSP, bez kont/analityki/zewnętrznych zasobów. Gość czyta/zmienia/wycofuje własną odpowiedź oraz potwierdza trwałe usunięcie. Musi zachować link; nie ma odzyskiwania bez emaila. Nie ma sekretów w liście organizatora, zwykłym HTML zaproszenia ani query string.
+Asset ładuje się lokalnie tylko w tym szablonie. Koperta pozostaje kodem React/CSS, bez frameworka UI, obrazka całej koperty lub pustych assetów. Źródła/licencje/autor/data/hash w THIRD-PARTY-ASSETS.md i app/src/assets/birthday-celebration/README.md; ISC notice zachowano w podkatalogu licenses. Sprawdzono też metadane alternatywy Rawpixel/Openclipart, ale jej nie integrowano i nie obchodzono logowania.
 
-Panel /app/sites/:id/responses ma stan publicznego RSVP, globalne sumy yes/no/uczestników, listę, filtr, deterministyczną paginację oraz potwierdzane usunięcie. Organizator nie edytuje odpowiedzi. Błędy nie są pokazywane jako poprawne zerowe statystyki. Nie ma listy zaproszonych ani metryki osób, które nie odpowiedziały.
+## Linki
 
-Limit body 2048 bajtów, imię 1–80 Unicode bez HTML, ścisła walidacja relacji yes/no/partySize, honeypot, same-origin bez wildcard CORS, krótko żyjący limiter SQL według hasha bezpośredniego IP. Limit nalicza się raz na request poza powtarzalnym permission_callback WordPressa. Istniejący snapshot, prawo publikacji, konta, CRUD, animacje i SVG zachowano. AssetManifest uwzględnia CSS statycznych importów współdzielonych przez trzy entry.
+- Lokalna publikacja: http://celebrations.local/s/98ddf7ec4fd399c19e934891195f0617/
+- Prywatny podgląd z Replay intro: http://celebrations.local/app/sites/10/preview
 
-## Przykład LocalWP
+Zmiany renderera zastosowano bez modyfikowania treści projektów lub publikowania poza LocalWP. Odpowiedzi testowe wysyłano tylko na stałej bazie microsite_test_430601248a09bf6c. Istniejących odpowiedzi użytkownika na LocalWP nie usuwano.
 
-Zaproszenie: http://celebrations.local/s/61b486f3910b58960165852293f4eefa/
+## Weryfikacja
 
-Panel odpowiedzi: http://celebrations.local/app/sites/8/responses
+- npm run verify: kontrakty, ESLint, TypeScript i produkcyjny build — PASS. Nowy chunk około 31.8 kB raw / 10.5 kB gzip obejmuje kod szablonu i bibliotekę; CSS około 22.0 kB / 5.4 kB gzip. Fonty nadal lokalne, 182,620 bajtów razem. Brak aktualizacji istniejących wersji zależności; dodano przypięte canvas-confetti i typy 1.9.0.
+- TEST_SCOPE=celebration npm run test:integration: 6 grup PASS na rzeczywistym WordPressie i stałej osobnej bazie. Zawiera bazowe testy nowego szablonu oraz rozszerzenie WebKit. Baza została zachowana.
+- Pełna regresja wcześniejszej wersji oprawy: 74 grupy PASS na tej samej stałej bazie. Po ostatnich zmianach zgłoszonych przez użytkownika nie powtarzano pełnej regresji ani macierzy; zgodnie z jego prośbą wykonano podstawowe kontrole opisane niżej.
+- LocalWP: 8 anonimowych smoke/HMR testów PASS. Rejestracja pozostała wyłączona, bez restartu Vite i wysyłania testowych RSVP na LocalWP.
+- node app/scripts/review-celebration-dev.mjs — PASS: StrictMode, HMR po otwarciu i podczas opening, cleanup ScrollTrigger/RAF, kontrolowany visibilitychange, ponowny mount oraz wymuszone błędy GSAP/Canvas z czytelną treścią. Pliki tymczasowe i edycje źródła przywrócono w finally.
+- Chromium: normalne otwarcie klawiaturą, focus, pojedynczy burst, pauza/wznowienie ciągłych dekoracji, Skip i odświeżenie, prawdziwy RSVP, zamknięty RSVP i izolacja snapshotu, wszystkie palety/reduced motion/rozmiary, brak błędów konsoli i overflow.
+- WebKit 27.2: trzy palety × 390×844 i 1440×900; karta/klapka i z-index, wiele kliknięć Open, pełne otwarcie, focus, Skip w trakcie, brak warstwy intro po Skip, reset burstu, zapamiętane pominięcie per projekt, pauza kuli, prawidłowy lokalny obraz 640px, rzeczywisty przycisk RSVP oraz Replay w prywatnym preview. Długi wariant bez wieku również przeszedł pełny przebieg, z kontrolą granic tekstu na wysuniętej karcie.
+- Natywny safaridriver został sprawdzony: odmówił utworzenia sesji, ponieważ Allow remote automation w ustawieniach Safari jest wyłączone. Nie zmieniano uprawnień systemu ani ustawień przeglądarki. PASS WebKit oznacza silnik Safari, nie natywną sesję Safari GUI.
 
-Włączono RSVP w istniejącym projekcie demonstracyjnym ID 8 i zaktualizowano jego publikację (administrator ID 1). Nie zmieniano innych projektów ani ustawień rejestracji i nie wysyłano testowych RSVP do bazy LocalWP (potwierdzono 0 rekordów w lokalnej tabeli odpowiedzi). Anonimowy Chromium potwierdził widoczny formularz, HTTP 200, zero cookies, brak żądań do Vite/panelu/kont oraz scrollY=0. To link lokalny, nie hosting dla gości z Internetu.
+## Przegląd wizualny i artefakty
 
-## Wykonane kontrole
+Obejrzano wcześniejszy ekran w przeglądarce przed zmianą oraz po zmianie. Oględziny obejmują lokalny zamknięty/open-card/hero i reprezentatywne zrzuty wszystkich palet na telefonie i desktopie. Zdjęcie ma prawdziwe lustra/srebro i miękką granicę; karta pozostaje nad otwartą klapką, a dolna część jest prawidłowo zasłonięta przez kieszeń. Układ hero po otwarciu pozostaje dotychczasowy.
 
-- npm run verify: kontrakty, ESLint, TypeScript i build trzech entry — PASS.
-- php -l: 30 własnych plików PHP — PASS. git diff --check — PASS.
-- TEST_SCOPE=rsvp npm run test:integration: 11 grup PASS na rzeczywistym WordPressie i stałej osobnej bazie.
-- Końcowy pełny npm run test:integration: 68 grup PASS (57 regresji i 11 RSVP), rzeczywiste sesje HTTP, produkcyjny build i ta sama stała baza testowa. Brak diagnostyki PHP. Baza zachowana do kolejnego przebiegu.
-- LocalWP: 8 anonimowych smoke/HMR testów PASS, w tym nowa chroniona trasa responses i refresh. HMR zachowuje formularz; Vite pozostaje uruchomiony.
-- Bezpiecznik --guard-only z nazwą aktywnej bazy LocalWP odrzuca operację przed resetem/tworzeniem/czyszczeniem — potwierdzony oczekiwany niezerowy kod.
-- HTTP RSVP: starsze dane/snapshoty, migracje, katalog typów, limit/typy, DST/UTC i zależność terminu, walidacja Unicode/HTML/yes/no/size, honeypot/body/origin/CORS, hash-only storage, retry i równoległe żądania, konflikt payloadu/sekretu, izolacja sekretów/A-B/sesji/nonce, globalne sumy przy filtrze i paginacji, niższy limit, dokładne granice czasu, replay po zamknięciu, wyłączenie/unpublish/republish, usunięcie i brak wskrzeszenia po wygaśnięciu znacznika, limiter bez bypassu X-Forwarded-For i usunięcie projektu.
-- Produkcyjne E2E RSVP: konfiguracja/publikacja organizatora → guest yes dla 3 osób → utrata HTTP po faktycznym zapisie → identyczne retry i jeden rekord → prywatny link → sumy organizatora → zmiana na no przez klawiaturę → nowe sumy → wycofanie publikacji → nadal działające trwałe usunięcie przez sekret → brak rekordu/sum. Preview nie ma przycisku wysyłania i nie tworzy odpowiedzi.
-- Dodatkowe E2E: 21 odpowiedzi, usunięcie ostatniej na stronie 2 wraca na stronę 1; filtr zachowuje sumy całego projektu. Formularz działa bez ukończenia intro w normal motion oraz w reduced motion. Publiczny/management build bez Vite, bez cookies i panelu. Zmiana fragmentu odrzuca poprzedni stan odpowiedzi.
+Artefakty: app/test-results/celebration-refinement/. before-cover.png / before-hero.png, after-*.png, webkit-{palette}-{width}-{closed,card,hero}.png oraz lokalne local-closed-envelope.png / local-open-envelope-card.png / local-hero-confetti.png / local-final-hero.png. Nagranie pełnego lokalnego otwarcia z konfetti: opening-envelope-confetti.webm. Zapisano również screenshoty poprzedniej macierzy w oddzielnym katalogu celebration, bez nadpisywania birthday/publication/rsvp/smoke. Artefakty i build nie są commitowane.
 
-## Wygląd i artefakty
+## Ograniczenia
 
-Obejrzano formularz mobilny 375 px oraz panel organizatora przy 375×900 i 1440×1000. Czytelne etykiety, focus, zawijanie nazw/akcji, brak poziomego overflow (również asercja). Artefakty: app/test-results/rsvp/ — guest-mobile, guest-desktop, management-mobile, organizer-mobile i organizer-desktop. Osobne katalogi birthday/publication/smoke pozostają zachowane. PNG i build nie są commitowane; prywatny link na testowym zrzucie dotyczy odpowiedzi usuniętej w tym samym E2E.
+Nie ma brakujących wymaganych assetów ani zależności. Natywny Safari GUI wymaga włączenia automatyzacji przez użytkownika; sprawdzono WebKit zamiast deklarować nieuruchomiony test Safari PASS. Nie wykonano pełnego audytu dostępności, testów na fizycznym iPhonie/telefonie ani benchmarku energii/FPS. Nie uruchomiono PHPCS/CI, które pozostają dotychczasowym długiem zgodnie z AGENTS. Znane npm audit: 10 moderate w narzędziach lintujących, bez audit fix --force.
 
-## Ograniczenia i pominięte kontrole
+LocalWP jest środowiskiem lokalnym. Zachowane są wcześniejsze ograniczenia publikacji/RSVP/kont opisane w dokumentacji. Nie rozbudowywano backendu ani płatności; istniejące kontrakty i dane pozostają zgodne. Nie integrowano własnych SVG użytkownika.
 
-Brak blokad ukończenia etapu. LocalWP nie jest hostingiem publicznym. Gość musi zachować sekret; brak emaila i odzyskiwania linku. SessionStorage zawiera tylko klucze niepotwierdzonej operacji, nie dane osobowe; po odświeżeniu przy odzyskiwaniu trzeba ponownie podać ten sam payload. Przy wyłączonym storage i utracie karty odzyskanie może być niemożliwe.
+## Ostatnie poprawki i podstawowa kontrola — 2026-11-02
 
-Nie dodano płatności, maili/SMS, importu, CSV, indywidualnych zaproszeń, uploadów, retencji odpowiedzi, pytań dodatkowych ani nowych SVG. Ochrona nie zastępuje kontroli publicznego ruchu: NAT dzieli limity, rozproszone boty mogą je obchodzić. Przed publicznym startem: HTTPS, zaufany reverse proxy/ochrona na brzegu, przegląd logowania bez sekretów, polityka danych oraz nadal reset hasła i weryfikacja emaila organizatora.
+Zgodnie z nową prośbą przed otwarciem koperty ukryta jest cała treść poniżej hero: story, szczegóły, RSVP i zakończenie. Obszar ma hidden/inert/aria-hidden, pojawia się po otwarciu albo Skip. Nie wystaje już spod zamkniętej koperty. To świadoma zmiana względem wcześniejszego wymagania dostępu do RSVP bez otwierania intro.
 
-Nie uruchomiono PHPCS/CI (istniejący dług zgodnie z AGENTS), pełnej macierzy Safari/Firefox/urządzeń ani testu obciążeniowego wielu workerów. Równoległe HTTP sprawdza efekt idempotencji i unikalności, ale prosty testowy PHP server nie zastępuje testu obciążenia. Nie przeprowadzono osobnego testu awarii DB podczas transakcyjnego usuwania ani pełnego audytu dostępności. Dotychczasowe ograniczenia GSAP/tzdb i macierzy PHP/WP pozostają. Znane npm audit: 10 moderate narzędzi lintujących; nie zmieniano zależności ani nie wykonywano audit fix --force.
+Osobne loadery dla dwóch szablonów zaproszeń: Birthday Celebration (metaliczny monogram, obwódka i delikatny pasek) oraz Birthday Party (własny znak/paleta). Kolory odpowiadają wybranemu wariantowi. Pierwszy loader jest już w serwerowym HTML, więc nie czeka na uruchomienie React. Ten sam CSS współdzielą PHP i komponent. InvitationAssetGate czeka na rzeczywiste fonty/obrazy, bez minimalnej sztucznej zwłoki; ma maksymalny fallback 1.8s i cleanup. Loader nie jest długim timerem ani atrakcją blokującą wejście.
 
-Szczegóły modelu, API i sekretów: [RSVP.md](RSVP.md). Praca pozostaje lokalna, bez automatycznego commita/push.
+Kula korzysta ponownie z kolorowego pliku źródłowego, bez desaturacji. Dodano trzy powoli pulsujące bliki. Podczas przewijania pojawia się drobny brokat przy krawędziach, z krótkim życiem i małą liczbą elementów (maks. 24 telefon / 42 desktop), bez zasłaniania pól. Pauza, hidden i reduced motion wyłączają ruch/nowe efekty; scroll listener i RAF są sprzątane.
+
+Na życzenie użytkownika ograniczono dalsze testy do podstawowych:
+
+- npm run verify po tych zmianach: kontrakty, ESLint, TypeScript i produkcyjny build — PASS.
+- php -l templates/public.php oraz git diff --check — PASS.
+- Krótki przegląd Chromium na LocalWP: loader → zamknięta koperta bez treści poniżej → karta → hero → widoczne i aktywne RSVP, bez wysyłania odpowiedzi — PASS. Brak pageerror.
+- Osobny loader Birthday Party na istniejącej lokalnej publikacji — widoczny i prawidłowo znika; HTTP 200.
+- Obejrzano kolorowy hero, loader Celebration i widok RSVP podczas scrolla z brokatem. Nie powtarzano ostatniej pełnej regresji, rozbudowanych testów ani nowej macierzy urządzeń.
+
+Aktualne artefakty w tym samym katalogu celebration-refinement: loader-celebration.png, loader-birthday-party.png, latest-closed.png, latest-card.png, latest-color-hero.png, scroll-rsvp.png, latest-opening-color-glitter.webm. Wcześniejsze nagranie opening-envelope-confetti.webm ma 6.6s; obejrzano klatki karty i hero z konfetti. Te pliki są lokalne i ignorowane przez Git. Nie ma brakujących wymaganych plików. Natywne Safari GUI pozostaje niezweryfikowane z powodu wyłączonej automatyzacji; wcześniejsze testy WebKit są odnotowane osobno, bez przypisywania ich ostatnim poprawkom.
+
+
+### Korekta typografii i pierwszego widoku — 2026-11-02
+
+- Birthday Celebration: większe opisy, etykiety i kontrolki formularza; responsywne proporcje imienia i wieku.
+- Usunięto wymuszoną wysokość 730/780 px. Koperta i hero dopasowują kompozycję do wysokości viewportu; długie treści mogą powiększyć sekcję bez ucinania tekstu.
+- Metaliczny przycisk z refleksami na hover/focus, okrągłą oprawą ikony oraz własnymi strzałkami SVG zamiast znaków tekstowych.
+- Zgodnie z prośbą użytkownika pominięto przegląd widoków i testy przeglądarkowe; kontrola kontraktów, ESLint, TypeScript i build: PASS (build w środowisku LocalWP).
+
+
+### Birthday Celebration: edytowalne teksty i płynne otwarcie — 2026-11-02
+
+- Domyślny wstęp: „Something special / is coming…”. Sekcja Template wording zawiera 42 gotowe pola (nagłówki, podpisy, przyciski, monogram, adresat koperty). Obsługiwane znaczniki: {name}, {age}, {palette}.
+- Opcjonalne content.celebrationCopy w kontrakcie v1; stare projekty korzystają z domyślnych tekstów bez modyfikacji zapisanych danych. Teksty pozostają plain text; limity egzekwuje istniejący walidator.
+- Własne tło CSS: płynąca poświata, smugi światła i drobiny, dopasowane do palety. Inspiracje: Codrops Ambient Canvas Backgrounds oraz Greenvelope Animated Envelope Invitations; bez kopiowania zewnętrznego kodu i assetów.
+- Koperta: tłoczone wykończenie, metaliczne brzegi, ozdobna podszewka, adresat i monogram.
+- Usunięto przełączanie hero absolute → relative. Koperta pozostaje ukryta i inert w tej samej komórce grid, więc zakończenie animacji nie zmienia wymiarów sceny. Stałe miejsce na scrollbar ogranicza boczne przesunięcie po odsłonięciu treści.
+- Weryfikacja: kontrakty, ESLint, TypeScript, build i git diff --check PASS. Na prośbę użytkownika bez przeglądu widoków i bez ponownej regresji integracyjnej; płynność do oceny wizualnej użytkownika.

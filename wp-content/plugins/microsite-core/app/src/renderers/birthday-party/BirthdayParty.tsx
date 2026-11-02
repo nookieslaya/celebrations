@@ -1,3 +1,4 @@
+import { InvitationAssetGate } from "../../components/InvitationLoader";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -34,11 +35,7 @@ function useReducedMotion() {
   return reduced;
 }
 
-export default function BirthdayParty({
-  value,
-}: {
-  value: BirthdayInvitationDraft;
-}) {
+function BirthdayParty({ value }: { value: BirthdayInvitationDraft }) {
   const reduced = useReducedMotion();
   const [opened, setOpened] = useState(reduced);
   const root = useRef<HTMLDivElement>(null);
@@ -400,5 +397,18 @@ export default function BirthdayParty({
         </div>
       )}
     </div>
+  );
+}
+
+export default function LoadedInvitation(
+  props: Parameters<typeof BirthdayParty>[0],
+) {
+  return (
+    <InvitationAssetGate
+      templateId="birthday-party"
+      palette={props.value.appearance.palette}
+    >
+      <BirthdayParty {...props} />
+    </InvitationAssetGate>
   );
 }

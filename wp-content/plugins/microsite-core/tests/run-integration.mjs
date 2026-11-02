@@ -1,3 +1,4 @@
+import { runCelebrationTests } from "./celebration.mjs";
 import { runRsvpTests } from "./rsvp.mjs";
 import { runPublicationTests } from "./publication.mjs";
 import { runBirthdayTests } from "./birthday.mjs";
@@ -442,7 +443,11 @@ try {
     return body;
   }
 
-  if (!["birthday", "publication", "rsvp"].includes(process.env.TEST_SCOPE)) {
+  if (
+    !["birthday", "publication", "rsvp", "celebration"].includes(
+      process.env.TEST_SCOPE,
+    )
+  ) {
     await check(
       "production shell serves both app paths and manifest assets independently of the running Vite",
       async () => {
@@ -966,7 +971,9 @@ try {
     await runBrowserFlows({ origin, password, check, isolatedWp });
   }
 
-  if (!["publication", "rsvp"].includes(process.env.TEST_SCOPE)) {
+  if (
+    !["publication", "rsvp", "celebration"].includes(process.env.TEST_SCOPE)
+  ) {
     await runBirthdayTests({
       origin,
       api,
@@ -980,7 +987,7 @@ try {
     });
   }
 
-  if (!["birthday", "rsvp"].includes(process.env.TEST_SCOPE)) {
+  if (!["birthday", "rsvp", "celebration"].includes(process.env.TEST_SCOPE)) {
     await runPublicationTests({
       origin,
       api,
@@ -1000,6 +1007,19 @@ try {
       a,
       b,
       admin,
+      check,
+      password,
+      pluginDirectory,
+      isolatedWp,
+    });
+  }
+
+  if (!process.env.TEST_SCOPE || process.env.TEST_SCOPE === "celebration") {
+    await runCelebrationTests({
+      origin,
+      api,
+      a,
+      b,
       check,
       password,
       pluginDirectory,

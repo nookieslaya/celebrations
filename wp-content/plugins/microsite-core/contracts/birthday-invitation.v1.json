@@ -129,6 +129,306 @@
                             "default": ""
                         }
                     }
+                },
+                "celebrationCopy": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "collection": {
+                            "type": "string",
+                            "title": "Collection name",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "THE CELEBRATION COLLECTION"
+                        },
+                        "introEyebrow": {
+                            "type": "string",
+                            "title": "Intro · overline",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "A LITTLE MYSTERY. A LOT TO CELEBRATE."
+                        },
+                        "introTitle": {
+                            "type": "string",
+                            "title": "Intro · heading",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Something special"
+                        },
+                        "introAccent": {
+                            "type": "string",
+                            "title": "Intro · italic heading",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "is coming…"
+                        },
+                        "introDescription": {
+                            "type": "string",
+                            "title": "Intro · description",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "A beautiful evening begins with an invitation."
+                        },
+                        "openButton": {
+                            "type": "string",
+                            "title": "Intro · open button",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Open invitation"
+                        },
+                        "skipButton": {
+                            "type": "string",
+                            "title": "Intro · skip button",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Skip intro"
+                        },
+                        "cardEyebrow": {
+                            "type": "string",
+                            "title": "Envelope card · overline",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "YOU’RE INVITED"
+                        },
+                        "cardOccasion": {
+                            "type": "string",
+                            "title": "Envelope card · occasion",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "{age} wonderful years"
+                        },
+                        "cardNoAge": {
+                            "type": "string",
+                            "title": "Envelope card · occasion without age",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "A night to remember"
+                        },
+                        "seal": {
+                            "type": "string",
+                            "title": "Envelope · monogram",
+                            "maxLength": 3,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "C"
+                        },
+                        "heroEyebrow": {
+                            "type": "string",
+                            "title": "Hero · overline",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "YOU’RE CORDIALLY INVITED"
+                        },
+                        "turning": {
+                            "type": "string",
+                            "title": "Hero · age label",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "IS TURNING"
+                        },
+                        "ageCaption": {
+                            "type": "string",
+                            "title": "Hero · age caption",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "YEARS OF WONDERFUL"
+                        },
+                        "replyButton": {
+                            "type": "string",
+                            "title": "Hero · RSVP button",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "I’ll be there"
+                        },
+                        "discoverButton": {
+                            "type": "string",
+                            "title": "Hero · details button",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Discover the evening"
+                        },
+                        "detailsLink": {
+                            "type": "string",
+                            "title": "Hero · secondary link",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "The details"
+                        },
+                        "storyEyebrow": {
+                            "type": "string",
+                            "title": "Story · overline",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "THE BEST THINGS IN LIFE ARE SHARED"
+                        },
+                        "storyTitle": {
+                            "type": "string",
+                            "title": "Story · heading",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Let’s make it"
+                        },
+                        "storyAccent": {
+                            "type": "string",
+                            "title": "Story · italic heading",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "unforgettable."
+                        },
+                        "signature": {
+                            "type": "string",
+                            "title": "Story · signature",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "With love, {name}"
+                        },
+                        "detailsEyebrow": {
+                            "type": "string",
+                            "title": "Details · overline",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "THE EVENING, AT A GLANCE"
+                        },
+                        "detailsTitle": {
+                            "type": "string",
+                            "title": "Details · heading",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Save the"
+                        },
+                        "detailsAccent": {
+                            "type": "string",
+                            "title": "Details · italic heading",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "occasion."
+                        },
+                        "whenLabel": {
+                            "type": "string",
+                            "title": "Details · date label",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "01 / WHEN"
+                        },
+                        "whereLabel": {
+                            "type": "string",
+                            "title": "Details · location label",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "02 / WHERE"
+                        },
+                        "directionsLink": {
+                            "type": "string",
+                            "title": "Details · map link",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Get directions"
+                        },
+                        "dressLabel": {
+                            "type": "string",
+                            "title": "Details · dress code label",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "THE DRESS CODE"
+                        },
+                        "extraLabel": {
+                            "type": "string",
+                            "title": "Details · extra information label",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "ONE MORE THING"
+                        },
+                        "rsvpEyebrow": {
+                            "type": "string",
+                            "title": "RSVP · overline",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "A PLACE AT THE PARTY"
+                        },
+                        "rsvpTitle": {
+                            "type": "string",
+                            "title": "RSVP · heading",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Will you"
+                        },
+                        "rsvpAccent": {
+                            "type": "string",
+                            "title": "RSVP · italic heading",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "be there?"
+                        },
+                        "closingTitle": {
+                            "type": "string",
+                            "title": "Closing · heading",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Here’s to the nights"
+                        },
+                        "closingAccent": {
+                            "type": "string",
+                            "title": "Closing · italic heading",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "we’ll always remember."
+                        },
+                        "closingEyebrow": {
+                            "type": "string",
+                            "title": "Closing · overline",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "GOOD COMPANY. BEAUTIFUL MEMORIES."
+                        },
+                        "celebrateButton": {
+                            "type": "string",
+                            "title": "Closing · repeat confetti button",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Celebrate again"
+                        },
+                        "pauseButton": {
+                            "type": "string",
+                            "title": "Animations · pause button",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Pause animations"
+                        },
+                        "resumeButton": {
+                            "type": "string",
+                            "title": "Animations · resume button",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Resume animations"
+                        },
+                        "reducedLabel": {
+                            "type": "string",
+                            "title": "Animations · reduced motion label",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Reduced motion"
+                        },
+                        "replayButton": {
+                            "type": "string",
+                            "title": "Preview · replay button",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "Replay intro"
+                        },
+                        "editionLabel": {
+                            "type": "string",
+                            "title": "Collection · palette caption",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "{palette}"
+                        },
+                        "envelopeRecipient": {
+                            "type": "string",
+                            "title": "Envelope · recipient",
+                            "maxLength": 160,
+                            "pattern": "^[^<>\\x00-\\x1F\\x7F]*$",
+                            "default": "For {name}"
+                        }
+                    }
                 }
             }
         },
@@ -144,7 +444,10 @@
                     "enum": [
                         "electric-citrus",
                         "pink-noir",
-                        "cobalt-pop"
+                        "cobalt-pop",
+                        "midnight-gold",
+                        "disco-rose",
+                        "stardust-silver"
                     ],
                     "default": "electric-citrus"
                 }

@@ -73,6 +73,44 @@
 - [x] HTTP/E2E: 68 grup PASS, produkcja, mobile/desktop, klawiatura i oględziny; 8 smoke/HMR PASS.
 - [x] Dokumentacja, faktyczne wyniki i przykład LocalWP.
 
+## Etap wizualny — Birthday Celebration (płatności odłożone)
+
+- [x] Research źródeł/licencji oraz lokalne, zoptymalizowane fonty.
+- [x] Nowy szablon v1 i trzy palety; zachowanie birthday-party oraz istniejących projektów.
+- [x] Wspólny edytor i defaults/restrykcje palet według szablonu.
+- [x] Cover/reveal/hero/story/details/RSVP/closing i choreografia GSAP.
+- [x] Dekoracje SVG/Canvas, pauza/visibility/intersection i reduced motion.
+- [x] Integracja prawdziwego RSVP bez duplikacji logiki.
+- [x] Osobny, idempotentny przykład LocalWP i lokalna publikacja.
+- [x] Test nowego zakresu oraz StrictMode/HMR/cleanup/fail-open.
+- [x] Końcowa regresja: 73 grupy PASS; 8 smoke/HMR PASS, oględziny macierzy i zapis wyników.
+- [x] Dokumentacja i artefakty do przeglądu, w tym 4.52s nagranie otwarcia.
+
+## Dopracowanie Birthday Celebration — koperta, konfetti i fotografia
+
+- [x] Obejrzenie wcześniejszego renderu, źródeł Realistic Look i pliku fotografii/licencji.
+- [x] canvas-confetti 1.9.4: emisje z dwóch stron, palety, reset i reduced motion.
+- [x] Lokalna srebrna fotografia kuli, maskowanie i spokojny ruch.
+- [x] Warstwowa koperta i jedna choreografia GSAP closed/opening/opened.
+- [x] Skip podczas otwierania, pamięć per projekt/intro-v2 i Replay w preview.
+- [x] Testy Chromium oraz macierz WebKit 390/1440 dla trzech palet.
+- [x] Regresja oprawy: 74 grupy PASS, HMR/StrictMode, długie imię bez wieku i przegląd artefaktów.
+- [x] Nowe nagranie, licencje i końcowy STATUS.
+
+## Dodatkowa korekta oprawy — 2026-11-02
+
+- [x] Cała treść poniżej koperty ukryta do Open/Skip.
+- [x] Oddzielne loadery obu szablonów i oczekiwanie na rzeczywiste assety.
+- [x] Kolorowa fotografia, spokojne bliki i brokat przy przewijaniu.
+- [x] Podstawowe kontrole zgodnie z preferencją użytkownika: verify, PHP i krótki przegląd Chromium; bez ponownej pełnej regresji.
+
+## Wstęp i personalizacja Birthday Celebration — 2026-11-02
+
+- [x] Gotowe, edytowalne teksty wstępu, sekcji, przycisków i koperty; zgodność ze starszymi zapisami.
+- [x] Tło ambientowe i nowa oprawa koperty na podstawie inspiracji internetowych.
+- [x] Stały układ sceny podczas przejścia koperta → hero oraz rezerwacja miejsca na scrollbar.
+- [x] Kontrole kodu i produkcyjny build; bez sprawdzania widoków zgodnie z prośbą użytkownika.
+
 ## Dalsze etapy
 
 - [ ] PHPCS i CI, prywatny podgląd basic-page.

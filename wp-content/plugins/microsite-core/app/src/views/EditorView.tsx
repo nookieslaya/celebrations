@@ -161,6 +161,7 @@ function DraftEditor<Type extends SiteTypeId>({
               }}
             />
             <Fields
+              templateId={site.templateId}
               value={site.draft}
               onChange={(draft) => {
                 setSite({ ...site, draft });
