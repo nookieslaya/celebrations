@@ -2,6 +2,8 @@ import { InvitationAssetGate } from "../../components/InvitationLoader";
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import type { PreviewContext } from "../../preview/protocol";
+import { formatEvent } from "../event-display";
 import type { BirthdayInvitationDraft } from "../../generated/drafts";
 import "./party.css";
 
@@ -35,17 +37,34 @@ function useReducedMotion() {
   return reduced;
 }
 
-function BirthdayParty({ value }: { value: BirthdayInvitationDraft }) {
+function BirthdayParty({
+  value,
+  preview = false,
+  previewContext,
+}: {
+  value: BirthdayInvitationDraft;
+  preview?: boolean;
+  previewContext?: PreviewContext;
+}) {
   const reduced = useReducedMotion();
-  const [opened, setOpened] = useState(reduced);
+  const [opened, setOpened] = useState(
+    reduced || Boolean(previewContext?.initiallyOpen),
+  );
   const root = useRef<HTMLDivElement>(null);
   const revealHeading = useRef<HTMLHeadingElement>(null);
   const details = useRef<HTMLElement>(null);
-  const skipAnimation = useRef(false);
+  const skipAnimation = useRef(Boolean(previewContext?.initiallyOpen));
+  const lastReplay = useRef(0);
   const confettiRequested = useRef(false);
   const confettiPlayed = useRef(false);
   const focusTarget = useRef<"reveal" | "details" | null>(null);
   const content = value.content;
+  const age =
+    Number.isInteger(content.age) &&
+    Number(content.age) >= 1 &&
+    Number(content.age) <= 120
+      ? content.age
+      : undefined;
   const name = content.celebrantName.trim() || "Your name here";
   const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
   const nameWords = name
@@ -53,13 +72,15 @@ function BirthdayParty({ value }: { value: BirthdayInvitationDraft }) {
     .map((word) =>
       Array.from(segmenter.segment(word), (segment) => segment.segment),
     );
-  const date = content.event.startsAt
-    ? new Intl.DateTimeFormat("en-GB", {
+  const date =
+    formatEvent(
+      content.event,
+      {
         dateStyle: "full",
         timeStyle: "short",
-        timeZone: content.event.timeZone,
-      }).format(new Date(content.event.startsAt))
-    : words.dateTba;
+      },
+      preview,
+    ) ?? words.dateTba;
 
   useEffect(() => {
     if (reduced) {
@@ -174,6 +195,21 @@ function BirthdayParty({ value }: { value: BirthdayInvitationDraft }) {
     return () => media?.revert();
   }, [opened, reduced]);
 
+  useEffect(() => {
+    const token = previewContext?.replay ?? 0;
+    if (token <= lastReplay.current || reduced) {
+      return;
+    }
+    lastReplay.current = token;
+    skipAnimation.current = false;
+    confettiRequested.current = true;
+    confettiPlayed.current = false;
+    focusTarget.current = "reveal";
+    setOpened(false);
+    const frame = requestAnimationFrame(() => setOpened(true));
+    return () => cancelAnimationFrame(frame);
+  }, [previewContext?.replay]);
+
   function open(skip = false, target: "reveal" | "details" = "reveal") {
     skipAnimation.current = skip;
     confettiRequested.current = !skip;
@@ -287,10 +323,10 @@ function BirthdayParty({ value }: { value: BirthdayInvitationDraft }) {
                   ))}
                 </span>
               </h1>
-              {content.age !== undefined && (
+              {age !== undefined && (
                 <div className="party-age">
                   <span>TURNING</span>
-                  <strong>{content.age}</strong>
+                  <strong>{age}</strong>
                 </div>
               )}
             </div>

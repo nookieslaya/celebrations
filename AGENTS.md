@@ -29,3 +29,8 @@ Nie twórz nowej bazy przy każdym przebiegu. Używaj stałej bazy microsite_tes
 ## Renderer i podgląd od etapu 4
 
 Schemat birthday-invitation jest źródłem limitów/defaults/typów; reguły DST wykonuje EventDate przez zaufany normalizer w Catalog. Nie wyliczaj momentu przez domyślną strefę przeglądarki/serwera. Renderer nie importuje routera, API ani kont; mapowanie wersji i lazy loading jest w renderers/registry.ts. Preview używa zapisanych, zwalidowanych danych i kontroli właściciela, nigdy przyszłej publicznej trasy /s/. GSAP musi mieć cleanup i reduced motion. TEST_SCOPE=birthday jest węższym testem na tej samej bazie, nie pełną regresją. Artefakty birthday w test-results/birthday mają pozostać dostępne po smoke tests; nie commituj PNG ani builda. PHPCS/CI pozostają długiem, nie konfiguruj ich bez zmiany zakresu.
+
+
+## Zakres sprawdzania
+
+Użytkownik preferuje podstawowe sprawdzanie. Przy zwykłych poprawkach ogranicz się do lint/typów/builda odpowiedniego dla zmiany. Nie uruchamiaj rozbudowanej regresji, macierzy widoków ani wielokrotnych przeglądów wizualnych bez wyraźnej potrzeby lub aktualnej prośby. Nie powtarzaj poprawnych kontroli bez nowej zmiany lub konkretnego błędu. Respektuj bieżące ograniczenie zakresu testów także wtedy, gdy starszy opis etapu zawiera szeroką checklistę.

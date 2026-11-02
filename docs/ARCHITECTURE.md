@@ -95,3 +95,8 @@ Nowy lazy renderer birthday-celebration@1 współdzieli typ, edytor i kontrakt b
 ## Galeria i kreator — 0.7.0
 
 [Galeria i kreator](GALLERY-WIZARD.md) rozszerzają istniejący katalog o metadane prezentacji, schematowe defaults, fikcyjne demo i publiczne URL miniatur. Nie wprowadzają drugiego systemu zapisu lub publikacji. Rejestr edytorów definiuje kroki i mapę pól; EditorView nadal posiada jeden stan i pełny PATCH. Gotowość pochodzi z istniejącego chronionego GET projektu i Publication::describe. Nawigacja między krokami tego samego projektu zachowuje dirty state, a sessionStorage pamięta wyłącznie krok; wylogowanie czyści tę pamięć. Demo jest odrębnym stanem galerii za sesją i korzysta z istniejącego lazy renderera bez aktywnego RSVP.
+
+
+## Wspólny podgląd
+
+[PREVIEW.md](PREVIEW.md) opisuje izolowany dokument renderera i protokół przekazywania bieżącego stanu. EditorModule zawiera wyłącznie Fields i definicje kroków; nie utrzymuje drugiego komponentu wizualizacji. Istniejące komponenty publiczne są wybierane przez ten sam rejestr w iframe, dla live, saved i demo. Zapis i publikacja nadal należą do dotychczasowych serwisów. RSVP preview współdzieli pola/CSS formularza bez klienta mutacji.

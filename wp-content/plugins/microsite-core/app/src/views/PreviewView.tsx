@@ -1,32 +1,10 @@
-import { InvitationLoader } from "../components/InvitationLoader";
-import { Component, Suspense, useCallback, type ReactNode } from "react";
+import { useCallback } from "react";
 import { useSession } from "../auth/SessionProvider";
 import { appBase } from "../config";
 import { copy } from "../copy";
 import { ErrorNotice, Loading, useResource } from "../components/Async";
-import { getRenderer } from "../renderers/registry";
+import { RendererFrame } from "../preview/RendererFrame";
 import { Link } from "../routing/Router";
-
-class RendererBoundary extends Component<
-  { children: ReactNode },
-  { failed: boolean }
-> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    if (this.state.failed) {
-      return (
-        <p className="notice error" role="alert">
-          The invitation could not be loaded. Return to the editor or refresh
-          this page.
-        </p>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 export function PreviewView({ id }: { id: number }) {
   const { api } = useSession();
@@ -35,18 +13,13 @@ export function PreviewView({ id }: { id: number }) {
     [api, id],
   );
   const resource = useResource(load);
-  const definition = resource.data
-    ? getRenderer(resource.data.templateId, resource.data.templateVersion)
-    : undefined;
-  const Renderer = definition?.Component;
-
   return (
     <div className="private-preview-shell">
       <div className="private-preview-toolbar">
         <Link href={`${appBase}/sites/${id}`}>
           <span aria-hidden="true">← </span>Back to editor
         </Link>
-        <span>Private draft · Not published</span>
+        <span>Saved draft preview · Changes are not published</span>
       </div>
       {resource.loading && (
         <div className="private-preview-message">
@@ -62,35 +35,9 @@ export function PreviewView({ id }: { id: number }) {
           </button>
         </div>
       )}
-      {resource.data &&
-        (Renderer && definition.siteType === resource.data.siteType ? (
-          <RendererBoundary key={`${id}:${resource.data.updatedAt}`}>
-            <Suspense
-              fallback={
-                <InvitationLoader
-                  templateId={resource.data.templateId}
-                  palette={
-                    "palette" in resource.data.draft.appearance
-                      ? resource.data.draft.appearance.palette
-                      : undefined
-                  }
-                />
-              }
-            >
-              <Renderer
-                value={resource.data.draft}
-                preview
-                introKey={resource.data.publicId}
-              />
-            </Suspense>
-          </RendererBoundary>
-        ) : (
-          <div className="private-preview-message">
-            <p className="notice">
-              A preview is not available for this template version.
-            </p>
-          </div>
-        ))}
+      {resource.data && (
+        <RendererFrame document={resource.data} mode="saved" viewport="fluid" />
+      )}
     </div>
   );
 }

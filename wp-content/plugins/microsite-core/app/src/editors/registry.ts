@@ -1,11 +1,8 @@
 import type { ComponentType } from "react";
 import type { DraftBySiteType } from "../generated/drafts";
 import type { SiteTypeId } from "../api/client";
-import { BasicPageFields, BasicPagePreview } from "./BasicPageEditor";
-import {
-  BirthdayInvitationFields,
-  BirthdayInvitationSummary,
-} from "./BirthdayInvitationEditor";
+import { BasicPageFields } from "./BasicPageEditor";
+import { BirthdayInvitationFields } from "./BirthdayInvitationEditor";
 
 export interface EditorStep {
   id: string;
@@ -31,8 +28,6 @@ export interface EditorModule<Type extends SiteTypeId> {
     value: DraftBySiteType[Type];
     onChange: (draft: DraftBySiteType[Type]) => void;
   }>;
-  Preview: ComponentType<{ value: DraftBySiteType[Type] }>;
-  fullPreview?: boolean;
 }
 
 type EditorRegistry = { [Type in SiteTypeId]?: EditorModule<Type> };
@@ -40,8 +35,6 @@ type EditorRegistry = { [Type in SiteTypeId]?: EditorModule<Type> };
 const registry: EditorRegistry = {
   "birthday-invitation": {
     Fields: BirthdayInvitationFields,
-    Preview: BirthdayInvitationSummary,
-    fullPreview: true,
     steps: [
       { id: "about", title: "About the celebration", projectName: true },
       { id: "event", title: "Date & location" },
@@ -92,7 +85,7 @@ const registry: EditorRegistry = {
       },
     },
   },
-  "basic-page": { Fields: BasicPageFields, Preview: BasicPagePreview },
+  "basic-page": { Fields: BasicPageFields },
 };
 
 export function getEditor<Type extends SiteTypeId>(

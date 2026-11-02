@@ -1,4 +1,4 @@
-import { chooseTemplate, goStep } from "./editor-navigation.mjs";
+import { chooseTemplate, goStep, savedPreview } from "./editor-navigation.mjs";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { mkdirSync } from "node:fs";
@@ -801,12 +801,12 @@ async function runRsvpBrowser({
         publicUrl = (await api(a, "GET", `/sites/${id}`)).data.publication
           .publicUrl;
         await organizer
-          .getByRole("button", { name: "Preview invitation", exact: true })
+          .getByRole("button", { name: "Preview saved draft", exact: true })
           .click();
         await expect(organizer).toHaveURL(/\/preview$/);
         await expect(
-          organizer.getByRole("button", { name: "Send RSVP" }),
-        ).toHaveCount(0);
+          savedPreview(organizer).getByRole("button", { name: "Send RSVP" }),
+        ).toBeDisabled();
         assert.equal(
           (await api(a, "GET", `/sites/${id}/responses`)).data.summary.yes,
           0,

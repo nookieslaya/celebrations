@@ -124,6 +124,16 @@
 - [x] Krytyczne E2E na buildzie produkcyjnym i dotychczasowej bazie testowej; screenshoty desktop/mobile.
 - [x] Dokumentacja metadanych, miniatur, kroków, zapisu, demo i ograniczeń.
 
+## Jeden rzeczywisty podgląd
+
+- [x] Usunięcie tekstowej makiety i powielonego podglądu Style.
+- [x] Wspólny publiczny rejestr rendererów dla live/saved/demo, bez kopiowania szablonów.
+- [x] Izolowany iframe, handshake, ścisłe origin/source/struktura, brak konfiguracji w URL i nonce w komunikacji.
+- [x] Aktualne niezapisane dane, odporne daty/placeholdery, RSVP bez mutacji.
+- [x] Mobile/Desktop, Edit/Preview z zachowaniem formularza, zatrzymanie ukrytych efektów.
+- [x] Otwarte live, jawne Replay opening i czytelny Preview saved draft.
+- [x] Produkcja, krótki HMR, aktualizacja dokumentacji i STATUS; zakończono dalsze testy na prośbę użytkownika.
+
 ## Dalsze etapy
 
 - [ ] PHPCS i CI, prywatny podgląd basic-page.

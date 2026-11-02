@@ -4,10 +4,12 @@ import {
   type ReactNode,
   type LazyExoticComponent,
 } from "react";
+import type { PreviewContext } from "../preview/protocol";
 import type { Site, SiteTypeId } from "../api/client";
 
 export interface RendererProps {
   preview?: boolean;
+  previewContext?: PreviewContext;
   introKey?: string;
   value: Site["draft"];
   rsvp?: ReactNode;
@@ -16,6 +18,8 @@ export interface RendererProps {
 
 interface RendererDefinition {
   embeddedRsvp?: boolean;
+  supportsRsvp?: boolean;
+  supportsOpening?: boolean;
   siteType: SiteTypeId;
   Component: LazyExoticComponent<ComponentType<RendererProps>>;
 }
@@ -28,6 +32,8 @@ const registry = new Map<string, RendererDefinition>([
     {
       siteType: "birthday-invitation",
       embeddedRsvp: true,
+      supportsOpening: true,
+      supportsRsvp: true,
       Component: lazy(
         () =>
           import("./birthday-celebration/BirthdayCelebration") as Promise<{
@@ -52,6 +58,8 @@ const registry = new Map<string, RendererDefinition>([
     "birthday-party@1",
     {
       siteType: "birthday-invitation",
+      supportsOpening: true,
+      supportsRsvp: true,
       Component: lazy(
         () =>
           import("./birthday-party/BirthdayParty") as Promise<{

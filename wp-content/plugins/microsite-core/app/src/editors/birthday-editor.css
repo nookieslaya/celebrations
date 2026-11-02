@@ -57,46 +57,6 @@
 .palette-samples [data-palette="cobalt-pop"] i:nth-child(3) {
   background: #ff8c4c;
 }
-.birthday-summary {
-  --summary-bg: #d8f233;
-  --summary-ink: #191b16;
-  padding: 35px 25px;
-  background: var(--summary-bg);
-  color: var(--summary-ink);
-  border: 2px solid var(--summary-ink);
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-.birthday-summary[data-palette="pink-noir"] {
-  --summary-bg: #f9b5da;
-  --summary-ink: #29152e;
-}
-.birthday-summary[data-palette="cobalt-pop"] {
-  --summary-bg: #263fe9;
-  --summary-ink: #fff4d8;
-}
-.birthday-summary h2 {
-  font:
-    900 clamp(28px, 4vw, 55px) / 1 system-ui,
-    sans-serif;
-  text-transform: uppercase;
-  letter-spacing: -2px;
-}
-.birthday-summary p {
-  white-space: pre-wrap;
-  line-height: 1.7;
-  font-size: 13px;
-}
-.birthday-summary small {
-  font-size: 11px;
-}
-.birthday-summary-star {
-  font-size: 65px;
-}
-.birthday-summary-age {
-  font-size: 12px;
-  letter-spacing: 3px;
-}
 .preview-choice {
   border: 1px solid #d5dfcb;
   background: #f4f7ee;
@@ -114,17 +74,39 @@
   accent-color: #365e44;
 }
 
-.palette-samples [data-palette="midnight-gold"] { background: #0a0d18; color: #dfb96d; }
-.palette-samples [data-palette="disco-rose"] { background: #200c1d; color: #eb93bb; }
-.palette-samples [data-palette="stardust-silver"] { background: #091727; color: #aecdee; }
+.palette-samples [data-palette="midnight-gold"] {
+  background: #0a0d18;
+  color: #dfb96d;
+}
+.palette-samples [data-palette="disco-rose"] {
+  background: #200c1d;
+  color: #eb93bb;
+}
+.palette-samples [data-palette="stardust-silver"] {
+  background: #091727;
+  color: #aecdee;
+}
 
-.birthday-summary[data-palette="midnight-gold"] { --summary-bg: #0a0d18; --summary-ink: #dfb96d; }
-.birthday-summary[data-palette="disco-rose"] { --summary-bg: #200c1d; --summary-ink: #eb93bb; }
-.birthday-summary[data-palette="stardust-silver"] { --summary-bg: #091727; --summary-ink: #aecdee; }
-.palette-samples [data-palette="midnight-gold"] i:first-child { background: #dfb96d; }
-.palette-samples [data-palette="disco-rose"] i:first-child { background: #eb93bb; }
-.palette-samples [data-palette="stardust-silver"] i:first-child { background: #aecdee; }
-.palette-samples [data-palette="midnight-gold"] i:nth-child(2) { background: #0a0d18; }
-.palette-samples [data-palette="disco-rose"] i:nth-child(2) { background: #200c1d; }
-.palette-samples [data-palette="stardust-silver"] i:nth-child(2) { background: #091727; }
-.palette-samples [data-palette="midnight-gold"] i:nth-child(3), .palette-samples [data-palette="disco-rose"] i:nth-child(3), .palette-samples [data-palette="stardust-silver"] i:nth-child(3) { background: #fff1cb; }
+.palette-samples [data-palette="midnight-gold"] i:first-child {
+  background: #dfb96d;
+}
+.palette-samples [data-palette="disco-rose"] i:first-child {
+  background: #eb93bb;
+}
+.palette-samples [data-palette="stardust-silver"] i:first-child {
+  background: #aecdee;
+}
+.palette-samples [data-palette="midnight-gold"] i:nth-child(2) {
+  background: #0a0d18;
+}
+.palette-samples [data-palette="disco-rose"] i:nth-child(2) {
+  background: #200c1d;
+}
+.palette-samples [data-palette="stardust-silver"] i:nth-child(2) {
+  background: #091727;
+}
+.palette-samples [data-palette="midnight-gold"] i:nth-child(3),
+.palette-samples [data-palette="disco-rose"] i:nth-child(3),
+.palette-samples [data-palette="stardust-silver"] i:nth-child(3) {
+  background: #fff1cb;
+}

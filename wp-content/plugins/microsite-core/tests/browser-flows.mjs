@@ -1,4 +1,4 @@
-import { chooseTemplate } from "./editor-navigation.mjs";
+import { chooseTemplate, livePreview } from "./editor-navigation.mjs";
 import assert from "node:assert/strict";
 import {
   chromium,
@@ -86,12 +86,12 @@ export async function runBrowserFlows({ origin, password, check, isolatedWp }) {
           .fill("A description saved through the real API.");
         await pageA.getByLabel("Accent color").selectOption("ocean");
         await expect(
-          pageA
-            .getByRole("region", { name: "Live draft preview" })
+          livePreview(pageA)
+            .getByRole("region", { name: "Page preview" })
             .getByRole("heading", { name: "A lovely new page" }),
         ).toBeVisible();
         await expect(
-          pageA.getByRole("region", { name: "Live draft preview" }),
+          livePreview(pageA).getByRole("region", { name: "Page preview" }),
         ).toHaveAttribute("data-accent", "ocean");
         await pageA
           .getByRole("button", { name: "Save draft", exact: true })
@@ -142,8 +142,8 @@ export async function runBrowserFlows({ origin, password, check, isolatedWp }) {
           pageA.getByText("Changes saved.", { exact: true }),
         ).toHaveCount(0);
         assert.equal(
-          await pageA
-            .getByRole("region", { name: "Live draft preview" })
+          await livePreview(pageA)
+            .getByRole("region", { name: "Page preview" })
             .locator("b")
             .count(),
           0,

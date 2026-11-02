@@ -66,3 +66,8 @@ E2E wykorzystuje build produkcyjny przy nadal działającym Vite LocalWP. Utrata
 ## Galeria i kreator — 0.7.0
 
 `TEST_SCOPE=gallery npm run test:integration` sprawdza krytyczny nowy przepływ w pięciu grupach, używając dotychczasowej stałej bazy i produkcyjnych assetów bez Vite. Szczegóły pokrycia i generowania miniatur: [GALLERY-WIZARD.md](GALLERY-WIZARD.md). `UPDATE_TEMPLATE_THUMBNAILS=1` jawnie odświeża źródłowe PNG; zwykły przebieg zapisuje tylko artefakty testowe. Własność, sesje, publikacja i RSVP są rzeczywistymi operacjami HTTP. Symulacje sieci dotyczą wyłącznie opóźnienia/utraty odpowiedzi, a ukrycie kroku używa zmiany deklaracji funkcji katalogu na granicy odpowiedzi testowej, bez mockowania uprawnień backendu.
+
+
+## Podgląd
+
+TEST_SCOPE=preview obejmuje cztery grupy krytycznych zachowań izolowanego renderera; wyniki ostatniego przebiegu są w STATUS.md. scripts/review-preview-dev.mjs jest krótkim testem HMR z fikcyjnymi danymi, bez operacji na bazie. Domyślnie kolejne poprawki mają przechodzić tylko podstawową kontrolę kodu/builda, zgodnie z aktualną preferencją użytkownika; nie uruchamiaj całej regresji lub macierzy urządzeń przy każdej zmianie.

@@ -1,4 +1,3 @@
-import BasicPage from "../renderers/basic/BasicPage";
 import schema from "../../../contracts/basic-page.v1.json";
 import type { BasicPageDraft } from "../generated/drafts";
 import { copy } from "../copy";
@@ -65,8 +64,4 @@ export function BasicPageFields({ value, onChange }: BasicPageFieldsProps) {
       </select>
     </>
   );
-}
-
-export function BasicPagePreview({ value }: { value: BasicPageDraft }) {
-  return <BasicPage value={value} label={copy.preview} />;
 }

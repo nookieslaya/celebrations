@@ -33,6 +33,16 @@ final class App {
         status_header( (int) apply_filters( 'microsite_app_status', 200 ) );
         nocache_headers();
         header( 'X-Robots-Tag: noindex, nofollow', true );
+        $is_preview_frame = rtrim( (string) wp_parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH ), '/' )
+            === rtrim( (string) wp_parse_url( home_url( '/app/preview-frame/' ), PHP_URL_PATH ), '/' );
+
+        if ( $is_preview_frame && ( ! is_user_logged_in() || ! current_user_can( 'edit_ms_sites' ) ) ) {
+            status_header( 403 );
+            header( 'Cache-Control: no-store, private, max-age=0' );
+            echo '<!doctype html><html lang="en"><meta charset="utf-8"><title>Preview unavailable</title><p>Sign in to view this preview.</p></html>';
+            exit;
+        }
+
         $base = plugin_dir_url( dirname( __FILE__ ) ) . 'app/';
         $dev = null;
         $marker = dirname( __DIR__ ) . '/app/.vite-dev.json';
@@ -44,13 +54,28 @@ final class App {
         }
         $manifest_path = dirname( __DIR__ ) . '/app/dist/.vite/manifest.json';
         $manifest = is_readable( $manifest_path ) ? json_decode( file_get_contents( $manifest_path ), true ) : array();
-        $entry = AssetManifest::entry( $manifest, 'src/main.tsx' );
+        $entry = AssetManifest::entry( $manifest, $is_preview_frame ? 'src/preview-frame.tsx' : 'src/main.tsx' );
         if ( ! $dev && ! $entry ) {
             status_header( 503 );
         }
         header( 'Cache-Control: no-store, private, max-age=0' );
         header( 'Vary: Cookie' );
         header( 'X-Frame-Options: SAMEORIGIN' );
+
+        if ( $is_preview_frame ) {
+            $development_sources = $dev ? ' ' . $dev : '';
+            $connections = $dev ? $dev . ' ' . preg_replace( '#^http#', 'ws', $dev ) : "'none'";
+            $scripts = $dev ? "'self' 'unsafe-inline' " . $dev : "'self'";
+            header( "Content-Security-Policy: default-src 'self'; script-src " . $scripts
+                . "; style-src 'self' 'unsafe-inline'" . $development_sources
+                . "; img-src 'self' data:" . $development_sources
+                . "; font-src 'self'" . $development_sources
+                . '; connect-src ' . $connections
+                . "; frame-ancestors 'self'; form-action 'none'; base-uri 'none'; object-src 'none'" );
+            header( 'Referrer-Policy: no-referrer' );
+            require dirname( __DIR__ ) . '/templates/preview-frame.php';
+            exit;
+        }
 
         $config = array(
             'appUrl'  => home_url( '/app/' ),

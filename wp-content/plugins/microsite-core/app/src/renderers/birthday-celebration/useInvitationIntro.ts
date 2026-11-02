@@ -15,6 +15,8 @@ interface IntroOptions {
   details: RefObject<HTMLElement | null>;
   reduced: boolean;
   preview: boolean;
+  initiallyOpen: boolean;
+  replayToken: number;
   projectKey: string;
   burst: () => void;
   resetBurst: () => void;
@@ -27,13 +29,15 @@ export function useInvitationIntro({
   details,
   reduced,
   preview,
+  initiallyOpen,
+  replayToken,
   projectKey,
   burst,
   resetBurst,
 }: IntroOptions) {
   const storageKey = `celebration-intro:envelope-v2:${projectKey}`;
   const [state, setState] = useState<IntroState>(() => {
-    if (reduced) {
+    if (reduced || initiallyOpen) {
       return "opened";
     }
     try {
@@ -46,6 +50,7 @@ export function useInvitationIntro({
     return "closed";
   });
   const currentState = useRef(state);
+  const lastReplay = useRef(0);
   const timeline = useRef<gsap.core.Timeline | null>(null);
   const context = useRef<gsap.Context | null>(null);
   const focusTarget = useRef<"hero" | "details" | null>(null);
@@ -99,6 +104,17 @@ export function useInvitationIntro({
       context.current = null;
     };
   }, [show]);
+
+  useEffect(() => {
+    if (replayToken <= lastReplay.current || reduced) {
+      return;
+    }
+    lastReplay.current = replayToken;
+    replay();
+    const frame = requestAnimationFrame(() => open());
+    return () => cancelAnimationFrame(frame);
+    // Replay identity is independent of changes to text and palette.
+  }, [replayToken]);
 
   function skip() {
     resetBurst();

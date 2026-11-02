@@ -1,5 +1,7 @@
 import { InvitationAssetGate } from "../../components/InvitationLoader";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import type { PreviewContext } from "../../preview/protocol";
+import { formatEvent } from "../event-display";
 import type { BirthdayInvitationDraft } from "../../generated/drafts";
 import { Decorations, Star } from "./Decorations";
 import { Effects } from "./Effects";
@@ -11,7 +13,6 @@ import { celebrationPalettes, type CelebrationPalette } from "./palettes";
 import { useChoreography, useMotionPreference } from "./useChoreography";
 import "./celebration.css";
 import "./envelope.css";
-
 
 function InvitationArrow({
   direction = "diagonal",
@@ -40,12 +41,14 @@ function BirthdayCelebration({
   rsvp,
   rsvpAvailable = false,
   preview = false,
+  previewContext,
   introKey,
 }: {
   value: BirthdayInvitationDraft;
   rsvp?: ReactNode;
   rsvpAvailable?: boolean;
   preview?: boolean;
+  previewContext?: PreviewContext;
   introKey?: string;
 }) {
   const root = useRef<HTMLDivElement>(null);
@@ -56,36 +59,46 @@ function BirthdayCelebration({
   const confettiCanvas = useRef<HTMLCanvasElement>(null);
   const reduced = useMotionPreference();
   const [paused, setPaused] = useState(false);
+  const motionPaused = paused || previewContext?.active === false;
   const palette =
     value.appearance.palette in celebrationPalettes
       ? (value.appearance.palette as CelebrationPalette)
       : "midnight-gold";
   const theme = celebrationPalettes[palette];
   const content = value.content;
+  const age =
+    Number.isInteger(content.age) &&
+    Number(content.age) >= 1 &&
+    Number(content.age) <= 120
+      ? content.age
+      : undefined;
   const copy = resolveCelebrationCopy(content, theme.name);
   const name = content.celebrantName.trim() || "Your celebration";
-  const date = content.event.startsAt ? new Date(content.event.startsAt) : null;
-  const dateLabel = date
-    ? new Intl.DateTimeFormat("en-GB", {
+  const dateLabel =
+    formatEvent(
+      content.event,
+      {
         day: "numeric",
         month: "long",
         year: "numeric",
-        timeZone: content.event.timeZone,
-      }).format(date)
-    : "A date to remember";
-  const timeLabel = date
-    ? new Intl.DateTimeFormat("en-GB", {
+      },
+      preview,
+    ) ?? "A date to remember";
+  const timeLabel =
+    formatEvent(
+      content.event,
+      {
         weekday: "long",
         hour: "2-digit",
         minute: "2-digit",
-        timeZone: content.event.timeZone,
-      }).format(date)
-    : "Details coming soon";
+      },
+      preview,
+    ) ?? "Details coming soon";
 
   const confetti = useConfetti(
     root,
     confettiCanvas,
-    paused || reduced,
+    motionPaused || reduced,
     theme.confetti,
   );
   const intro = useInvitationIntro({
@@ -95,6 +108,8 @@ function BirthdayCelebration({
     details,
     reduced,
     preview,
+    initiallyOpen: previewContext?.initiallyOpen ?? false,
+    replayToken: previewContext?.replay ?? 0,
     projectKey: introKey ?? window.location.pathname,
     burst: confetti.burst,
     resetBurst: confetti.reset,
@@ -110,7 +125,7 @@ function BirthdayCelebration({
     let visible = true;
     const synchronize = () => {
       element.dataset.decorationsActive = String(
-        visible && !document.hidden && !paused && !reduced,
+        visible && !document.hidden && !motionPaused && !reduced,
       );
     };
     const observer = new IntersectionObserver((entries) => {
@@ -124,7 +139,7 @@ function BirthdayCelebration({
       observer.disconnect();
       document.removeEventListener("visibilitychange", synchronize);
     };
-  }, [paused, reduced]);
+  }, [motionPaused, reduced]);
   return (
     <div
       ref={root}
@@ -134,9 +149,9 @@ function BirthdayCelebration({
       data-intro-state={intro.state}
       data-reveal-state={opened ? "complete" : intro.state}
       data-reduced={reduced}
-      data-paused={paused}
+      data-paused={motionPaused}
     >
-      <Effects paused={paused} reduced={reduced} color={theme.accent} />
+      <Effects paused={motionPaused} reduced={reduced} color={theme.accent} />
       <canvas
         ref={confettiCanvas}
         className="celebration-confetti"
@@ -163,7 +178,7 @@ function BirthdayCelebration({
             : copy.pauseButton}
         <span aria-hidden="true">{paused ? "▷" : "Ⅱ"}</span>
       </button>
-      {preview && opened && !reduced && (
+      {preview && previewContext?.mode !== "live" && opened && !reduced && (
         <button
           className="celebration-replay celebration-text-button"
           onClick={intro.replay}
@@ -189,10 +204,8 @@ function BirthdayCelebration({
             <span />
             <i className="celebration-aurora-dust" />
           </div>
-          <p className="celebration-eyebrow">
-            {copy.introEyebrow}
-          </p>
-          <Envelope name={name} age={content.age} copy={copy} />
+          <p className="celebration-eyebrow">{copy.introEyebrow}</p>
+          <Envelope name={name} age={age} copy={copy} />
           <h1>
             {copy.introTitle}
             <br />
@@ -225,18 +238,13 @@ function BirthdayCelebration({
           <h1 ref={heading} tabIndex={-1} className="celebration-name">
             {name}
           </h1>
-          {content.age !== undefined && (
+          {age !== undefined && (
             <div className="celebration-age-wrap">
               <span className="celebration-eyebrow">{copy.turning}</span>
-              <div
-                className="celebration-age"
-                data-digits={String(content.age).length}
-              >
-                {content.age}
+              <div className="celebration-age" data-digits={String(age).length}>
+                {age}
               </div>
-              <span className="celebration-age-caption">
-                {copy.ageCaption}
-              </span>
+              <span className="celebration-age-caption">{copy.ageCaption}</span>
             </div>
           )}
           <h2 className="celebration-hero-copy celebration-tagline">
@@ -277,9 +285,7 @@ function BirthdayCelebration({
           <div className="celebration-rule">
             <Star />
           </div>
-          <p className="celebration-eyebrow">
-            {copy.storyEyebrow}
-          </p>
+          <p className="celebration-eyebrow">{copy.storyEyebrow}</p>
           <h2 id="celebration-story-heading">
             {copy.storyTitle}
             <br />
@@ -301,13 +307,17 @@ function BirthdayCelebration({
           </h2>
           <div className="celebration-details-grid">
             <div>
-              <span className="celebration-detail-number">{copy.whenLabel}</span>
+              <span className="celebration-detail-number">
+                {copy.whenLabel}
+              </span>
               <h3>{dateLabel}</h3>
               <p>{timeLabel}</p>
               <small>{content.event.timeZone}</small>
             </div>
             <div>
-              <span className="celebration-detail-number">{copy.whereLabel}</span>
+              <span className="celebration-detail-number">
+                {copy.whereLabel}
+              </span>
               <h3>{content.venueName || "Somewhere special"}</h3>
               <p>{content.address || "The address will be shared soon."}</p>
               {content.address && (
@@ -371,9 +381,7 @@ function BirthdayCelebration({
             <br />
             <em>{copy.closingAccent}</em>
           </p>
-          <span className="celebration-eyebrow">
-            {copy.closingEyebrow}
-          </span>
+          <span className="celebration-eyebrow">{copy.closingEyebrow}</span>
           {!reduced && (
             <button
               className="celebration-text-button"
@@ -385,7 +393,7 @@ function BirthdayCelebration({
           )}
           <div className="celebration-footer-line">
             <span>
-              {name} {content.age !== undefined ? `· ${content.age}` : ""}
+              {name} {age !== undefined ? `· ${age}` : ""}
             </span>
             <Star />
             <span>{copy.editionLabel}</span>

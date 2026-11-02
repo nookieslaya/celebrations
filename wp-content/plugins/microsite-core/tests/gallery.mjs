@@ -30,6 +30,7 @@ export async function runGalleryTests({
     reducedMotion: "reduce",
   });
   const page = await context.newPage();
+  const demoFrame = () => page.frameLocator('iframe[title="Template demo"]');
   const errors = [];
   const requests = [];
   page.on("pageerror", (error) => errors.push(error.message));
@@ -110,12 +111,10 @@ export async function runGalleryTests({
           ).toBeVisible();
           await expect(page.locator(".template-demo-stage")).toBeVisible();
           await expect(
-            page.locator(
-              ".template-demo-stage .celebration, .template-demo-stage .party, .template-demo-stage .draft-preview",
-            ),
+            demoFrame().locator(".celebration, .party, .draft-preview"),
           ).toBeVisible();
           await expect(
-            page.locator(".invitation-assets-gate[data-ready=false]"),
+            demoFrame().locator(".invitation-assets-gate[data-ready=false]"),
           ).toHaveCount(0);
           assert.equal(
             await page
@@ -127,24 +126,30 @@ export async function runGalleryTests({
             await page.goto(
               `/app/sites/new?type=${type}&demo=${template.id}&palette=${color}`,
             );
-            const root = page.locator(
-              ".template-demo-stage .celebration, .template-demo-stage .party, .template-demo-stage .draft-preview",
+            const root = demoFrame().locator(
+              ".celebration, .party, .draft-preview",
             );
             await expect(root).toBeVisible();
             await expect(
-              page.locator(".invitation-assets-gate[data-ready=false]"),
+              demoFrame().locator(".invitation-assets-gate[data-ready=false]"),
             ).toHaveCount(0);
-            await page.setViewportSize({ width: 390, height: 640 });
+            await page.setViewportSize({ width: 390, height: 704 });
             const style = await page.addStyleTag({
               content:
                 ".template-demo-toolbar, .demo-notice { display: none !important; }",
             });
-            await page.evaluate(() => document.fonts.ready);
+            await expect(
+              page.locator('iframe[title="Template demo"]'),
+            ).toHaveAttribute("height", "640");
+            const child = page
+              .frames()
+              .find((frame) => frame.url().includes("/preview-frame/"));
+            await child.evaluate(() => document.fonts.ready);
             const thumbnailPath = join(
               thumbnails,
               `${template.id}-${color}.png`,
             );
-            await page.screenshot({
+            await page.locator('iframe[title="Template demo"]').screenshot({
               path:
                 process.env.UPDATE_TEMPLATE_THUMBNAILS === "1"
                   ? thumbnailPath
@@ -409,15 +414,19 @@ export async function runGalleryTests({
           .getByRole("button", { name: "Save & continue", exact: true })
           .click();
         await page
-          .getByRole("button", { name: "Preview invitation", exact: true })
+          .getByRole("button", { name: "Preview saved draft", exact: true })
           .click();
         await expect(page).toHaveURL(/\/preview$/);
         await expect(
-          page.getByText("Private draft · Not published", { exact: true }),
+          page.getByText("Saved draft preview · Changes are not published", {
+            exact: true,
+          }),
         ).toBeVisible();
         await expect(
-          page.getByRole("button", { name: "Send RSVP", exact: true }),
-        ).toHaveCount(0);
+          page
+            .frameLocator('iframe[title="Saved draft preview"]')
+            .getByRole("button", { name: "Send RSVP", exact: true }),
+        ).toBeDisabled();
         await page.getByRole("link", { name: "Back to editor" }).click();
         await expect(page).toHaveURL(/step=style/);
         await step("Review & publish");

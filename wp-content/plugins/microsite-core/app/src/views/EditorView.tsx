@@ -5,6 +5,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { LivePreview } from "../preview/LivePreview";
 import { PublicationPanel } from "../components/PublicationPanel";
 import {
   ApiError,
@@ -99,6 +100,7 @@ function DraftEditor<Type extends SiteTypeId>({
   const [error, setError] = useState<unknown>(null);
   const [success, setSuccess] = useState(false);
   const [previewChoice, setPreviewChoice] = useState(false);
+  const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
   const submitting = useRef(false);
   const mounted = useMounted();
   const stepHeading = useRef<HTMLHeadingElement>(null);
@@ -150,6 +152,7 @@ function DraftEditor<Type extends SiteTypeId>({
   }, [step?.id, focusField]);
 
   function goStep(id: string, field?: string) {
+    setMobileView("edit");
     const next = new URLSearchParams({ step: id });
     if (field) {
       next.set("field", field);
@@ -225,7 +228,6 @@ function DraftEditor<Type extends SiteTypeId>({
     );
   }
   const Fields = module.Fields;
-  const Preview = module.Preview;
   const appearance = site.draft.appearance as Record<string, string>;
   const palette = Object.values(appearance)[0];
   const content = site.draft.content as Record<string, unknown>;
@@ -313,8 +315,30 @@ function DraftEditor<Type extends SiteTypeId>({
           </ol>
         </>
       )}
-      <div className="editor-layout">
-        <div>
+      <div
+        className="mobile-editor-toggle"
+        role="group"
+        aria-label="Editor view"
+      >
+        <button
+          className="button"
+          type="button"
+          aria-pressed={mobileView === "edit"}
+          onClick={() => setMobileView("edit")}
+        >
+          Edit
+        </button>
+        <button
+          className="button"
+          type="button"
+          aria-pressed={mobileView === "preview"}
+          onClick={() => setMobileView("preview")}
+        >
+          Preview
+        </button>
+      </div>
+      <div className="editor-layout" data-mobile-view={mobileView}>
+        <div className="editor-form-column">
           <form
             className="panel-card"
             onSubmit={
@@ -464,7 +488,7 @@ function DraftEditor<Type extends SiteTypeId>({
           </form>
           {step?.review && publicationPanel()}
         </div>
-        <div>
+        <div className="editor-preview-column">
           {type?.features.includes("rsvp") && (
             <Link
               className="button"
@@ -473,61 +497,60 @@ function DraftEditor<Type extends SiteTypeId>({
               Manage responses
             </Link>
           )}
-          <p className="eyebrow">{copy.preview}</p>
-          {step?.id === "style" && template && (
-            <img
-              className="wizard-template-thumbnail"
-              src={template.thumbnailUrls[palette] ?? template.thumbnailUrl}
-              alt={`${template.name} preview`}
-              width="390"
-              height="640"
-            />
-          )}
-          <Preview value={site.draft} />
-          {module.fullPreview && (
-            <>
-              <button
-                className="button primary"
-                disabled={busy}
-                onClick={() => {
-                  if (dirty) {
-                    setPreviewChoice(true);
-                  } else {
-                    navigate(`${appBase}/sites/${site.id}/preview`);
-                  }
-                }}
+          <LivePreview
+            document={site}
+            mobileVisible={mobileView === "preview"}
+          />
+          <>
+            <button
+              className="button primary"
+              disabled={busy}
+              onClick={() => {
+                if (dirty) {
+                  setPreviewChoice(true);
+                } else {
+                  navigate(`${appBase}/sites/${site.id}/preview`);
+                }
+              }}
+            >
+              Preview saved draft
+            </button>
+            {previewChoice && (
+              <div
+                className="preview-choice"
+                role="dialog"
+                aria-label="Save before preview"
               >
-                Preview invitation
-              </button>
-              {previewChoice && (
-                <div
-                  className="preview-choice"
-                  role="dialog"
-                  aria-label="Save before preview"
+                <p>
+                  The preview uses your last saved draft. Save your changes
+                  before opening it?
+                </p>
+                {error !== null && <ErrorNotice error={error} />}
+                <button
+                  className="button primary"
+                  disabled={busy}
+                  onClick={() => void save(undefined, true)}
                 >
-                  <p>
-                    The preview uses your last saved draft. Save your changes
-                    before opening it?
-                  </p>
-                  {error !== null && <ErrorNotice error={error} />}
-                  <button
-                    className="button primary"
-                    disabled={busy}
-                    onClick={() => void save(undefined, true)}
-                  >
-                    Save and preview
-                  </button>
-                  <button
-                    className="button"
-                    disabled={busy}
-                    onClick={() => setPreviewChoice(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              )}
-            </>
-          )}
+                  Save and preview
+                </button>
+                <a
+                  className="button"
+                  href={`${appBase}/sites/${site.id}/preview`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open saved version in a new tab
+                </a>
+                <button
+                  className="button"
+                  disabled={busy}
+                  onClick={() => setPreviewChoice(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </>
           <p className="field-help">
             {site.publication.published
               ? "Your live page changes only when you publish an update."

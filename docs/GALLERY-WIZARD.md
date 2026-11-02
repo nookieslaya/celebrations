@@ -56,3 +56,8 @@ W Review używany jest dotychczasowy PublicationPanel: Publish / Update live pag
 Screenshoty galerii, formularza, review i błędu w 390×844 oraz 1440×900 są w `app/test-results/gallery/`. Nie commituj ich ani dist. Źródłowe miniatury w assets są częścią wtyczki i powinny być wersjonowane. Dotychczasowe scenariusze mają wspólny helper `tests/editor-navigation.mjs` dostosowujący nawigację do galerii i kroków; zakres faktycznie uruchomionych kontroli jest w STATUS.md.
 
 Nie ma nowych szablonów, efektów, płatności, hostingu, zmiany szablonu istniejącego projektu ani publicznej strony marketingowej. Demo jest dostępne w panelu. Rejestracja LocalWP pozostaje bez zmian. Reset hasła, weryfikacja emaila, PHPCS/CI i ograniczenia dotychczasowych kont/publicznego uruchomienia pozostają poza tym etapem.
+
+
+## Aktualizacja podglądu
+
+Osadzony podgląd i demo korzystają teraz z izolowanego iframe i rzeczywistego renderera. Usunięto tekstowe Summary oraz miniaturę z boku kroku Style. Preview saved draft pozostaje odrębnym źródłem ostatnio zapisanych danych. Szczegóły: [PREVIEW.md](PREVIEW.md).

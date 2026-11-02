@@ -48,6 +48,7 @@ export default defineConfig(({ mode }) => {
           app: "src/main.tsx",
           public: "src/public.tsx",
           management: "src/rsvp-manage.tsx",
+          preview: "src/preview-frame.tsx",
         },
       },
     },

@@ -1,0 +1,89 @@
+.live-preview-panel {
+  position: sticky;
+  top: 20px;
+  max-height: calc(100svh - 40px);
+  overflow: auto;
+  background: #edf0e9;
+  border: 1px solid #d7dfd0;
+  border-radius: 12px;
+  padding: 14px;
+}
+.live-preview-label {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #38503b;
+}
+.live-preview-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.live-preview-controls [role="group"] {
+  display: flex;
+  gap: 6px;
+}
+.live-preview-controls .button {
+  padding: 9px 12px;
+}
+.live-preview-controls [aria-pressed="true"] {
+  background: #203b2b;
+  color: white;
+}
+.renderer-frame {
+  width: 100%;
+  min-width: 0;
+}
+.renderer-frame-window {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #fbfaf7;
+}
+.renderer-frame iframe {
+  display: block;
+  max-width: none;
+  border: 0;
+  transform-origin: top left;
+}
+.renderer-frame-fluid .renderer-frame-window {
+  border-radius: 0;
+}
+.mobile-editor-toggle {
+  display: none;
+}
+.editor-preview-column {
+  min-width: 0;
+}
+.saved-preview-action {
+  margin-top: 16px;
+}
+@media (max-width: 950px) {
+  .mobile-editor-toggle {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .mobile-editor-toggle [aria-pressed="true"] {
+    background: #203b2b;
+    color: #fff;
+  }
+  .editor-layout[data-mobile-view="edit"] .editor-preview-column {
+    display: none;
+  }
+  .editor-layout[data-mobile-view="preview"] .editor-form-column {
+    display: none;
+  }
+  .live-preview-panel {
+    position: static;
+    max-height: none;
+    padding: 10px;
+  }
+}
+
+.renderer-frame-mobile .renderer-frame-window {
+  max-width: 390px;
+  margin-inline: auto;
+}

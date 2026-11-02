@@ -1,12 +1,4 @@
-import {
-  Component,
-  Suspense,
-  useCallback,
-  useRef,
-  useState,
-  type FormEvent,
-  type ReactNode,
-} from "react";
+import { useCallback, useRef, useState, type FormEvent } from "react";
 import { ApiError, type SiteTypeId } from "../api/client";
 import { useSession } from "../auth/SessionProvider";
 import { appBase } from "../config";
@@ -18,7 +10,7 @@ import {
   useResource,
 } from "../components/Async";
 import { Link, useRouter } from "../routing/Router";
-import { getRenderer } from "../renderers/registry";
+import { RendererFrame } from "../preview/RendererFrame";
 import {
   PalettePicker,
   selectedPalette,
@@ -26,25 +18,6 @@ import {
   type Template,
 } from "../gallery/PalettePicker";
 import "../gallery/gallery.css";
-
-class DemoBoundary extends Component<
-  { children: ReactNode },
-  { failed: boolean }
-> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? (
-      <p className="notice error" role="alert">
-        This demo could not load. Return to the gallery and try again.
-      </p>
-    ) : (
-      this.props.children
-    );
-  }
-}
 
 export function NewSiteView() {
   const { api, session } = useSession();
@@ -150,8 +123,6 @@ export function NewSiteView() {
     );
   }
   if (demo) {
-    const definition = getRenderer(demo.id, demo.version);
-    const Renderer = definition?.Component;
     const palette = selectedPalette(demo, query.get("palette"));
     return (
       <div className="template-demo">
@@ -169,25 +140,16 @@ export function NewSiteView() {
           sent.
         </p>
         <div className="template-demo-stage">
-          {Renderer && definition.siteType === typeId ? (
-            <DemoBoundary key={`${demo.id}:${palette}`}>
-              <Suspense fallback={<Loading />}>
-                <Renderer
-                  value={withPalette(demo, palette, true)}
-                  preview
-                  introKey={`demo:${demo.id}:${palette}`}
-                  rsvp={
-                    <p className="celebration-rsvp-notice">
-                      Demo · Guest responses are disabled.
-                    </p>
-                  }
-                  rsvpAvailable={false}
-                />
-              </Suspense>
-            </DemoBoundary>
-          ) : (
-            <p className="notice">This demo is currently unavailable.</p>
-          )}
+          <RendererFrame
+            document={{
+              siteType: typeId as SiteTypeId,
+              templateId: demo.id,
+              templateVersion: demo.version,
+              draft: withPalette(demo, palette, true),
+            }}
+            mode="demo"
+            viewport="fluid"
+          />
         </div>
       </div>
     );

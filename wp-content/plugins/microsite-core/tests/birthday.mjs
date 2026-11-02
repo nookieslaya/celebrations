@@ -1,4 +1,9 @@
-import { chooseTemplate, goStep } from "./editor-navigation.mjs";
+import {
+  chooseTemplate,
+  goStep,
+  savedPreview,
+  livePreview,
+} from "./editor-navigation.mjs";
 import assert from "node:assert/strict";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -237,9 +242,10 @@ export async function runBirthdayTests({
         await expect(page.getByLabel("Celebrant name")).toBeVisible();
         path = new URL(page.url()).pathname;
         projectId = Number(path.split("/").at(-1));
+        await expect(livePreview(page).locator(".party")).toBeVisible();
         assert.equal(
           requests.some((url) => url.includes("BirthdayParty-")),
-          false,
+          true,
         );
         await goStep(page, "about");
         await page.getByLabel("Celebrant name").fill("Alex Morgan");
@@ -301,7 +307,7 @@ export async function runBirthdayTests({
         await goStep(page, "about");
         await page.getByLabel("Invitation heading").fill("<b>Invalid</b>");
         await page
-          .getByRole("button", { name: "Preview invitation", exact: true })
+          .getByRole("button", { name: "Preview saved draft", exact: true })
           .click();
         await expect(
           page.getByRole("dialog", { name: "Save before preview" }),
@@ -309,7 +315,7 @@ export async function runBirthdayTests({
         await page.getByRole("button", { name: "Cancel", exact: true }).click();
         await expect(page).toHaveURL(new RegExp(`${path}(?:\\?.*)?$`));
         await page
-          .getByRole("button", { name: "Preview invitation", exact: true })
+          .getByRole("button", { name: "Preview saved draft", exact: true })
           .click();
         await page
           .getByRole("button", { name: "Save and preview", exact: true })
@@ -325,7 +331,10 @@ export async function runBirthdayTests({
           .click();
         await expect(page).toHaveURL(new RegExp(`${path}/preview$`));
         await expect(
-          page.getByRole("button", { name: "Open invitation", exact: true }),
+          savedPreview(page).getByRole("button", {
+            name: "Open invitation",
+            exact: true,
+          }),
         ).toBeVisible();
         assert.equal(new URL(page.url()).search, "");
       },
@@ -340,22 +349,40 @@ export async function runBirthdayTests({
           fullPage: true,
           animations: "disabled",
         });
-        await page
+        await savedPreview(page)
           .getByRole("button", { name: "Open invitation", exact: true })
           .focus();
         await page.keyboard.press("Enter");
         await expect(
-          page.getByRole("heading", { name: "Alex Morgan", exact: true }),
+          savedPreview(page).getByRole("heading", {
+            name: "Alex Morgan",
+            exact: true,
+          }),
         ).toBeVisible();
         await expect(
-          page.getByRole("heading", { name: "Alex Morgan", exact: true }),
+          savedPreview(page).getByRole("heading", {
+            name: "Alex Morgan",
+            exact: true,
+          }),
         ).toBeFocused();
-        await expect(page.locator(".party-confetti-piece")).toHaveCount(42);
-        await page.getByRole("link", { name: "Jump to details" }).click();
-        await expect(page.locator("#party-details")).toBeInViewport();
-        await expect(page.locator(".party-date")).toContainText("10 July 2027");
-        await expect(page.locator(".party-date")).toContainText("19:30");
-        await expect(page.getByText("The Loft", { exact: true })).toBeVisible();
+        await expect(
+          savedPreview(page).locator(".party-confetti-piece"),
+        ).toHaveCount(42);
+        await savedPreview(page)
+          .getByRole("link", { name: "Jump to details" })
+          .click();
+        await expect(
+          savedPreview(page).locator("#party-details"),
+        ).toBeInViewport();
+        await expect(savedPreview(page).locator(".party-date")).toContainText(
+          "10 July 2027",
+        );
+        await expect(savedPreview(page).locator(".party-date")).toContainText(
+          "19:30",
+        );
+        await expect(
+          savedPreview(page).getByText("The Loft", { exact: true }),
+        ).toBeVisible();
         assert.equal(
           await page.evaluate(() => document.body.style.overflow),
           "",
@@ -367,10 +394,12 @@ export async function runBirthdayTests({
       "birthday preview supports refresh, skip intro, placeholders and owner isolation",
       async () => {
         await page.reload();
-        await page
+        await savedPreview(page)
           .getByRole("button", { name: "Skip intro", exact: true })
           .click();
-        await expect(page.locator(".party-confetti-piece")).toHaveCount(0);
+        await expect(
+          savedPreview(page).locator(".party-confetti-piece"),
+        ).toHaveCount(0);
         await page
           .getByRole("link", { name: "Back to editor", exact: true })
           .click();
@@ -406,17 +435,20 @@ export async function runBirthdayTests({
             await review.setViewportSize({ width, height });
             await review.goto(`${path}/preview`);
             await expect(
-              review.getByRole("heading", { name: "Alex Morgan", exact: true }),
+              savedPreview(review).getByRole("heading", {
+                name: "Alex Morgan",
+                exact: true,
+              }),
             ).toBeVisible();
             await expect(
-              review.getByRole("button", {
+              savedPreview(review).getByRole("button", {
                 name: "Open invitation",
                 exact: true,
               }),
             ).toHaveCount(0);
-            await expect(review.locator(".party-confetti-piece")).toHaveCount(
-              0,
-            );
+            await expect(
+              savedPreview(review).locator(".party-confetti-piece"),
+            ).toHaveCount(0);
             assert.equal(
               await review.evaluate(
                 () => document.documentElement.scrollWidth > innerWidth,
@@ -447,14 +479,18 @@ export async function runBirthdayTests({
           await review.setViewportSize({ width: 375, height: 812 });
           await review.goto(`${path}/preview`);
           await expect(
-            review.getByText("Date to be announced", { exact: true }),
+            savedPreview(review).getByText("Date to be announced", {
+              exact: true,
+            }),
           ).toBeVisible();
-          await expect(review.locator(".party-age")).toHaveCount(0);
+          await expect(savedPreview(review).locator(".party-age")).toHaveCount(
+            0,
+          );
           await expect(
-            review.getByText("The dress code", { exact: true }),
+            savedPreview(review).getByText("The dress code", { exact: true }),
           ).toHaveCount(0);
           await expect(
-            review.getByRole("link", { name: "Find the party" }),
+            savedPreview(review).getByRole("link", { name: "Find the party" }),
           ).toHaveCount(0);
           assert.equal(
             await review.evaluate(

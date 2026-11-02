@@ -1,4 +1,9 @@
-import { chooseTemplate, goStep } from "./editor-navigation.mjs";
+import {
+  chooseTemplate,
+  goStep,
+  savedPreview,
+  livePreview,
+} from "./editor-navigation.mjs";
 import assert from "node:assert/strict";
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -157,25 +162,31 @@ export async function runCelebrationTests({
         await expect(editor.getByLabel("Color palette")).toHaveValue(
           "disco-rose",
         );
+        await expect(livePreview(editor).locator(".celebration")).toBeVisible();
         assert.equal(
-          loaded.some((url) => /BirthdayCelebration-|\.woff2/.test(url)),
-          false,
+          loaded.some((url) => /BirthdayCelebration-/.test(url)),
+          true,
         );
         await editor.goto(`/app/sites/${site.id}/preview`);
         await expect(
-          editor.getByRole("button", { name: "Open invitation", exact: true }),
+          savedPreview(editor).getByRole("button", {
+            name: "Open invitation",
+            exact: true,
+          }),
         ).toBeVisible();
-        await editor
+        await savedPreview(editor)
           .getByRole("button", { name: "Skip intro", exact: true })
           .click();
         await expect(
-          editor.getByRole("heading", { name: "The Glasshouse" }),
+          savedPreview(editor).getByRole("heading", { name: "The Glasshouse" }),
         ).toBeVisible();
         await expect(
-          editor.getByRole("button", { name: "Send RSVP" }),
-        ).toHaveCount(0);
+          savedPreview(editor).getByRole("button", { name: "Send RSVP" }),
+        ).toBeDisabled();
         await expect(
-          editor.getByText(/Private preview · RSVP is available/),
+          savedPreview(editor).getByText(
+            /Preview only — guest responses cannot be sent/,
+          ),
         ).toBeVisible();
       },
     );

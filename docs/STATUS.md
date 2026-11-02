@@ -1,7 +1,26 @@
 # Stan faktyczny — 2026-11-02
 
 
-## Aktualny etap: galeria i kreator — 0.7.0
+## Aktualna poprawka: wspólny rzeczywisty podgląd
+
+Usunięto BirthdayInvitationSummary, osadzoną powłokę BasicPagePreview, miniaturę Style i style tekstowej makiety. Jeden RendererFrame obsługuje live, zapisany szkic i demo, a TemplatePreview wybiera rzeczywiste komponenty z publicznego rejestru rendererów. Brak kopiowania układu lub dekoracji szablonów. Normalne podsumowanie Review pozostało.
+
+- Bieżące, niezapisane dane przekazywane w pamięci po gotowości iframe; zero zapisu/publikacji podczas edycji.
+- Kontrolowane viewporty Mobile 390×844 i Desktop 1440×900, izolacja CSS, Edit / Preview bez odmontowania formularza.
+- Domyślnie otwarta treść, jawne Replay opening, bez restartu przy zmianie tekstu/palety/kroku; pauza po ukryciu.
+- Preview saved draft jednoznacznie pokazuje ostatni zapis; dostępna nowa karta bez utraty bieżącego formularza.
+- Rzeczywiste pola/styl RSVP bez API odpowiedzi i aktywnych linków zarządzania.
+- Bezpieczna prezentacja aktualnej lokalnej daty oraz neutralne placeholdery; kontrakty i normalizacja backendu bez zmian.
+- Pusty chroniony dokument /app/preview-frame/ nie zawiera nonce lub szkicu. Ścisłe origin/source/kształt wiadomości; sandbox, CSP i blokada nawigacji zewnętrznej. Development i produkcja korzystają z tego samego entry.
+
+Wykonane: verify (kontrakty, ESLint, TypeScript, build) PASS; PHP App/preview-frame PASS; cztery grupy TEST_SCOPE=preview PASS i pięć grup TEST_SCOPE=gallery PASS na tej samej microsite_test_430601248a09bf6c; test lokalnego iframe/CSS HMR PASS. Porównanie metryk/style/fontów wszystkich trzech szablonów z publicznym rendererem PASS. Zrzuty 1440×900 i 390×844 obejrzane; artefakty w app/test-results/live-preview/. Lokalna baza strony i ustawienie rejestracji bez zmian, istniejący Vite pozostawiony.
+
+Ograniczenia: nie powtarzano pełnej regresji i Safari/WebKit. Development/HMR sprawdzono na tymczasowym lokalnym harnessie z fikcyjnymi danymi, a pełny przepływ z rzeczywistą sesją na produkcyjnym buildzie izolowanego WordPressa. Użytkownik ponownie ograniczył testy do podstawowych; dalsze sprawdzanie zakończono. Dokumentacja: [PREVIEW.md](PREVIEW.md).
+
+Przykładowy kreator: http://celebrations.local/app/sites/10?step=about
+
+
+## Poprzedni etap: galeria i kreator — 0.7.0
 
 Działa galeria z katalogu, dziewięć rzeczywistych miniatur dla wszystkich palet, prywatne demo bez projektu/odpowiedzi oraz potwierdzenie nazwy przed utworzeniem. Zaproszenia mają pięć kroków z jednym stanem i dotychczasowym PATCH. Basic-page zachowuje prosty edytor. Podsumowanie korzysta z istniejącego read-only GET projektu, Publication::describe i walidatora backendu, a publikacja/link/QR z dotychczasowego PublicationPanel. Szablonu istniejącego projektu nie można zmienić.
 

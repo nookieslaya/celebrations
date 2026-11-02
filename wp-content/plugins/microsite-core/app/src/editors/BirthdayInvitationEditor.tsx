@@ -295,31 +295,3 @@ export function BirthdayInvitationFields({
     </div>
   );
 }
-
-export function BirthdayInvitationSummary({
-  value,
-}: {
-  value: BirthdayInvitationDraft;
-}) {
-  return (
-    <section
-      className="birthday-summary"
-      data-palette={value.appearance.palette}
-      aria-label="Invitation draft summary"
-    >
-      <span className="birthday-summary-star" aria-hidden="true">
-        ✳
-      </span>
-      <p>YOU’RE INVITED</p>
-      <h2>{value.content.celebrantName || "Your name here"}</h2>
-      {value.content.age !== undefined && (
-        <span className="birthday-summary-age">
-          TURNING {value.content.age}
-        </span>
-      )}
-      <h3>{value.content.heading}</h3>
-      <p>{value.content.message}</p>
-      <small>Open the full-screen preview to see your saved invitation.</small>
-    </section>
-  );
-}

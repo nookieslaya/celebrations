@@ -1,3 +1,4 @@
+import { runPreviewTests } from "./preview.mjs";
 import { runGalleryTests } from "./gallery.mjs";
 import { runCelebrationTests } from "./celebration.mjs";
 import { runRsvpTests } from "./rsvp.mjs";
@@ -445,7 +446,7 @@ try {
   }
 
   if (
-    !["birthday", "publication", "rsvp", "celebration", "gallery"].includes(
+    !["birthday", "publication", "rsvp", "celebration", "gallery", "preview"].includes(
       process.env.TEST_SCOPE,
     )
   ) {
@@ -973,7 +974,7 @@ try {
   }
 
   if (
-    !["publication", "rsvp", "celebration", "gallery"].includes(
+    !["publication", "rsvp", "celebration", "gallery", "preview"].includes(
       process.env.TEST_SCOPE,
     )
   ) {
@@ -991,7 +992,7 @@ try {
   }
 
   if (
-    !["birthday", "rsvp", "celebration", "gallery"].includes(
+    !["birthday", "rsvp", "celebration", "gallery", "preview"].includes(
       process.env.TEST_SCOPE,
     )
   ) {
@@ -1045,6 +1046,10 @@ try {
       pluginDirectory,
       isolatedWp,
     });
+  }
+
+  if (!process.env.TEST_SCOPE || process.env.TEST_SCOPE === "preview") {
+    await runPreviewTests({ origin, api, a, b, check, password, pluginDirectory, isolatedWp });
   }
 
   if (existsSync(join(temporaryDirectory, "php-errors.log"))) {

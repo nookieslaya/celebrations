@@ -25,3 +25,11 @@ export async function goStep(page, step) {
       .click();
   }
 }
+
+export function savedPreview(page) {
+  return page.frameLocator('iframe[title="Saved draft preview"]');
+}
+
+export function livePreview(page) {
+  return page.frameLocator('iframe[title="Live preview"]');
+}

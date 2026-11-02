@@ -1,0 +1,12 @@
+html[data-preview-active="false"] *,
+html[data-preview-active="false"] *::before,
+html[data-preview-active="false"] *::after {
+  animation-play-state: paused !important;
+}
+.frame-loading {
+  padding: 24px;
+  color: #526454;
+  font:
+    15px/1.6 system-ui,
+    sans-serif;
+}
