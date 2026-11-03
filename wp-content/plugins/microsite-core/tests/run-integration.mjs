@@ -1,3 +1,4 @@
+import { runStagingTests } from "./staging.mjs";
 import { runPreviewTests } from "./preview.mjs";
 import { runGalleryTests } from "./gallery.mjs";
 import { runCelebrationTests } from "./celebration.mjs";
@@ -58,6 +59,8 @@ function assertIsolatedDatabase(database, developmentDatabase) {
 const developmentDatabase = developmentConfig("DB_NAME");
 const developmentHost = developmentConfig("DB_HOST");
 const databaseSocket = wpAt(developmentDirectory, [
+  "--skip-plugins",
+  "--skip-themes",
   "eval",
   "echo ini_get('mysqli.default_socket');",
 ]);
@@ -197,7 +200,9 @@ try {
     recursive: true,
   });
   symlinkSync(
-    pluginDirectory,
+    process.env.TEST_RUNTIME_PLUGIN
+      ? resolve(process.env.TEST_RUNTIME_PLUGIN)
+      : pluginDirectory,
     join(temporaryDirectory, "wp-content/plugins/microsite-core"),
   );
   copyFileSync(
@@ -345,6 +350,8 @@ try {
     "php",
     [
       "-d",
+      "opcache.enable_cli=0",
+      "-d",
       "auto_prepend_file=",
       "-d",
       "auto_append_file=",
@@ -446,9 +453,15 @@ try {
   }
 
   if (
-    !["birthday", "publication", "rsvp", "celebration", "gallery", "preview"].includes(
-      process.env.TEST_SCOPE,
-    )
+    ![
+      "birthday",
+      "publication",
+      "rsvp",
+      "celebration",
+      "gallery",
+      "preview",
+      "staging",
+    ].includes(process.env.TEST_SCOPE)
   ) {
     await check(
       "production shell serves both app paths and manifest assets independently of the running Vite",
@@ -974,9 +987,14 @@ try {
   }
 
   if (
-    !["publication", "rsvp", "celebration", "gallery", "preview"].includes(
-      process.env.TEST_SCOPE,
-    )
+    ![
+      "publication",
+      "rsvp",
+      "celebration",
+      "gallery",
+      "preview",
+      "staging",
+    ].includes(process.env.TEST_SCOPE)
   ) {
     await runBirthdayTests({
       origin,
@@ -992,9 +1010,14 @@ try {
   }
 
   if (
-    !["birthday", "rsvp", "celebration", "gallery", "preview"].includes(
-      process.env.TEST_SCOPE,
-    )
+    ![
+      "birthday",
+      "rsvp",
+      "celebration",
+      "gallery",
+      "preview",
+      "staging",
+    ].includes(process.env.TEST_SCOPE)
   ) {
     await runPublicationTests({
       origin,
@@ -1049,7 +1072,20 @@ try {
   }
 
   if (!process.env.TEST_SCOPE || process.env.TEST_SCOPE === "preview") {
-    await runPreviewTests({ origin, api, a, b, check, password, pluginDirectory, isolatedWp });
+    await runPreviewTests({
+      origin,
+      api,
+      a,
+      b,
+      check,
+      password,
+      pluginDirectory,
+      isolatedWp,
+    });
+  }
+
+  if (!process.env.TEST_SCOPE || process.env.TEST_SCOPE === "staging") {
+    await runStagingTests({ origin, api, a, check, isolatedWp });
   }
 
   if (existsSync(join(temporaryDirectory, "php-errors.log"))) {

@@ -221,7 +221,7 @@ export async function runBirthdayTests({
 
   try {
     await check(
-      "birthday browser creates from catalog and does not fetch animation code on login/list/editor",
+      "birthday browser creates from catalog and loads the selected live renderer in the editor",
       async () => {
         await page.goto("/app/login");
         await page.getByLabel("Email address").fill("a@example.invalid");

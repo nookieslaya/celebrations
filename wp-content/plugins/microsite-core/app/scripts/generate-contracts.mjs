@@ -5,6 +5,16 @@ const contractsDirectory = new URL("../../contracts/", import.meta.url);
 const outputPath = new URL("../src/generated/drafts.ts", import.meta.url);
 
 function typescriptType(schema, indentation = 0) {
+  if (schema.oneOf) {
+    return schema.oneOf
+      .map((option) => typescriptType(option, indentation))
+      .join(" | ");
+  }
+
+  if (schema.type === "array") {
+    return `Array<${typescriptType(schema.items, indentation)}>`;
+  }
+
   if (schema.enum) {
     return schema.enum.map((value) => JSON.stringify(value)).join(" | ");
   }

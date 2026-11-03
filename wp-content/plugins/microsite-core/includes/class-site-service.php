@@ -30,6 +30,13 @@ final class SiteService {
             return $selection;
         }
 
+        if (
+            'development' === ( $selection['type']['availability'] ?? 'available' )
+            && ! current_user_can( 'manage_options' )
+        ) {
+            return new WP_Error( 'microsite_type_unavailable', 'This site type is in development.', array( 'status' => 403 ) );
+        }
+
         $draft = array_key_exists( 'draft', $payload )
             ? $payload['draft']
             : $selection['type']['defaults'];

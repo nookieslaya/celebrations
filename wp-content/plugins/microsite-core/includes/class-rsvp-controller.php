@@ -104,7 +104,12 @@ final class RsvpController {
 
         $origin = (string) $request->get_header( 'Origin' );
         $home = wp_parse_url( home_url() );
-        $expected = $home['scheme'] . '://' . $home['host'] . ( isset( $home['port'] ) ? ':' . $home['port'] : '' );
+        $expected = strtolower( $home['scheme'] . '://' . $home['host'] );
+        $default_port = 'https' === $home['scheme'] ? 443 : 80;
+
+        if ( isset( $home['port'] ) && $home['port'] !== $default_port ) {
+            $expected .= ':' . $home['port'];
+        }
 
         if (
             ( '' !== $origin && $origin !== $expected )

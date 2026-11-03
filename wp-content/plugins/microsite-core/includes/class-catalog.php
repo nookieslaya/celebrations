@@ -25,7 +25,25 @@ final class Catalog {
             JSON_THROW_ON_ERROR
         );
 
+        $wedding_schema = json_decode(
+            file_get_contents( dirname( __DIR__ ) . '/contracts/wedding.v1.json' ),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
+
         $this->types = array(
+            'wedding' => array(
+                'id' => 'wedding',
+                'name' => 'Wedding',
+                'availability' => 'development',
+                'schemaVersion' => 1,
+                'schema' => $wedding_schema,
+                'defaults' => self::defaults_from_schema( $wedding_schema ),
+                'features' => array(),
+                'normalizer' => array( WeddingConfig::class, 'normalise' ),
+                'publishRequired' => array(),
+            ),
             'birthday-invitation' => array(
                 'id'            => 'birthday-invitation',
                 'name'          => 'Birthday invitation',
@@ -48,6 +66,19 @@ final class Catalog {
         );
 
         $this->templates = array(
+            'modern-editorial' => array(
+                'id' => 'modern-editorial',
+                'name' => 'Modern Editorial',
+                'description' => 'Wedding foundation; editor and renderer are not implemented.',
+                'availability' => 'development',
+                'version' => '1',
+                'siteTypes' => array( 'wedding' ),
+                'rendererKey' => null,
+                'allowedAppearance' => array(
+                    'palette' => $wedding_schema['properties']['appearance']['properties']['palette']['enum'],
+                    'fontPair' => $wedding_schema['properties']['appearance']['properties']['fontPair']['enum'],
+                ),
+            ),
             'birthday-party' => array(
                 'id'                => 'birthday-party',
                 'version'           => '1',
@@ -98,6 +129,10 @@ final class Catalog {
         $templates = array();
 
         foreach ( $this->types as $type ) {
+            if ( ! $this->is_available( $type ) ) {
+                continue;
+            }
+
             $types[] = array(
                 'id'            => $type['id'],
                 'name'          => $type['name'],
@@ -115,6 +150,10 @@ final class Catalog {
         );
 
         foreach ( $this->templates as $template ) {
+            if ( ! $this->is_available( $template ) ) {
+                continue;
+            }
+
             $type = $this->types[ $template['siteTypes'][0] ];
             $defaults = array_replace_recursive( $type['defaults'], $template['defaults'] ?? array() );
             $demo = $defaults;
@@ -163,7 +202,24 @@ final class Catalog {
         );
     }
 
-    private function defaults_from_schema( array $schema ): mixed {
+    public function is_available( array $definition ): bool {
+        return 'available' === ( $definition['availability'] ?? 'available' );
+    }
+
+    public function wedding_registry(): array {
+        $schema = $this->types['wedding']['schema'];
+
+        return array(
+            'sections' => WeddingSections::definitions( $schema ),
+            'styles' => WeddingSections::style_registry( $schema ),
+        );
+    }
+
+    public static function defaults_from_schema( array $schema ): mixed {
+        if ( array_key_exists( 'default', $schema ) ) {
+            return $schema['default'];
+        }
+
         if ( 'object' !== $schema['type'] ) {
             return $schema['default'];
         }
@@ -172,7 +228,7 @@ final class Catalog {
 
         foreach ( $schema['properties'] as $key => $property ) {
             if ( 'object' === $property['type'] || array_key_exists( 'default', $property ) ) {
-                $defaults[ $key ] = $this->defaults_from_schema( $property );
+                $defaults[ $key ] = self::defaults_from_schema( $property );
             }
         }
 

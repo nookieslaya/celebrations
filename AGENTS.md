@@ -4,7 +4,7 @@ Pracujemy na istniejącym WordPressie LocalWP. Nie instaluj WP, nie resetuj bazy
 
 Kod aplikacji: `wp-content/plugins/microsite-core/app`. Routing `/app/*` i assety należą do wtyczki. Motyw jest opcjonalny. Zachowuj jeden origin dla dokumentów i API. Vite służy tylko do assetów/HMR.
 
-Komendy WP/PHP wykonuj w LocalWP → Open site shell. Nie zapisuj bezwzględnych ścieżek lokalnych narzędzi w kodzie. Node >=22.12.0. Instalacja zależności: `npm ci`. Główna kontrola: `npm run verify` w katalogu app. Testy przeglądarkowe: `WP_SITE_URL="$(wp option get home)" npm run test:e2e`.
+Komendy WP/PHP wykonuj w LocalWP → Open site shell. Nie zapisuj bezwzględnych ścieżek lokalnych narzędzi w kodzie. Node 22.13+ (linia 22) lub >=24; Node 23 nie spełnia engines ESLint 10. Instalacja zależności: `npm ci`. Główna kontrola: `npm run verify` w katalogu app. Testy przeglądarkowe: `WP_SITE_URL="$(wp option get home)" npm run test:e2e`.
 
 Jedyną listą zadań jest `specs/001-app-shell/tasks.md`. Stan weryfikacji zapisuj w docs/STATUS.md. Nie raportuj pominiętych kontroli jako PASS.
 
@@ -34,3 +34,7 @@ Schemat birthday-invitation jest źródłem limitów/defaults/typów; reguły DS
 ## Zakres sprawdzania
 
 Użytkownik preferuje podstawowe sprawdzanie. Przy zwykłych poprawkach ogranicz się do lint/typów/builda odpowiedniego dla zmiany. Nie uruchamiaj rozbudowanej regresji, macierzy widoków ani wielokrotnych przeglądów wizualnych bez wyraźnej potrzeby lub aktualnej prośby. Nie powtarzaj poprawnych kontroli bez nowej zmiany lub konkretnego błędu. Respektuj bieżące ograniczenie zakresu testów także wtedy, gdy starszy opis etapu zawiera szeroką checklistę.
+
+## Moduł wedding
+
+Przed pracą nad modułem wedding przeczytaj docs/WEDDING.md. Po zmianach aktualizuj tam bieżący stan i następny krok. Zadania zapisuj wyłącznie w specs/001-app-shell/tasks.md, a wykonane i pominięte kontrole w docs/STATUS.md. Zdefiniowane opcje development nie oznaczają gotowego edytora, renderera ani możliwości publikacji.

@@ -73,7 +73,9 @@ export async function guestRequest<Data>(
     response = await fetch(url, {
       method,
       headers,
-      credentials: "omit",
+      // Preserve same-origin hosting access (e.g. a closed staging gateway).
+      // Guest authorization still comes from the RSVP secret, never a WP nonce.
+      credentials: "same-origin",
       cache: "no-store",
       referrerPolicy: "no-referrer",
       body: payload ? JSON.stringify(payload) : undefined,

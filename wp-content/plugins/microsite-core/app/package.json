@@ -1,14 +1,16 @@
 {
   "name": "microsite-app",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.7.1",
   "type": "module",
   "engines": {
-    "node": ">=22.12.0"
+    "node": "^22.13.0 || >=24.0.0"
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
+    "package:staging": "python3 scripts/package-staging.py",
+    "release:staging": "npm ci && npm run verify && npm run package:staging",
     "lint": "eslint .",
     "verify": "npm run contracts:check && npm run lint && npm run build",
     "test:e2e": "playwright test",

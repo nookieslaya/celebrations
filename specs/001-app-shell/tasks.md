@@ -138,3 +138,13 @@
 
 - [ ] PHPCS i CI, prywatny podgląd basic-page.
 - [ ] Płatności, media/uploady i jawna integracja sprawdzonych assetów jako oddzielne moduły.
+
+## Wedding W1 — fundament danych i rejestry
+
+- [x] Inwentaryzacja wspólnego Site, kontraktów, snapshotów, edytorów, rendererów, RSVP i brakującego modułu mediów.
+- [x] Kontrakt wedding, 14 rodzajów sekcji, defaults, rejestry wariantów/stylów/presety i generowane TS.
+- [x] Wspólny zapis/odczyt/PATCH, reguły układu, referencji, limitów oraz dat przez EventDate.
+- [x] Stan development: ukrycie katalogu, tworzenie administracyjne i serwerowy zakaz publikacji.
+- [x] Wyłącznie kontrole schematu, składni i typów; runtime niezweryfikowany.
+- [x] docs/WEDDING.md: stan, decyzje, ogólny plan W2–W6 i następny krok.
+- [ ] W2 na osobne zlecenie: bezpieczne media i modularny edytor sekcji; następne etapy opisane w docs/WEDDING.md.

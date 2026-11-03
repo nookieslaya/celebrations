@@ -451,7 +451,9 @@ function DraftEditor<Type extends SiteTypeId>({
                   )}
                 </div>
               )}
-              {error !== null && <ErrorNotice error={error} />}
+              {error !== null && !previewChoice && (
+                <ErrorNotice error={error} />
+              )}
               {success && (
                 <p className="notice success" role="status">
                   {copy.saved}

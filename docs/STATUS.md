@@ -125,3 +125,25 @@ Aktualne artefakty w tym samym katalogu celebration-refinement: loader-celebrati
 - Koperta: tłoczone wykończenie, metaliczne brzegi, ozdobna podszewka, adresat i monogram.
 - Usunięto przełączanie hero absolute → relative. Koperta pozostaje ukryta i inert w tej samej komórce grid, więc zakończenie animacji nie zmienia wymiarów sceny. Stałe miejsce na scrollbar ogranicza boczne przesunięcie po odsłonięciu treści.
 - Weryfikacja: kontrakty, ESLint, TypeScript, build i git diff --check PASS. Na prośbę użytkownika bez przeglądu widoków i bez ponownej regresji integracyjnej; płynność do oceny wizualnej użytkownika.
+
+## Wedding W1 — 2026-11-03
+
+Zaimplementowano wyłącznie fundament typu wedding: contracts/wedding.v1.json, WeddingSections, WeddingConfig, wpisy Catalog wedding/modern-editorial, wspólny zapis szkicu i rozszerzenie generatora TS o arrays/oneOf. Istniejący Site, kontrolery CRUD, własność, capabilities, pełna semantyka PATCH oraz magazyn snapshotów pozostają wspólne. Nie dodano tabel, projektu na LocalWP, edytora, renderera, uploadów ani ślubnego RSVP. Nie zmieniono rejestracji i praw publikacji.
+
+Model: osobne imiona pary, opcjonalny pusty nagłówek, wspólne wydarzenie UTC/IANA, lista miejsc, kontrolowany wygląd/wejście oraz uporządkowane sekcje ze stabilnymi id. Kontrakty: hero, invitation, countdown, venues, schedule, story, gallery, guest-info, travel, gifts, faq, rsvp, contact, footer. Backend zawiera walidację układu, unikalności, referencji, linków i normalizację dat przez dotychczasowy EventDate. Attachment ID jest wyłącznie inertną referencją, bez potwierdzenia praw do mediów; wymagany bezpieczny resolver w W2 przed użyciem.
+
+Ochrona niegotowego typu w kodzie: availability=development, wykluczenie z publicznego katalogu, POST developerskiego szkicu tylko dla administratora z manage_options oprócz dotychczasowych zabezpieczeń; publishable blokuje publikację również administratorowi z nadanym prawem. Brak wpisu w rendererach i brak udawanego edytora. Nie deklarujemy runtime tych zabezpieczeń jako przetestowanego.
+
+Wykonane wyłącznie kontrole uzgodnionego zakresu:
+
+- JSON parsing + walidacja metaschematu Draft 4 wedding.v1.json — PASS (jsonschema 4.25.1 w usuniętym katalogu tymczasowym, bez nowej zależności projektu).
+- npm run contracts:generate — PASS; WeddingDraft oraz DraftBySiteType.wedding wygenerowane ze schematu.
+- npx tsc --noEmit — PASS; istniejąca konfiguracja TypeScript, bez uruchamiania builda.
+- npm run contracts:check — PASS; wygenerowane kontrakty aktualne.
+- php -l — PASS dla sześciu zmienionych/nowych plików: class-wedding-config.php, class-wedding-sections.php, class-catalog.php, class-site-validator.php, class-site-service.php, microsite-core.php. PHP z konfiguracji LocalWP udostępnionej w Open site shell.
+
+Nie uruchamiano lint/build/verify, przeglądarki, screenshotów, podglądu, Playwright, testów integracyjnych, regresji ani pomiarów. Nie dodano zestawu testów. Nie wykonano wdrożenia ani nowej paczki produkcyjnej. Wcześniejsze paczki 0.7.1 nie zawierają W1.
+
+Sprawdzenie składni, schematu i typów NIE potwierdza działania runtime, zapisu/odczytu HTTP, normalizacji DST ani braku regresji istniejących typów. Te kontrole wymagają osobnego zlecenia. Wcześniejsze raporty PASS nie dotyczą W1.
+
+Następny krok: W2 — bezpieczne media i modularny edytor sekcji, dopiero na osobne zlecenie. Decyzje, braki i ogólny plan W2–W6: docs/WEDDING.md. Zachowano zastane niecommitowane zmiany audytu stagingu; W1 nie kończy ani nie potwierdza poprzedniego audytu.

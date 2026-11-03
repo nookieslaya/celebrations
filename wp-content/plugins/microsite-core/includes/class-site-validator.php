@@ -104,6 +104,10 @@ final class SiteValidator {
             return $selection;
         }
 
+        if ( ! $this->catalog->is_available( $selection['type'] ) || ! $this->catalog->is_available( $selection['template'] ) ) {
+            return new WP_Error( 'microsite_type_unavailable', 'This site type has no production renderer and cannot be published.', array( 'status' => 403 ) );
+        }
+
         $versions = $this->stored_versions( $record, $selection );
 
         if ( is_wp_error( $versions ) ) {
@@ -157,6 +161,24 @@ final class SiteValidator {
     }
 
     private function strict_integer_types( mixed $value, array $schema ): bool {
+        if ( isset( $schema['oneOf'] ) ) {
+            foreach ( $schema['oneOf'] as $candidate ) {
+                if ( ! is_wp_error( rest_validate_value_from_schema( $value, $candidate ) ) ) {
+                    return $this->strict_integer_types( $value, $candidate );
+                }
+            }
+
+            return false;
+        }
+
+        if ( 'array' === $schema['type'] && is_array( $value ) ) {
+            foreach ( $value as $item ) {
+                if ( ! $this->strict_integer_types( $item, $schema['items'] ) ) {
+                    return false;
+                }
+            }
+        }
+
         if ( 'boolean' === $schema['type'] ) {
             return is_bool( $value );
         }

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Microsite Core
  * Description: Theme-independent application shell for microsites.
- * Version: 0.7.0
+ * Version: 0.7.1
  * Requires PHP: 8.2
  * Requires at least: 6.6
  * Text Domain: microsite-core
@@ -26,6 +26,8 @@ require_once __DIR__ . '/includes/class-rsvp-database.php';
 require_once __DIR__ . '/includes/class-rsvp-service.php';
 require_once __DIR__ . '/includes/class-rsvp-controller.php';
 require_once __DIR__ . '/includes/class-preview-access.php';
+require_once __DIR__ . '/includes/class-wedding-config.php';
+require_once __DIR__ . '/includes/class-wedding-sections.php';
 require_once __DIR__ . '/includes/class-catalog.php';
 require_once __DIR__ . '/includes/class-site-type.php';
 require_once __DIR__ . '/includes/class-permissions.php';

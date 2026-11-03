@@ -269,6 +269,45 @@ export async function runRsvpTests({
         await guest("POST", path(), answer, identity(), 403, {
           Origin: "https://foreign.invalid",
         });
+        const originalHome = isolatedWp(["config", "get", "WP_HOME"]);
+        try {
+          for (const [home, expectedOrigin] of [
+            [
+              "https://staging.example.invalid:443",
+              "https://staging.example.invalid",
+            ],
+            [
+              "https://staging.example.invalid:8443",
+              "https://staging.example.invalid:8443",
+            ],
+          ]) {
+            isolatedWp(["config", "set", "WP_HOME", home, "--type=constant"]);
+            await guest(
+              "GET",
+              `/public/sites/${site.publicId}/rsvp`,
+              undefined,
+              null,
+              200,
+              { Origin: expectedOrigin },
+            );
+            await guest(
+              "GET",
+              `/public/sites/${site.publicId}/rsvp`,
+              undefined,
+              null,
+              403,
+              { Origin: "https://foreign.invalid" },
+            );
+          }
+        } finally {
+          isolatedWp([
+            "config",
+            "set",
+            "WP_HOME",
+            originalHome,
+            "--type=constant",
+          ]);
+        }
         const missingOrigin = await anonymous.post(
           `/index.php?rest_route=/microsites/v1${path()}`,
           { data: answer },

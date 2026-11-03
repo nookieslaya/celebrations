@@ -545,9 +545,7 @@ export async function runCelebrationTests({
                   "opened",
                 );
                 await expect(review.locator(".celebration-name")).toBeFocused();
-                await expect(review.locator(".celebration-cover")).toHaveCount(
-                  0,
-                );
+                await expect(review.locator(".celebration-cover")).toBeHidden();
                 await expect(
                   review.locator(".celebration-confetti"),
                 ).toHaveAttribute("data-bursts", "1");
@@ -603,9 +601,7 @@ export async function runCelebrationTests({
                 await review
                   .getByRole("button", { name: "Skip intro", exact: true })
                   .click();
-                await expect(review.locator(".celebration-cover")).toHaveCount(
-                  0,
-                );
+                await expect(review.locator(".celebration-cover")).toBeHidden();
                 await expect(
                   review.locator("#celebration-details"),
                 ).toBeFocused();
@@ -647,41 +643,41 @@ export async function runCelebrationTests({
           try {
             const preview = await previewContext.newPage();
             await preview.goto(`/app/sites/${site.id}/preview`);
-            await preview
+            await savedPreview(preview)
               .getByRole("button", { name: "Skip intro", exact: true })
               .click();
             await expect(
-              preview.getByRole("button", {
+              savedPreview(preview).getByRole("button", {
                 name: "Replay intro",
                 exact: true,
               }),
             ).toBeVisible();
-            await preview
+            await savedPreview(preview)
               .getByRole("button", { name: "Replay intro", exact: true })
               .click();
             await expect(
-              preview.getByRole("button", {
+              savedPreview(preview).getByRole("button", {
                 name: "Open invitation",
                 exact: true,
               }),
             ).toBeVisible();
-            await preview
+            await savedPreview(preview)
               .getByRole("button", { name: "Open invitation", exact: true })
               .click();
-            await preview
+            await savedPreview(preview)
               .getByRole("button", { name: "Skip intro", exact: true })
               .click();
-            await expect(preview.locator(".celebration-cover")).toHaveCount(0);
+            await expect(savedPreview(preview).locator(".celebration-cover")).toBeHidden();
             await expect(
-              preview.getByRole("button", { name: "Send RSVP", exact: true }),
-            ).toHaveCount(0);
-            await preview
+              savedPreview(preview).getByRole("button", { name: "Send RSVP", exact: true }),
+            ).toBeDisabled();
+            await savedPreview(preview)
               .getByRole("button", { name: "Replay intro", exact: true })
               .click();
-            await preview
+            await savedPreview(preview)
               .getByRole("button", { name: "Open invitation", exact: true })
               .click();
-            await expect(preview.locator(".celebration-name")).toBeFocused();
+            await expect(savedPreview(preview).locator(".celebration-name")).toBeFocused();
           } finally {
             await previewContext.close();
           }

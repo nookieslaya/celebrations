@@ -4,14 +4,17 @@ import { writeFileSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), "");
+  // Production assets are relative and independent of any WordPress installation.
   const siteUrl =
-    env.WP_SITE_URL ||
-    execFileSync("wp", ["option", "get", "home"], {
-      cwd: resolve(process.cwd(), "../../../.."),
-      encoding: "utf8",
-    }).trim();
+    command === "serve"
+      ? env.WP_SITE_URL ||
+        execFileSync("wp", ["option", "get", "home"], {
+          cwd: resolve(process.cwd(), "../../../.."),
+          encoding: "utf8",
+        }).trim()
+      : undefined;
   const marker = resolve(".vite-dev.json");
   return {
     plugins: [
@@ -39,7 +42,10 @@ export default defineConfig(({ mode }) => {
       },
     ],
     base: "./",
-    server: { host: "127.0.0.1", cors: { origin: new URL(siteUrl).origin } },
+    server: {
+      host: "127.0.0.1",
+      cors: { origin: siteUrl ? new URL(siteUrl).origin : false },
+    },
     build: {
       manifest: true,
       outDir: "dist",
