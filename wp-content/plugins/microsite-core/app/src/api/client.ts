@@ -1,3 +1,4 @@
+import type { MediaAsset, MediaList } from "../media/types";
 import type { ResponseList } from "../rsvp/api";
 import type { DraftBySiteType } from "../generated/drafts";
 
@@ -91,6 +92,7 @@ export interface SessionUser {
   displayName: string;
   canCreateSites: boolean;
   canEditSites: boolean;
+  canDevelopWedding: boolean;
 }
 
 export interface Session {
@@ -145,7 +147,9 @@ export function createApiClient(options: ApiClientOptions) {
       headers.set("X-Microsite-CSRF", options.getAuthCsrfToken());
     }
 
-    if (payload !== undefined) {
+    const multipart = payload instanceof FormData;
+
+    if (payload !== undefined && !multipart) {
       headers.set("Content-Type", "application/json");
     }
 
@@ -157,7 +161,11 @@ export function createApiClient(options: ApiClientOptions) {
         credentials: "same-origin",
         cache: "no-store",
         signal,
-        body: payload === undefined ? undefined : JSON.stringify(payload),
+        body: multipart
+          ? payload
+          : payload === undefined
+            ? undefined
+            : JSON.stringify(payload),
       });
     } catch (error) {
       if (error instanceof DOMException && error.name === "AbortError") {
@@ -211,6 +219,27 @@ export function createApiClient(options: ApiClientOptions) {
   }
 
   return {
+    media: (id: number, page = 1, signal?: AbortSignal) =>
+      request<MediaList>(
+        `sites/${id}/media?page=${page}`,
+        "GET",
+        undefined,
+        true,
+        signal,
+      ),
+    mediaAsset: (id: number, asset: number, signal?: AbortSignal) =>
+      request<MediaAsset>(
+        `sites/${id}/media/${asset}`,
+        "GET",
+        undefined,
+        true,
+        signal,
+      ),
+    uploadMedia: (id: number, file: File) => {
+      const data = new FormData();
+      data.append("file", file);
+      return request<MediaAsset>(`sites/${id}/media`, "POST", data);
+    },
     catalog: (signal?: AbortSignal) =>
       request<Catalog>("catalog", "GET", undefined, false, signal),
     session: (signal?: AbortSignal) =>

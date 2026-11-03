@@ -2,17 +2,17 @@
 
 Przed pracą nad modułem przeczytaj ten dokument. Po zmianach aktualizuj bieżący stan i następny krok. Jedyna lista zadań pozostaje w specs/001-app-shell/tasks.md; wyniki kontroli zapisujemy w docs/STATUS.md.
 
-## Kontekst i stan W1 — 2026-11-03
+## Kontekst i stan W2 — 2026-11-03
 
 Platforma obsługuje różne ministrony. Wedding jest nowym typem wspólnego Site, nie osobną aplikacją. Konta, właściciel projektu, REST CRUD, capabilities, zapis, publikacja, snapshoty, linki i QR pozostają wspólne. Nie tworzymy nowego CPT ani tabel ślubnych, endpointów CRUD, płatności lub dowolnego page buildera. Nie ma edycji kodu, własnego CSS, marginesów ani elementów wewnątrz sekcji.
 
 W1 dostarcza kontrakt wedding.v1.json, generowane typy WeddingDraft / DraftBySiteType.wedding, rejestry WeddingSections oraz normalizer WeddingConfig. Catalog rejestruje wedding i modern-editorial ze stanem development. Definicje są dostępne kodowi backendu przez Catalog::type(), template() i wedding_registry(). Nie są metadanymi publicznego katalogu.
 
-Nie ma edytora Wedding ani renderera Modern Editorial. Rejestr edytorów pozostaje bez wpisu wedding i korzysta z istniejącej obsługi niedostępnego edytora; rejestr rendererów nie wskazuje pozornego komponentu. Nie dodano uploadów ani adaptera RSVP. Wyniki składni i typów nie potwierdzają działania runtime.
+W2 dodaje modularny edytor Wedding i wspólną usługę mediów. Rejestr rendererów nadal nie zawiera Modern Editorial. Nie dodano animacji, fontów, adaptera RSVP ani możliwości publikacji. Wyniki składni i typów nie potwierdzają działania runtime lub wyglądu.
 
 ## Faktyczna integracja ze wspólną aplikacją
 
-POST /sites, GET /sites/{id}, lista oraz PATCH /sites/{id} korzystają z dotychczasowych SiteService, SiteValidator i SiteRepository. Utworzenie szkicu developerskiego przez POST wymaga oprócz zwykłych zabezpieczeń create_ms_sites, sesji/nonce i dodatkowo manage_options. Zwykły klient otrzyma 403 przy bezpośrednim POST wedding; brak kafelka nie jest jedyną ochroną. Administrator może przygotować szkic przez istniejące API, ale W1 nie daje interfejsu do tego działania i nie tworzy projektu automatycznie.
+POST /sites, GET /sites/{id}, lista oraz PATCH /sites/{id} korzystają z dotychczasowych SiteService, SiteValidator i SiteRepository. Utworzenie szkicu developerskiego przez POST wymaga oprócz zwykłych zabezpieczeń create_ms_sites, sesji/nonce i dodatkowo manage_options. Zwykły klient otrzyma 403 przy bezpośrednim POST wedding; brak kafelka nie jest jedyną ochroną. Administrator otwiera listę projektów /app/sites, rozwija „Administrator tools · Wedding development”, wpisuje nazwę i wybiera „Create development wedding”. Narzędzie korzysta z istniejącego POST /sites bez draft, więc backend stosuje defaults W1. Po utworzeniu otwiera /app/sites/{id}; projekt można później otworzyć z listy. Przycisk korzysta z canDevelopWedding w bootstrapie sesji, a serwer nadal wymaga manage_options i create_ms_sites. Nie zmieniamy publicznego katalogu. W razie nieznanego wyniku tworzenia kolejne wysłanie jest blokowane do sprawdzenia listy, bez automatycznego ponawiania.
 
 GET i PATCH zachowują kontrolę własności/uprawnionego administratora. PATCH zmienia nazwę i/lub zastępuje cały draft; nie scala tablic ani obiektów, nie zmienia typu, wersji czy właściciela. Sam zapis nie sortuje sekcji, nie usuwa ich treści i nie stosuje ponownie presetu. Zmiana enabled albo variant zachowuje przesłany content; klient kolejnego etapu musi przesyłać cały stan.
 
@@ -76,11 +76,11 @@ WeddingSections::definitions wyprowadza kontrakt, defaults i warianty z JSON Sch
 
 Preset składa istniejące sekcje. Nie zawiera klientowskich treści, nie kopiuje renderera i nie jest stosowany ponownie przy PATCH/GET. Późniejsza zmiana definicji nie nadpisze zapisanych projektów. Nie ma przełączania presetów istniejącego projektu. Definicja nie oznacza dostępnej funkcji: żadna opcja wedding nie ma jeszcze produkcyjnego renderera.
 
-## Media: stan i brakujące zabezpieczenia W2
+## Media W2
 
-Istnieją jedynie statyczne assety wtyczki i miniatury galerii, nie moduł klientowskich mediów. Klienci nie dostają upload_files. Nie ma uploadu, listy prywatnych zasobów, walidacji MIME/rozmiaru lub bezpiecznego resolvera attachmentId.
+W2 zawiera wspólny moduł MediaService/MediaController i customowy MediaPicker, bez nadawania klientom upload_files. Szczegóły autoryzacji, formatów, limitów, URL i operacji: docs/MEDIA.md. Kod jest ukończony, ale uploadu nie uruchamiano w runtime.
 
-W W1 dodatni attachmentId jest tylko inertnym elementem szkicu. Nie potwierdzamy własności, istnienia ani dostępu; nie pobieramy attachment URL, metadanych lub obrazu. Brak renderera i blokada publikacji zapobiegają wykorzystaniu tej referencji do publicznego odczytu. Przed jakimkolwiek użyciem w W2/W3 potrzebna jest polityka właściciela/projektu i sprawdzenie dostępu dla każdego zasobu również przy zapisie, odczycie podglądu i publikacji. Samo istnienie wpisu attachment lub prawo do projektu nie wystarczą. Publiczne pliki standardowych uploadów WordPressa nie stają się prywatne przez prywatne DTO — strategię przechowywania i udostępniania trzeba rozstrzygnąć w W2.
+Biblioteka jest zakreślona właścicielem projektu, a nie aktualnym administratorem. Pokazuje wyłącznie attachmenty tego modułu z odpowiadającym właścicielem. Podpinanie zasobu sprawdzane jest po normalizacji w SiteService podczas tworzenia/zapisu szkicu, przed prywatnym podglądem oraz w wspólnej operacji publikowania. Nie akceptujemy historycznych/obcych attachmentów przez samą znajomość ID. Standardowe pliki uploads mogą być publiczne przez bezpośredni URL — nie zapewniamy prywatnego storage.
 
 ## RSVP i podgląd: stan oraz dalsza integracja
 
@@ -92,15 +92,15 @@ Rzeczywisty podgląd już używa wspólnego rejestru lazy rendererów oraz izolo
 
 ## Plan kolejnych etapów
 
-W1 (obecny): fundament danych, rejestry i walidacja oraz połączenie ze wspólnym zapisem. Zakończony w kodzie, tylko kontrole statyczne; brak potwierdzenia runtime.
+W1 (ukończony): fundament danych, rejestry i walidacja oraz połączenie ze wspólnym zapisem. Zakończony w kodzie, tylko kontrole statyczne; brak potwierdzenia runtime.
 
-W2 (następny): bezpieczna obsługa mediów oraz modularny edytor, włączanie sekcji i zmiana kolejności ze stabilnymi id. Należy wykorzystać wspólne konta, zapis i dirty state, bez kopiowania powłoki edytora.
+W2 (obecny, kod ukończony): wspólne media oraz modularny edytor, włączanie sekcji i zmiana kolejności ze stabilnymi id. Wykorzystuje wspólne konta, zapis i dirty state; wykonano jedynie kontrole statyczne.
 
-W3: pierwszy styl Modern Editorial, renderer wszystkich sekcji, trzy warianty hero, trzy palety i trzy pary fontów z ustalonymi assetami/licencjami.
+W3 (następny, osobne zlecenie): pierwszy styl Modern Editorial, renderer wszystkich sekcji, trzy warianty hero, trzy palety i trzy pary fontów z ustalonymi assetami/licencjami.
 
 W4: trzy wejścia, integracja rzeczywistego podglądu, galerii, oddzielnych demonstracji i presetów.
 
-W5: adapter istniejącego RSVP dla całej uroczystości, reguły gotowości publikacji i pełny przepływ klienta. Dopiero po zakończeniu funkcji można jawnie udostępnić wedding.
+W5: adapter istniejącego RSVP dla całej uroczystości, reguły gotowości publikacji i pełny przepływ klienta. Obecny snapshot zapisuje content i appearance dotychczasowych typów; przed publikacją wedding trzeba rozszerzyć wspólną kopertę snapshotu o jego sections/entrance i ich odczyt, bez kopiowania systemu publikacji lub zmiany istniejących snapshotów w tle. W2 świadomie tego nie wdraża. Dopiero po zakończeniu funkcji można jawnie udostępnić wedding.
 
 W6: dokładne testy, przegląd wizualny i staging wyłącznie na osobne zlecenie.
 
@@ -114,4 +114,23 @@ Nowy preset składa istniejące sekcje i warianty, wybiera styl i początkowy uk
 
 Nowy rodzaj ministrony używa wspólnego Site, ma własny kontrakt, definicję katalogu i edytora oraz rejestr renderera. Nie musi mieć daty, miejsc ani RSVP; wedding nie jest nowym kontraktem bazowym całej platformy.
 
-Nierozstrzygnięte: prywatność i cykl życia plików, konkretny dobór fontów, adapter i konfiguracja RSVP, finalne reguły publikacji wymagające zdjęć lub danych, UX usuwania referowanych miejsc i wyboru presetów. Są to decyzje kolejnych etapów, nie przeszkody do zapisu niekompletnego szkicu W1.
+Nierozstrzygnięte: ewentualny prywatny storage i przyszły cykl życia plików, konkretny dobór fontów, adapter i konfiguracja RSVP, finalne reguły publikacji wymagające zdjęć lub danych oraz wybór presetów. Usuwanie referowanych miejsc w W2 wymaga potwierdzenia i czyści wyłącznie referencje. Są to decyzje kolejnych etapów, nie przeszkody do zapisu niekompletnego szkicu W1.
+
+
+## Edycja W2
+
+WeddingFields jest zarejestrowany we wspólnym rejestrze edytorów, bez urodzinowych kroków. Wspólny DraftEditor odpowiada za odczyt, nazwę, zapis pełnego draft przez PATCH, błędy, porównanie dirty state, ochronę wyjścia i sesję. Nowy EditorOperationsProvider blokuje zapis i zmiany formularza w trakcie uploadu oraz uwzględnia niezakończony upload w ochronie wyjścia. Nie ma równoległego magazynu lub automatycznego zapisu wedding.
+
+Wedding details edytuje parę, wspólny nagłówek, datę/strefę i miejsca. Zmiana czasu czyści lokalne startsAt; kanoniczne UTC ustala dopiero dotychczasowy EventDate na serwerze. Terminy miejsc i harmonogramu korzystają z tych samych pól i normalizera. Szkic może być niepełny; dane strukturalnie niepoprawne, błędne daty/DST lub niebezpieczne URL są odrzucane przez backend. Nowy link gifts wymaga uzupełnienia poprawnego HTTP(S) URL albo usunięcia pozycji przed zapisem — nie zmieniano kontraktu W1.
+
+Page sections wybiera sekcję według jej stabilnego ID. Move up / Move down działają przez natywne przyciski, bez biblioteki drag-and-drop, i nie przekraczają hero/footer. Przestawienie zachowuje ID i aktywny formularz, zmienia tylko lokalną tablicę sections. Wyłączenie zachowuje treść i miejsce w tablicy. Nie ma duplikowania ani trwałego usuwania sekcji. Jeżeli w poprawnym szkicu W1 brakuje sekcji opcjonalnej, można dodać jeden egzemplarz z kontraktowych defaults, bez powielania typu. ListFields zachowuje id pozycji przy edycji/kolejności, udostępnia dodawanie i usuwanie pozycji oraz pilnuje limitów z kontraktu.
+
+Przy usuwaniu miejsca edytor wskazuje jego użycia, również w wyłączonych sekcjach. Dopiero potwierdzenie usuwa miejsce oraz venueIds w venues i venueId w pozycjach schedule. Nie usuwa pozycji harmonogramu, dat, tytułów ani pozostałej treści. Zmiana dotyczy szkicu, nie snapshotów.
+
+Hero/story/gallery używają tego samego MediaPicker. Alt jest zapisywany przy konkretnym użyciu, nie globalnie na pliku. Galeria dodaje pozycję dopiero z potwierdzonym attachmentId, pozwala ją przestawiać i usuwać referencję. Błąd zapisu nie czyści formularza ani nie usuwa uploadu.
+
+Appearance pokazuje zapisane identyfikatory jako ustawienia developerskie; nie udostępnia pozornie działających palet, par fontów, wariantów hero i wejścia. RSVP edytuje wyłącznie heading/text z W1, z informacją o połączeniu w W5. Podgląd w edytorze i na bezpośredniej trasie zapisanego podglądu pokazuje „Visual preview will be available in the next stage”. Nie tworzymy tekstowej makiety, iframe wedding ani importu nieistniejącego renderera.
+
+Aby dodać formularz dla istniejącego typu sekcji, rozszerz jawny switch w SectionForms lub ListSectionFields, korzystając z wygenerowanej unii WeddingSection/SectionOf i wspólnych TextField, EventFields, ListFields oraz MediaPicker. Limity pobieraj z kontraktu przez model.ts. Nie generuj całego UI automatycznie ze schematu i nie dodawaj drugiego zapisu/konta. Nowe pole produktu wymaga osobnej decyzji o kontrakcie, a nie tylko formularza.
+
+Następny krok: W3 — Modern Editorial, renderer wszystkich sekcji, trzy warianty hero, palety i pary fontów. Nie rozpoczęto W3. W2 nie potwierdza działania runtime, bezpieczeństwa HTTP lub wyglądu; dokładne testy zostają na osobne zlecenie.

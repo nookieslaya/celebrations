@@ -22,6 +22,7 @@ final class AuthService {
                 'displayName'    => $user->display_name,
                 'canCreateSites' => user_can( $user, 'create_ms_sites' ),
                 'canEditSites'   => user_can( $user, 'edit_ms_sites' ),
+                'canDevelopWedding' => user_can( $user, 'manage_options' ) && user_can( $user, 'create_ms_sites' ),
             );
             $nonce = wp_create_nonce( 'wp_rest' );
         }

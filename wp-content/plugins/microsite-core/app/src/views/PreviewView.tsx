@@ -1,3 +1,4 @@
+import { getRenderer } from "../renderers/registry";
 import { useCallback } from "react";
 import { useSession } from "../auth/SessionProvider";
 import { appBase } from "../config";
@@ -35,9 +36,21 @@ export function PreviewView({ id }: { id: number }) {
           </button>
         </div>
       )}
-      {resource.data && (
-        <RendererFrame document={resource.data} mode="saved" viewport="fluid" />
-      )}
+      {resource.data &&
+        (getRenderer(
+          resource.data.templateId,
+          resource.data.templateVersion,
+        ) ? (
+          <RendererFrame
+            document={resource.data}
+            mode="saved"
+            viewport="fluid"
+          />
+        ) : (
+          <p className="notice">
+            Visual preview will be available in the next stage
+          </p>
+        ))}
     </div>
   );
 }

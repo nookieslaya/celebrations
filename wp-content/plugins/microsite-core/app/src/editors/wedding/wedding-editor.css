@@ -1,0 +1,60 @@
+.wedding-editor > section {
+  margin-block: 2rem;
+  padding-block: 1rem;
+  border-top: 1px solid #d9dce3;
+}
+
+.wedding-field,
+.wedding-event-fields {
+  margin-block: 0.75rem;
+}
+
+.wedding-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block: 0.75rem;
+}
+
+.wedding-list-item,
+.wedding-section-form {
+  min-width: 0;
+  padding: 1rem;
+  margin-block: 1rem;
+  border: 1px solid #d9dce3;
+  border-radius: 0.75rem;
+}
+
+.wedding-section-list {
+  padding-left: 1.5rem;
+}
+
+.wedding-section-list > li {
+  padding-block: 0.5rem;
+  border-bottom: 1px solid #e7e9ee;
+}
+
+.wedding-editor input[type="checkbox"] {
+  width: auto;
+  margin-right: 0.5rem;
+}
+
+.wedding-editor label:has(input[type="checkbox"]) {
+  display: block;
+}
+
+.wedding-editor dl {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .wedding-actions > .button {
+    flex: 1 1 8rem;
+  }
+
+  .wedding-list-item,
+  .wedding-section-form {
+    padding: 0.75rem;
+  }
+}

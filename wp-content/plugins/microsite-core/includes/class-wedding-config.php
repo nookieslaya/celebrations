@@ -109,7 +109,7 @@ final class WeddingConfig {
             return self::error( 'Hero and footer are required.' );
         }
 
-        // Attachment IDs are inert references in W1. No URLs or media are resolved.
+        // Project-aware asset authorization is enforced by MediaService after normalization.
         return $draft;
     }
 

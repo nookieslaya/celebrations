@@ -147,3 +147,26 @@ Nie uruchamiano lint/build/verify, przeglądarki, screenshotów, podglądu, Play
 Sprawdzenie składni, schematu i typów NIE potwierdza działania runtime, zapisu/odczytu HTTP, normalizacji DST ani braku regresji istniejących typów. Te kontrole wymagają osobnego zlecenia. Wcześniejsze raporty PASS nie dotyczą W1.
 
 Następny krok: W2 — bezpieczne media i modularny edytor sekcji, dopiero na osobne zlecenie. Decyzje, braki i ogólny plan W2–W6: docs/WEDDING.md. Zachowano zastane niecommitowane zmiany audytu stagingu; W1 nie kończy ani nie potwierdza poprzedniego audytu.
+
+## Wedding W2 — 2026-11-03
+
+W kodzie zakończono modularny edytor wedding i wspólne media. Narzędzie administratora na /app/sites („Administrator tools · Wedding development”) tworzy projekt przez istniejący POST /sites i otwiera /app/sites/{id}. canDevelopWedding pochodzi z bieżącej sesji WordPressa, a backend nadal wymaga manage_options oraz create_ms_sites. Katalog publiczny i blokada publikacji development pozostają bez zmian.
+
+WeddingFields korzysta z dotychczasowego DraftEditor: sesji, odczytu, nazwy projektu, pełnego PATCH, błędów, dirty state i ochrony wyjścia. WeddingDetails, PageSections, SectionForms/ListSectionFields oraz wspólne Fields rozdzielają dane pary/miejsc, listę sekcji i 14 jawnych formularzy. Move up/down oraz enabled zachowują ID/content; hero/footer są zablokowane. Powtarzalne listy mają stabilne ID, limity, dodawanie/usuwanie/kolejność. Usunięcie używanego miejsca wymaga potwierdzenia wyczyszczenia referencji, bez usuwania harmonogramu. Appearance jest tylko odczytem ustawień development. Zamiast makiety/iframe wedding wyświetla się „Visual preview will be available in the next stage”. Nie dodano renderera, animacji/fontów, adaptera RSVP, płatności lub zmiany presetów.
+
+MediaService/MediaController i MediaPicker obsługują upload, paginowaną bibliotekę właściciela projektu, rozwiązanie URL/rozmiarów przez WP, wybór i usunięcie referencji, alt per użycie. Zasób wymaga autora i markera modułu zgodnych z właścicielem projektu; historyczne i cudze attachmenty są odrzucane. Jawny REST nonce, sesja, edit_ms_sites i dotychczasowe prawa projektu chronią endpointy. Aplikacyjne attachmenty są również wykluczone ze standardowego REST biblioteki WP; dostępne DTO przechodzą przez trasę projektu. Walidacja referencji jest w create/update, prywatnym preview i przed utworzeniem snapshotu. Nie nadano upload_files ani praw administracyjnych klientom.
+
+Limity w jednym miejscu: JPEG/PNG/WebP, maksymalnie 10 MB z limitem hostingu, 25 MP, 50 plików modułu na właściciela (również w koszu). Sprawdzany jest rzeczywisty plik/MIME/rozszerzenie, wymiary przed dekodowaniem i dekoder WP; WP tworzy attachmenty/warianty. Limit liczby chroni blokada właściciela. Upload ma własny stan i blokadę wielokrotnego wysłania; EditorOperationsProvider blokuje zapis/edycję do potwierdzenia ID. Błąd zapisu szkicu nie usuwa uploadu ani formularza. Nie dodano trwałego usuwania plików, croppera, prywatnego storage i podpisanych URL. Pliki uploads nadal mogą być dostępne przez bezpośredni URL; informacja jest przy uploadzie i w docs/MEDIA.md.
+
+Kontrole wykonane zgodnie z zakresem W2:
+
+- php -l — PASS dla 7 zmienionych/nowych plików PHP: microsite-core.php, class-auth-service.php, class-publication.php, class-site-service.php, class-wedding-config.php, class-media-service.php i class-media-controller.php. Użyto PHP z konfiguracji LocalWP Open site shell.
+- npx tsc --noEmit — PASS po poprawieniu typowania elementów list; bez builda.
+- npm run contracts:check — PASS; typy W1 pozostają aktualne, nie wymagały regeneracji.
+- Kontrola zmienionych JSON Schema — nie dotyczy: kontrakt wedding.v1.json i inne schematy nie zostały zmienione.
+
+Nie uruchamiano przeglądarki, screenshotów, wizualnego podglądu, Playwright, testów integracyjnych, regresji, lint/verify/build ani pomiarów. Nie dodano testów. Nie utworzono projektu lub pliku w działającej bazie, nie uruchamiano uploadów, nie zmieniono motywu, rejestracji i praw publikacji. Nie restartowano Vite, nie przygotowano nowej paczki ani wdrożenia i nie wykonano commit/push.
+
+**Działanie runtime, wygląd, uploady, izolacja HTTP, współbieżne limity, zapis/odczyt oraz regresja istniejących typów nie zostały zweryfikowane.** Składnia i typy nie stanowią takiego potwierdzenia. Szczegóły i ograniczenia: docs/WEDDING.md i docs/MEDIA.md.
+
+Następny krok na osobne zlecenie: W3 — Modern Editorial, renderer wszystkich sekcji, trzy warianty hero, trzy palety i trzy pary fontów. Zakończono na W2.

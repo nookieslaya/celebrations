@@ -74,6 +74,13 @@ final class Publication {
                 return $draft;
             }
 
+            $post = $this->repository->find( $id );
+            $assets = MediaService::validate_draft( $draft, $record['siteType'], (int) $post->post_author );
+
+            if ( is_wp_error( $assets ) ) {
+                return $assets;
+            }
+
             $record['draft'] = $draft;
             $snapshot = $this->snapshot( $record );
             $previous = $this->state( $id );

@@ -147,4 +147,19 @@
 - [x] Stan development: ukrycie katalogu, tworzenie administracyjne i serwerowy zakaz publikacji.
 - [x] Wyłącznie kontrole schematu, składni i typów; runtime niezweryfikowany.
 - [x] docs/WEDDING.md: stan, decyzje, ogólny plan W2–W6 i następny krok.
-- [ ] W2 na osobne zlecenie: bezpieczne media i modularny edytor sekcji; następne etapy opisane w docs/WEDDING.md.
+- [x] W2: bezpieczne media i modularny edytor sekcji — implementacja i kontrole statyczne poniżej; runtime niezweryfikowany.
+
+
+## Wedding W2 — edytor i wspólne media
+
+- [x] Administracyjne tworzenie szkicu przez wspólne API, bez ujawnienia wedding w katalogu.
+- [x] Rejestracja WeddingFields i integracja ze wspólnym zapisem, dirty state, błędami i sesją.
+- [x] Wspólne dane/miejsca, potwierdzane czyszczenie referencji, 14 formularzy sekcji i stabilne listy.
+- [x] Włączanie i Move up/down bez usuwania danych, zablokowane hero/footer, wygląd tylko do odczytu.
+- [x] Wspólna usługa mediów i customowy selektor: upload, biblioteka z paginacją, wybór, alt i usuwanie referencji.
+- [x] Kontrola właściciela/markera/capabilities/nonce, walidacja przypisania, formatu, wymiarów i limitu biblioteki.
+- [x] Blokada zapisu przy uploadzie, osobne operacje upload/PATCH, informacja o publicznych URL uploads.
+- [x] Komunikat braku wizualnego podglądu, bez renderera, animacji, ślubnego RSVP i publikacji.
+- [x] Wyłącznie php -l, TypeScript i kontrola kontraktów; brak runtime/wizualnych/integracyjnych testów.
+- [x] Aktualizacja WEDDING, MEDIA i STATUS z ograniczeniami oraz następnym krokiem.
+- [ ] W3 na osobne zlecenie: Modern Editorial, renderer, warianty hero, palety i pary fontów.

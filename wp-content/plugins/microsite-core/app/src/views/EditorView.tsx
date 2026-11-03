@@ -5,6 +5,11 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import {
+  EditorOperationsProvider,
+  useEditorOperations,
+} from "../components/EditorOperations";
+import { getRenderer } from "../renderers/registry";
 import { LivePreview } from "../preview/LivePreview";
 import { PublicationPanel } from "../components/PublicationPanel";
 import {
@@ -62,11 +67,13 @@ export function EditorView({ id }: { id: number }) {
     );
   }
   return resource.data ? (
-    <DraftEditor
-      key={resource.data.site.id}
-      initial={resource.data.site}
-      catalog={resource.data.catalog}
-    />
+    <EditorOperationsProvider>
+      <DraftEditor
+        key={resource.data.site.id}
+        initial={resource.data.site}
+        catalog={resource.data.catalog}
+      />
+    </EditorOperationsProvider>
   ) : null;
 }
 
@@ -93,6 +100,7 @@ function DraftEditor<Type extends SiteTypeId>({
   catalog: Catalog;
 }) {
   const { api, session } = useSession();
+  const operations = useEditorOperations();
   const { setDirty, navigate, location } = useRouter();
   const [site, setSite] = useState(initial);
   const [savedSnapshot, setSavedSnapshot] = useState(snapshot(initial));
@@ -105,6 +113,9 @@ function DraftEditor<Type extends SiteTypeId>({
   const mounted = useMounted();
   const stepHeading = useRef<HTMLHeadingElement>(null);
   const module = getEditor(site.siteType);
+  const hasVisualPreview = Boolean(
+    getRenderer(site.templateId, site.templateVersion),
+  );
   const type = catalog.siteTypes.find((item) => item.id === site.siteType);
   const template = catalog.templates.find(
     (item) => item.id === site.templateId,
@@ -128,9 +139,9 @@ function DraftEditor<Type extends SiteTypeId>({
   );
 
   useEffect(() => {
-    setDirty(dirty);
+    setDirty(dirty || operations.pending);
     return () => setDirty(false);
-  }, [dirty, setDirty]);
+  }, [dirty, operations.pending, setDirty]);
 
   useEffect(() => {
     if (!step) {
@@ -172,7 +183,7 @@ function DraftEditor<Type extends SiteTypeId>({
     openPreview = false,
   ): Promise<Site | null> {
     event?.preventDefault();
-    if (submitting.current || busy || !module) {
+    if (submitting.current || busy || operations.hasPending() || !module) {
       return null;
     }
     if (!dirty) {
@@ -244,7 +255,7 @@ function DraftEditor<Type extends SiteTypeId>({
       <PublicationPanel
         site={site}
         dirty={dirty}
-        busy={busy}
+        busy={busy || operations.pending}
         save={() => save()}
         onBusy={setBusy}
         fieldLabels={labels}
@@ -357,7 +368,7 @@ function DraftEditor<Type extends SiteTypeId>({
                 </h2>
               </>
             )}
-            <fieldset disabled={busy}>
+            <fieldset disabled={busy || operations.pending}>
               {(!step || step.projectName) && (
                 <>
                   <label htmlFor="project-name">{copy.name}</label>
@@ -376,6 +387,7 @@ function DraftEditor<Type extends SiteTypeId>({
               )}
               {!step?.review && (
                 <Fields
+                  projectId={site.id}
                   templateId={site.templateId}
                   section={step?.id}
                   availablePalettes={template?.allowedAppearance.palette}
@@ -499,60 +511,68 @@ function DraftEditor<Type extends SiteTypeId>({
               Manage responses
             </Link>
           )}
-          <LivePreview
-            document={site}
-            mobileVisible={mobileView === "preview"}
-          />
-          <>
-            <button
-              className="button primary"
-              disabled={busy}
-              onClick={() => {
-                if (dirty) {
-                  setPreviewChoice(true);
-                } else {
-                  navigate(`${appBase}/sites/${site.id}/preview`);
-                }
-              }}
-            >
-              Preview saved draft
-            </button>
-            {previewChoice && (
-              <div
-                className="preview-choice"
-                role="dialog"
-                aria-label="Save before preview"
-              >
-                <p>
-                  The preview uses your last saved draft. Save your changes
-                  before opening it?
-                </p>
-                {error !== null && <ErrorNotice error={error} />}
+          {hasVisualPreview ? (
+            <>
+              <LivePreview
+                document={site}
+                mobileVisible={mobileView === "preview"}
+              />
+              <>
                 <button
                   className="button primary"
                   disabled={busy}
-                  onClick={() => void save(undefined, true)}
+                  onClick={() => {
+                    if (dirty) {
+                      setPreviewChoice(true);
+                    } else {
+                      navigate(`${appBase}/sites/${site.id}/preview`);
+                    }
+                  }}
                 >
-                  Save and preview
+                  Preview saved draft
                 </button>
-                <a
-                  className="button"
-                  href={`${appBase}/sites/${site.id}/preview`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Open saved version in a new tab
-                </a>
-                <button
-                  className="button"
-                  disabled={busy}
-                  onClick={() => setPreviewChoice(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            )}
-          </>
+                {previewChoice && (
+                  <div
+                    className="preview-choice"
+                    role="dialog"
+                    aria-label="Save before preview"
+                  >
+                    <p>
+                      The preview uses your last saved draft. Save your changes
+                      before opening it?
+                    </p>
+                    {error !== null && <ErrorNotice error={error} />}
+                    <button
+                      className="button primary"
+                      disabled={busy}
+                      onClick={() => void save(undefined, true)}
+                    >
+                      Save and preview
+                    </button>
+                    <a
+                      className="button"
+                      href={`${appBase}/sites/${site.id}/preview`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Open saved version in a new tab
+                    </a>
+                    <button
+                      className="button"
+                      disabled={busy}
+                      onClick={() => setPreviewChoice(false)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
+              </>
+            </>
+          ) : (
+            <p className="notice" role="status">
+              Visual preview will be available in the next stage
+            </p>
+          )}
           <p className="field-help">
             {site.publication.published
               ? "Your live page changes only when you publish an update."

@@ -33,6 +33,8 @@ require_once __DIR__ . '/includes/class-site-type.php';
 require_once __DIR__ . '/includes/class-permissions.php';
 require_once __DIR__ . '/includes/class-site-validator.php';
 require_once __DIR__ . '/includes/class-site-repository.php';
+require_once __DIR__ . '/includes/class-media-service.php';
+require_once __DIR__ . '/includes/class-media-controller.php';
 require_once __DIR__ . '/includes/class-site-service.php';
 require_once __DIR__ . '/includes/class-publication.php';
 require_once __DIR__ . '/includes/class-publication-controller.php';
@@ -66,6 +68,9 @@ function boot_backend(): void {
     $validator = new SiteValidator( $catalog );
     $service = new SiteService( $repository, $validator, $permissions );
     $controller = new SitesController( $catalog, $service, $permissions );
+    add_action( 'rest_api_init', array( new MediaController(), 'register_routes' ) );
+    add_filter( 'rest_attachment_query', array( MediaService::class, 'exclude_from_core_rest' ) );
+    add_filter( 'rest_pre_dispatch', array( MediaService::class, 'guard_core_rest' ), 10, 3 );
     $publication = new Publication( $repository, $validator, $permissions );
     $rsvp = new RsvpService( $publication, $catalog, $repository, $permissions );
     $rsvp_controller = new RsvpController( $rsvp, $permissions );

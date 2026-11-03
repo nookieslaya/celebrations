@@ -1,3 +1,4 @@
+import { DevelopmentWedding } from "../editors/wedding/DevelopmentWedding";
 import { useCallback } from "react";
 import { useSession } from "../auth/SessionProvider";
 import { appBase } from "../config";
@@ -45,6 +46,7 @@ export function SitesView() {
         )}
       </div>
       <p className="intro">{copy.siteIntro}</p>
+      <DevelopmentWedding />
       {resource.loading && <Loading />}
       {resource.error !== null && (
         <>

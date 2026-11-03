@@ -50,6 +50,12 @@ final class SiteService {
             return $valid;
         }
 
+        $assets = MediaService::validate_draft( $valid, $selection['type']['id'], get_current_user_id() );
+
+        if ( is_wp_error( $assets ) ) {
+            return $assets;
+        }
+
         return $this->repository->create(
             get_current_user_id(),
             $payload['name'],
@@ -101,6 +107,12 @@ final class SiteService {
                 return $valid;
             }
 
+            $assets = MediaService::validate_draft( $valid, $record['siteType'], (int) $post->post_author );
+
+            if ( is_wp_error( $assets ) ) {
+                return $assets;
+            }
+
             $payload['draft'] = $valid;
         }
 
@@ -130,6 +142,13 @@ final class SiteService {
 
         if ( is_wp_error( $draft ) ) {
             return $draft;
+        }
+
+        $post = $this->repository->find( $id );
+        $assets = MediaService::validate_draft( $draft, $record['siteType'], (int) $post->post_author );
+
+        if ( is_wp_error( $assets ) ) {
+            return $assets;
         }
 
         $record['draft'] = $draft;

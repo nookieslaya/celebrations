@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { DraftBySiteType } from "../generated/drafts";
 import type { SiteTypeId } from "../api/client";
+import { WeddingFields } from "./wedding/WeddingEditor";
 import { BasicPageFields } from "./BasicPageEditor";
 import { BirthdayInvitationFields } from "./BirthdayInvitationEditor";
 
@@ -22,6 +23,7 @@ export interface EditorModule<Type extends SiteTypeId> {
   steps?: EditorStep[];
   fields?: Record<string, EditorField>;
   Fields: ComponentType<{
+    projectId?: number;
     templateId?: string;
     section?: string;
     availablePalettes?: string[];
@@ -33,6 +35,7 @@ export interface EditorModule<Type extends SiteTypeId> {
 type EditorRegistry = { [Type in SiteTypeId]?: EditorModule<Type> };
 
 const registry: EditorRegistry = {
+  wedding: { Fields: WeddingFields },
   "birthday-invitation": {
     Fields: BirthdayInvitationFields,
     steps: [
