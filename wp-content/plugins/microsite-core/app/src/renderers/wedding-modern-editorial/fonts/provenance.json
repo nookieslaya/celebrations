@@ -1,0 +1,91 @@
+{
+  "downloaded": "2026-11-03",
+  "googleFontsCommit": "2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc",
+  "transform": "Local Latin/Latin Extended subset; serif weight 400; sans weight 400–600; other axes frozen at upstream defaults; primary family names renamed to Microsite ME aliases; copyright/license records retained.",
+  "fonts": [
+    {
+      "sourceFamily": "cormorantgaramond",
+      "localFamily": "Microsite ME Serif One",
+      "file": "serif-one.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/cormorantgaramond/CormorantGaramond%5Bwght%5D.ttf",
+      "sourceGitBlob": "d992a83ce525c330fad3a19087746bcb2dc038ee",
+      "sourceSha256": "b20b7d9626dd956b2c5e558692ad328b1f19e3275e2782db4fa07670d83f35e0",
+      "sha256": "814b562ff670d5d94e3ac1ca0e647d63b7a2949a82728e980884f1fa8845e351",
+      "bytes": 51852,
+      "weights": "400",
+      "version": "Version 4.001",
+      "license": "SIL OFL 1.1",
+      "licenseSource": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/cormorantgaramond/OFL.txt"
+    },
+    {
+      "sourceFamily": "manrope",
+      "localFamily": "Microsite ME Sans One",
+      "file": "sans-one.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/manrope/Manrope%5Bwght%5D.ttf",
+      "sourceGitBlob": "75274da58537d6123b14f2cd0c355ad4681fc2b3",
+      "sourceSha256": "3ae11c49db0455a3cc33e37d380f20fdb8c7f8b41dc07625c177e3d87a9d6ae6",
+      "sha256": "99bb3ab9754ec77ab97e9b8a2f046d7a0ed155cefe23181318af924988871eb8",
+      "bytes": 28028,
+      "weights": "400–600 variable",
+      "version": "Version 4.505",
+      "license": "SIL OFL 1.1",
+      "licenseSource": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/manrope/OFL.txt"
+    },
+    {
+      "sourceFamily": "librebaskerville",
+      "localFamily": "Microsite ME Serif Two",
+      "file": "serif-two.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/librebaskerville/LibreBaskerville%5Bwght%5D.ttf",
+      "sourceGitBlob": "eae4eba83203138da3a3a7603b598b7ebc5a5238",
+      "sourceSha256": "05a95421961341c5b2556285e8415df9db27dab4f4abe22b446b3c6a8b916c5d",
+      "sha256": "23a9c46571390fc0a718e53012c34a97e990bed6d8ab04fca26856638441f3d4",
+      "bytes": 28104,
+      "weights": "400",
+      "version": "Version 2.005",
+      "license": "SIL OFL 1.1",
+      "licenseSource": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/librebaskerville/OFL.txt"
+    },
+    {
+      "sourceFamily": "sourcesans3",
+      "localFamily": "Microsite ME Sans Two",
+      "file": "sans-two.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/sourcesans3/SourceSans3%5Bwght%5D.ttf",
+      "sourceGitBlob": "d259aa494fe7117141a2752a998a52c172bbd42b",
+      "sourceSha256": "042fe2cc0b933e328410d7acbd0aa6a1873dca5aef81875f4bc214b08825c7b9",
+      "sha256": "f76d664cf892175691d404dc11b8114a823c0b2732e1099ac6bd9f18c2662618",
+      "bytes": 57328,
+      "weights": "400–600 variable",
+      "version": "Version 3.052;hotconv 1.1.0;makeotfexe 2.6.0",
+      "license": "SIL OFL 1.1",
+      "licenseSource": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/sourcesans3/OFL.txt"
+    },
+    {
+      "sourceFamily": "playfairdisplay",
+      "localFamily": "Microsite ME Serif Three",
+      "file": "serif-three.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/playfairdisplay/PlayfairDisplay%5Bwght%5D.ttf",
+      "sourceGitBlob": "7a09eb71f10622fd083134ac9ed46f59b21bee18",
+      "sourceSha256": "c40f2293766a503bc70cce9e512ef844a4ccb7cbcde792fe2ea31d191917d8d6",
+      "sha256": "cbf1d1ad3479190f3f03b95a05b205158c42d6a72fc3467d0fb374072fa5c36a",
+      "bytes": 35840,
+      "weights": "400",
+      "version": "Version 1.203",
+      "license": "SIL OFL 1.1",
+      "licenseSource": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/playfairdisplay/OFL.txt"
+    },
+    {
+      "sourceFamily": "inter",
+      "localFamily": "Microsite ME Sans Three",
+      "file": "sans-three.woff2",
+      "source": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf",
+      "sourceGitBlob": "047c92f6e2212473dc436020afed689527076d44",
+      "sourceSha256": "29160a80ff49ddcab2c97711247e08b1fab27a484a329ce8b813d820dc559031",
+      "sha256": "c1ff9ec0ac8cf84937ce4d5abb36c0f4ed63954903009116b7826ab901bc18af",
+      "bytes": 65728,
+      "weights": "400–600 variable",
+      "version": "Version 4.001;git-66647c0bb",
+      "license": "SIL OFL 1.1",
+      "licenseSource": "https://raw.githubusercontent.com/google/fonts/2fe1e8c6b137fb13041a7cfca6fdcd8a910ea4dc/ofl/inter/OFL.txt"
+    }
+  ]
+}

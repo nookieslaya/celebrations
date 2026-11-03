@@ -4,10 +4,12 @@ import {
   type ReactNode,
   type LazyExoticComponent,
 } from "react";
+import type { MediaAsset } from "../media/types";
 import type { PreviewContext } from "../preview/protocol";
 import type { Site, SiteTypeId } from "../api/client";
 
 export interface RendererProps {
+  media?: readonly MediaAsset[];
   preview?: boolean;
   previewContext?: PreviewContext;
   introKey?: string;
@@ -27,6 +29,15 @@ interface RendererDefinition {
 // This trusted registry is the only place where template IDs select code.
 // The preview API validates the type, version and full draft before this boundary.
 const registry = new Map<string, RendererDefinition>([
+  [
+    "modern-editorial@1",
+    {
+      siteType: "wedding",
+      Component: lazy(
+        () => import("./wedding-modern-editorial/ModernEditorial"),
+      ),
+    },
+  ],
   [
     "birthday-celebration@1",
     {

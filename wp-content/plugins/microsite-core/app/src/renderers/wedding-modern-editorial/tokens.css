@@ -1,0 +1,49 @@
+.modern-editorial {
+  --me-background: #f7f3ec;
+  --me-surface: #eee7dc;
+  --me-text: #242421;
+  --me-muted: #5e574d;
+  --me-accent: #78644c;
+  --me-border: #c9bca9;
+  --me-button: #242421;
+  --me-button-text: #f7f3ec;
+  --me-serif: "Microsite ME Serif One", Georgia, "Times New Roman", serif;
+  --me-sans: "Microsite ME Sans One", Arial, sans-serif;
+  --me-page-width: 78rem;
+  --me-gutter: clamp(1.25rem, 5vw, 5rem);
+  --me-section-space: clamp(3.25rem, 8vw, 8rem);
+  --me-title-size: clamp(2.25rem, 5.5vw, 5rem);
+  --me-body-size: clamp(1rem, 0.95rem + 0.25vw, 1.1875rem);
+}
+
+.modern-editorial[data-palette="sage-linen"] {
+  --me-background: #f2f3ec;
+  --me-surface: #e3e7dc;
+  --me-text: #29392f;
+  --me-muted: #4d5d4e;
+  --me-accent: #64785f;
+  --me-border: #b4beae;
+  --me-button: #29392f;
+  --me-button-text: #f2f3ec;
+}
+
+.modern-editorial[data-palette="rose-stone"] {
+  --me-background: #fbf2ef;
+  --me-surface: #f0e0d8;
+  --me-text: #44312e;
+  --me-muted: #6b4f49;
+  --me-accent: #966858;
+  --me-border: #d2b4a9;
+  --me-button: #44312e;
+  --me-button-text: #fbf2ef;
+}
+
+.modern-editorial[data-font-pair="modern-romantic"] {
+  --me-serif: "Microsite ME Serif Two", "Palatino Linotype", Georgia, serif;
+  --me-sans: "Microsite ME Sans Two", "Segoe UI", Arial, sans-serif;
+}
+
+.modern-editorial[data-font-pair="timeless-classic"] {
+  --me-serif: "Microsite ME Serif Three", Georgia, "Times New Roman", serif;
+  --me-sans: "Microsite ME Sans Three", system-ui, Arial, sans-serif;
+}

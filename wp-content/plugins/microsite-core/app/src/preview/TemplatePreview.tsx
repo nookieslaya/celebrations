@@ -52,6 +52,7 @@ export function TemplatePreview({ document, context }: PreviewUpdate) {
       >
         <Renderer
           value={value}
+          media={document.previewMedia}
           preview
           previewContext={context}
           rsvp={definition.embeddedRsvp ? rsvp : undefined}

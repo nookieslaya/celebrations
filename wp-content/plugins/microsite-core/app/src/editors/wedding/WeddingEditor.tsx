@@ -1,4 +1,5 @@
 import type { WeddingDraft } from "../../generated/drafts";
+import { AppearanceFields } from "./AppearanceFields";
 import { PageSections } from "./PageSections";
 import { WeddingDetails } from "./WeddingDetails";
 import "./wedding-editor.css";
@@ -26,21 +27,7 @@ export function WeddingFields({
       </p>
       <WeddingDetails value={value} onChange={onChange} />
       <PageSections projectId={projectId} value={value} onChange={onChange} />
-      <section aria-label="Appearance">
-        <h2>Appearance</h2>
-        <dl>
-          <dt>Palette</dt>
-          <dd>{value.appearance.palette}</dd>
-          <dt>Font pair</dt>
-          <dd>{value.appearance.fontPair}</dd>
-          <dt>Entrance</dt>
-          <dd>{value.entrance.variant}</dd>
-        </dl>
-        <p>
-          These are saved development settings. Visual choices and Modern
-          Editorial will be available in the next stages.
-        </p>
-      </section>
+      <AppearanceFields value={value} onChange={onChange} />
     </div>
   );
 }

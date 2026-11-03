@@ -513,10 +513,17 @@ function DraftEditor<Type extends SiteTypeId>({
           )}
           {hasVisualPreview ? (
             <>
-              <LivePreview
-                document={site}
-                mobileVisible={mobileView === "preview"}
-              />
+              {site.siteType !== "wedding" ? (
+                <LivePreview
+                  document={site}
+                  mobileVisible={mobileView === "preview"}
+                />
+              ) : (
+                <p className="notice">
+                  Save your draft and open Preview saved draft. Live preview
+                  will be available in W4.
+                </p>
+              )}
               <>
                 <button
                   className="button primary"

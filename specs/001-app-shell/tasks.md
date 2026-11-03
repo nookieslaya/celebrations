@@ -162,4 +162,17 @@
 - [x] Komunikat braku wizualnego podglądu, bez renderera, animacji, ślubnego RSVP i publikacji.
 - [x] Wyłącznie php -l, TypeScript i kontrola kontraktów; brak runtime/wizualnych/integracyjnych testów.
 - [x] Aktualizacja WEDDING, MEDIA i STATUS z ograniczeniami oraz następnym krokiem.
-- [ ] W3 na osobne zlecenie: Modern Editorial, renderer, warianty hero, palety i pary fontów.
+- [x] W3: Modern Editorial i prywatny podgląd zapisanego szkicu — implementacja poniżej, runtime niezweryfikowany.
+
+
+## Wedding W3 — Modern Editorial
+
+- [x] Specyfikacja implementacji stylu: tokeny, skale, układy, niepełne dane i responsywność.
+- [x] Renderer 14 sekcji z jawnym rejestrem i trzema kompozycjami hero bez utraty content.
+- [x] Trzy palety i trzy pary fontów pod dotychczasowymi identyfikatorami; lokalne WOFF2/OFL/provenance.
+- [x] Kontrolowane linki/anchory, semantyka, zdjęcia z srcset/sizes, fallbacki, natywne FAQ i osobny countdown.
+- [x] Zbiorcze autoryzowane media oraz administracyjny podgląd zapisanego szkicu przez istniejącą powłokę.
+- [x] Rozdzielenie rendererImplemented i dostępności publicznej; brak publikacji, live sync, demo, wejść i aktywnego RSVP.
+- [x] Wyłącznie php -l, TypeScript i kontrola aktualności kontraktów; schematy bez zmian.
+- [x] Aktualizacja dokumentacji i STATUS bez deklarowania wizualnej/runtime weryfikacji.
+- [ ] W4 na osobne zlecenie: wejścia, pełna integracja podglądu, osobne demo i presety.

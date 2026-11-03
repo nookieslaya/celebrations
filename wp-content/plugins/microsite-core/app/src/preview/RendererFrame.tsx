@@ -47,6 +47,9 @@ export function RendererFrame({
       templateId: document.templateId,
       templateVersion: document.templateVersion,
       draft: document.draft,
+      ...(document.previewMedia !== undefined
+        ? { previewMedia: document.previewMedia }
+        : {}),
     },
     context: { mode, initiallyOpen: mode === "live", active: running, replay },
   };
@@ -105,6 +108,7 @@ export function RendererFrame({
   }, [
     ready,
     document.draft,
+    document.previewMedia,
     document.templateId,
     document.templateVersion,
     document.siteType,

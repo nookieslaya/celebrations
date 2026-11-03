@@ -58,3 +58,11 @@ Remove photo reference / Remove item usuwa wyłącznie użycie w lokalnym szkicu
 ## Weryfikacja W2
 
 Wyłącznie php -l i TypeScript oraz zgodność wygenerowanych kontraktów. Schemat W1 nie zmienił się. Nie uruchamiano uploadu, odczytu HTTP, próby cudzego ID, równoległych żądań, przeglądarki ani testów integracyjnych. Opisane mechanizmy wymagają osobnej weryfikacji runtime i bezpieczeństwa przed produkcyjnym udostępnieniem.
+
+## Zbiorczy prywatny podgląd — W3
+
+GET sites/{id}/preview dla wedding sprawdza dodatkowo manage_options i przygotowuje previewMedia przez MediaService::preview_assets. To ta sama kontrolowana operacja podglądu projektu, bez endpointu przyjmującego listę dowolnych ID. Rozwiązuje tylko referencje włączonych hero/story/gallery (do 42 unikalnych zasobów), po sprawdzeniu autora, markera, statusu/MIME i fizycznego pliku w standardowym lokalnym uploads. Nie zwraca całej biblioteki. Przy braku dostępu/usuniętym pliku pomija DTO bez URL, umożliwiając fallback w rendererze; nie usuwa referencji ze szkicu. Walidacja create/update nadal odrzuca niedozwolone referencje. Zachowanie pozostałych typów API pozostaje bez pola previewMedia.
+
+Rodzic iframe przekazuje tę ograniczoną reprezentację do renderera. Nowy renderer nie wykonuje fetch biblioteki ani requestu dla każdego zdjęcia, nie zna nonce i sesji. Photo wybiera large/medium/full, srcset/sizes i jawne wymiary; hero jest eager, pozostałe obrazy lazy. Błąd img ukrywa zdjęcie lub przełącza hero na typografię. Podgląd używa bieżącej autoryzacji przy każdym odczycie, nie zapisuje URL w draft i nie zmienia snapshotu.
+
+CSP iframe nadal dopuszcza lokalne media tego samego originu. Obsługa offload/CDN, prywatnego storage i podpisanych URL nie została dodana. Kontrola istnienia get_attached_file zakłada standardowy lokalny magazyn WordPressa. Dostępność binarnych uploads przez URL pozostaje jak opisana wyżej. Nie przeprowadzono prób HTTP/mediów w W3; wykonano wyłącznie uzgodnione kontrole statyczne.

@@ -2,13 +2,13 @@
 
 Przed pracą nad modułem przeczytaj ten dokument. Po zmianach aktualizuj bieżący stan i następny krok. Jedyna lista zadań pozostaje w specs/001-app-shell/tasks.md; wyniki kontroli zapisujemy w docs/STATUS.md.
 
-## Kontekst i stan W2 — 2026-11-03
+## Kontekst i stan W3 — 2026-11-03
 
 Platforma obsługuje różne ministrony. Wedding jest nowym typem wspólnego Site, nie osobną aplikacją. Konta, właściciel projektu, REST CRUD, capabilities, zapis, publikacja, snapshoty, linki i QR pozostają wspólne. Nie tworzymy nowego CPT ani tabel ślubnych, endpointów CRUD, płatności lub dowolnego page buildera. Nie ma edycji kodu, własnego CSS, marginesów ani elementów wewnątrz sekcji.
 
 W1 dostarcza kontrakt wedding.v1.json, generowane typy WeddingDraft / DraftBySiteType.wedding, rejestry WeddingSections oraz normalizer WeddingConfig. Catalog rejestruje wedding i modern-editorial ze stanem development. Definicje są dostępne kodowi backendu przez Catalog::type(), template() i wedding_registry(). Nie są metadanymi publicznego katalogu.
 
-W2 dodaje modularny edytor Wedding i wspólną usługę mediów. Rejestr rendererów nadal nie zawiera Modern Editorial. Nie dodano animacji, fontów, adaptera RSVP ani możliwości publikacji. Wyniki składni i typów nie potwierdzają działania runtime lub wyglądu.
+W2 dostarcza modularny edytor Wedding i wspólną usługę mediów. W3 dodaje renderer Modern Editorial dla 14 sekcji, trzy kompozycje hero, trzy palety i trzy lokalne pary fontów oraz prywatny podgląd zapisanego szkicu dla administratora. Nie dodano animowanych wejść, adaptera RSVP ani możliwości publikacji. W1, W2 i W3 mają wyłącznie kontrole statyczne; nie potwierdzają one runtime, wyglądu lub responsywności.
 
 ## Faktyczna integracja ze wspólną aplikacją
 
@@ -66,21 +66,21 @@ Schemat wykorzystuje ograniczone arrays i oneOf z jednoznacznym type dla content
 
 ## Rejestry i preset
 
-WeddingSections::definitions wyprowadza kontrakt, defaults i warianty z JSON Schema. Dodaje nazwę, canDisable i pozycję first/movable/last. WeddingSections::style_registry definiuje opcje, wszystkie availability=development:
+WeddingSections::definitions wyprowadza kontrakt, defaults i warianty z JSON Schema. Dodaje nazwę, canDisable i pozycję first/movable/last. WeddingSections::style_registry definiuje opcje, nadal wszystkie availability=development. W3 dodaje rendererImplemented=true dla wariantów sekcji, palet, par fontów i stylu/presetu Modern Editorial; wejścia mają rendererImplemented=false. Ta flaga opisuje implementację renderera, nie dostępność dla klienta lub zgodę na publikację:
 
 - Palety: ivory-ink, sage-linen, rose-stone.
-- Pary fontów: editorial-serif, modern-romantic, timeless-classic. To identyfikatory, bez jeszcze wybranych/załadowanych plików fontów.
+- Pary fontów: editorial-serif = Cormorant Garamond + Manrope, modern-romantic = Libre Baskerville + Source Sans 3, timeless-classic = Playfair Display + Inter. W3 dostarcza lokalne WOFF2 i oryginalne licencje OFL.
 - Wejścia: reveal, envelope, typography.
 - Hero: photo-full, split, typography; pozostałe sekcje mają default.
 - Preset modern-editorial: początkowy układ/aktywność, warianty, paleta ivory-ink, fontPair editorial-serif, wejście reveal.
 
-Preset składa istniejące sekcje. Nie zawiera klientowskich treści, nie kopiuje renderera i nie jest stosowany ponownie przy PATCH/GET. Późniejsza zmiana definicji nie nadpisze zapisanych projektów. Nie ma przełączania presetów istniejącego projektu. Definicja nie oznacza dostępnej funkcji: żadna opcja wedding nie ma jeszcze produkcyjnego renderera.
+Preset składa istniejące sekcje. Nie zawiera klientowskich treści, nie kopiuje renderera i nie jest stosowany ponownie przy PATCH/GET. Późniejsza zmiana definicji nie nadpisze zapisanych projektów. Nie ma przełączania presetów istniejącego projektu. RendererImplemented nie oznacza publicznej dostępności. W3 zawiera renderer stylu, ale wedding pozostaje developerskie, bez wejść i aktywnego RSVP.
 
 ## Media W2
 
 W2 zawiera wspólny moduł MediaService/MediaController i customowy MediaPicker, bez nadawania klientom upload_files. Szczegóły autoryzacji, formatów, limitów, URL i operacji: docs/MEDIA.md. Kod jest ukończony, ale uploadu nie uruchamiano w runtime.
 
-Biblioteka jest zakreślona właścicielem projektu, a nie aktualnym administratorem. Pokazuje wyłącznie attachmenty tego modułu z odpowiadającym właścicielem. Podpinanie zasobu sprawdzane jest po normalizacji w SiteService podczas tworzenia/zapisu szkicu, przed prywatnym podglądem oraz w wspólnej operacji publikowania. Nie akceptujemy historycznych/obcych attachmentów przez samą znajomość ID. Standardowe pliki uploads mogą być publiczne przez bezpośredni URL — nie zapewniamy prywatnego storage.
+Biblioteka jest zakreślona właścicielem projektu, a nie aktualnym administratorem. Pokazuje wyłącznie attachmenty tego modułu z odpowiadającym właścicielem. Podpinanie zasobu sprawdzane jest po normalizacji w SiteService podczas tworzenia/zapisu szkicu, w zbiorczym resolverze prywatnego podglądu oraz w wspólnej operacji publikowania. Podgląd pomija niedostępny asset, bez ujawnienia jego URL; zapis nadal odrzuca taką referencję. Nie akceptujemy historycznych/obcych attachmentów przez samą znajomość ID. Standardowe pliki uploads mogą być publiczne przez bezpośredni URL — nie zapewniamy prywatnego storage.
 
 ## RSVP i podgląd: stan oraz dalsza integracja
 
@@ -88,17 +88,17 @@ Działa współdzielony moduł RSVP z tabelami, sekretami gości, uprawnieniami,
 
 W W5 trzeba dodać adapter kontekstu wydarzenia/konfiguracji do istniejącego modułu i zdecydować o jednym źródle globalnego włączenia RSVP względem enabled sekcji oraz CTA. Bez kopiowania tabel, sekretów, endpointów, zasad uprawnień i deadline/DST. Pierwsza integracja obejmie całą uroczystość, nie osobne wydarzenia. W1 zapisuje wyłącznie odwołanie shared-rsvp i teksty sekcji; nie przesądza konfiguracji terminu odpowiedzi.
 
-Rzeczywisty podgląd już używa wspólnego rejestru lazy rendererów oraz izolowanego iframe z walidacją origin/source i struktury wiadomości. W4 musi rozszerzyć kontrolę transportu w preview/protocol.ts o nowe tablice i unie; dziś świadomie odrzuca nieobsługiwany wedding i nie ma renderera. Nie dodajemy drugiej makiety ani publikacji szkicu na /s/ dla podglądu.
+Rzeczywisty podgląd używa wspólnego rejestru lazy rendererów oraz izolowanego iframe z walidacją origin/source i struktury wiadomości. W3 minimalnie rozszerza transport o tablice/oneOf i ograniczone DTO previewMedia dla wedding, wyłącznie w mode=saved. Backend GET sites/{id}/preview sprawdza dostęp do projektu i dodatkowo manage_options, normalizuje zapisany szkic, a MediaService::preview_assets rozwiązuje tylko wskazane zdjęcia włączonych sekcji. Pozostałe typy nie dostają nowego pola. Nie dodajemy drugiej makiety ani publikacji szkicu na /s/ dla podglądu. Live synchronizacja, demo, wejścia i pełna integracja pozostają na W4.
 
 ## Plan kolejnych etapów
 
 W1 (ukończony): fundament danych, rejestry i walidacja oraz połączenie ze wspólnym zapisem. Zakończony w kodzie, tylko kontrole statyczne; brak potwierdzenia runtime.
 
-W2 (obecny, kod ukończony): wspólne media oraz modularny edytor, włączanie sekcji i zmiana kolejności ze stabilnymi id. Wykorzystuje wspólne konta, zapis i dirty state; wykonano jedynie kontrole statyczne.
+W2 (ukończony w kodzie): wspólne media oraz modularny edytor, włączanie sekcji i zmiana kolejności ze stabilnymi id. Wykorzystuje wspólne konta, zapis i dirty state; wykonano jedynie kontrole statyczne.
 
-W3 (następny, osobne zlecenie): pierwszy styl Modern Editorial, renderer wszystkich sekcji, trzy warianty hero, trzy palety i trzy pary fontów z ustalonymi assetami/licencjami.
+W3 (obecny, ukończony w kodzie): Modern Editorial, renderer wszystkich sekcji, trzy warianty hero, trzy palety i trzy lokalne pary fontów z licencjami. Minimalny prywatny podgląd zapisanego szkicu; bez potwierdzenia runtime.
 
-W4: trzy wejścia, integracja rzeczywistego podglądu, galerii, oddzielnych demonstracji i presetów.
+W4 (następny, osobne zlecenie): trzy wejścia, integracja rzeczywistego podglądu, galerii, oddzielnych demonstracji i presetów.
 
 W5: adapter istniejącego RSVP dla całej uroczystości, reguły gotowości publikacji i pełny przepływ klienta. Obecny snapshot zapisuje content i appearance dotychczasowych typów; przed publikacją wedding trzeba rozszerzyć wspólną kopertę snapshotu o jego sections/entrance i ich odczyt, bez kopiowania systemu publikacji lub zmiany istniejących snapshotów w tle. W2 świadomie tego nie wdraża. Dopiero po zakończeniu funkcji można jawnie udostępnić wedding.
 
@@ -114,7 +114,7 @@ Nowy preset składa istniejące sekcje i warianty, wybiera styl i początkowy uk
 
 Nowy rodzaj ministrony używa wspólnego Site, ma własny kontrakt, definicję katalogu i edytora oraz rejestr renderera. Nie musi mieć daty, miejsc ani RSVP; wedding nie jest nowym kontraktem bazowym całej platformy.
 
-Nierozstrzygnięte: ewentualny prywatny storage i przyszły cykl życia plików, konkretny dobór fontów, adapter i konfiguracja RSVP, finalne reguły publikacji wymagające zdjęć lub danych oraz wybór presetów. Usuwanie referowanych miejsc w W2 wymaga potwierdzenia i czyści wyłącznie referencje. Są to decyzje kolejnych etapów, nie przeszkody do zapisu niekompletnego szkicu W1.
+Nierozstrzygnięte: ewentualny prywatny storage i przyszły cykl życia plików, adapter i konfiguracja RSVP, finalne reguły publikacji wymagające zdjęć lub danych oraz wybór presetów. Usuwanie referowanych miejsc w W2 wymaga potwierdzenia i czyści wyłącznie referencje. Są to decyzje kolejnych etapów, nie przeszkody do zapisu niekompletnego szkicu W1.
 
 
 ## Edycja W2
@@ -129,8 +129,25 @@ Przy usuwaniu miejsca edytor wskazuje jego użycia, również w wyłączonych se
 
 Hero/story/gallery używają tego samego MediaPicker. Alt jest zapisywany przy konkretnym użyciu, nie globalnie na pliku. Galeria dodaje pozycję dopiero z potwierdzonym attachmentId, pozwala ją przestawiać i usuwać referencję. Błąd zapisu nie czyści formularza ani nie usuwa uploadu.
 
-Appearance pokazuje zapisane identyfikatory jako ustawienia developerskie; nie udostępnia pozornie działających palet, par fontów, wariantów hero i wejścia. RSVP edytuje wyłącznie heading/text z W1, z informacją o połączeniu w W5. Podgląd w edytorze i na bezpośredniej trasie zapisanego podglądu pokazuje „Visual preview will be available in the next stage”. Nie tworzymy tekstowej makiety, iframe wedding ani importu nieistniejącego renderera.
+Od W3 Appearance udostępnia trzy zaimplementowane palety i pary fontów; hero udostępnia trzy kompozycje. Wejście jest nadal tylko odczytem ustawienia developerskiego, bez animacji. RSVP edytuje wyłącznie heading/text z W1, z informacją o połączeniu w W5. Od W3 przycisk Preview saved draft otwiera rzeczywisty zapisany szkic, za pośrednictwem istniejącego iframe i lazy renderera. W edytorze informujemy, że live preview będzie w W4; nie synchronizujemy niezapisanej konfiguracji. Nie tworzymy tekstowej makiety.
 
 Aby dodać formularz dla istniejącego typu sekcji, rozszerz jawny switch w SectionForms lub ListSectionFields, korzystając z wygenerowanej unii WeddingSection/SectionOf i wspólnych TextField, EventFields, ListFields oraz MediaPicker. Limity pobieraj z kontraktu przez model.ts. Nie generuj całego UI automatycznie ze schematu i nie dodawaj drugiego zapisu/konta. Nowe pole produktu wymaga osobnej decyzji o kontrakcie, a nie tylko formularza.
 
-Następny krok: W3 — Modern Editorial, renderer wszystkich sekcji, trzy warianty hero, palety i pary fontów. Nie rozpoczęto W3. W2 nie potwierdza działania runtime, bezpieczeństwa HTTP lub wyglądu; dokładne testy zostają na osobne zlecenie.
+W2 został zakończony w kodzie; W3 opisano poniżej. Żaden z tych etapów nie potwierdza działania runtime, bezpieczeństwa HTTP lub wyglądu; dokładne testy zostają na osobne zlecenie.
+
+
+## Modern Editorial W3
+
+Specyfikacja implementacji: docs/styles/modern-editorial.md. To opis zamierzonego zachowania kodu, nie raport wizualnej oceny. Typografia ma duże szeryfowe imiona i użytkowy sans, kolory Ivory & Ink / Sage & Linen / Rose & Cocoa mapowane na istniejące ivory-ink / sage-linen / rose-stone. Nie zmieniano kontraktu lub istniejących danych.
+
+Rejestr renderers/registry.ts zawiera modern-editorial@1. Renderer otrzymuje WeddingDraft i ograniczoną listę MediaAsset, a sekcje wybiera przez jawny sections/registry.tsx. Hero ma kompozycje photo-full, split i typography z tego samego content. Brak/utrata zdjęcia daje wariant typograficzny. Sekcje są w zapisanej kolejności, enabled=false zachowuje dane, a opcjonalne puste treści są pomijane. Countdown ma własny timer/cleanup i używa już potwierdzonego UTC, bez drugiego parsera DST. Linki mają kontrolowane protokoły, mapy nie używają iframe, a FAQ korzysta z details/summary. RSVP to tylko opis i informacja o W5.
+
+Zdjęcia nie są pobierane po jednym z API przez renderer. SiteService::preview przygotowuje dla administratora dodatkowe previewMedia ze wspólnego MediaService, wyłącznie dla używanych aktywnych sekcji, po kontroli właściciela/markera. Brakujący lub niedozwolony plik nie ma DTO i nie ujawnia URL. Iframe dostaje same referencje i rozwiązane rozmiary, nie bibliotekę/nonce/sesję. Photo używa srcset/sizes, wymiarów i lazy loading poza hero. Uploads nadal nie są prywatnym storage; CSP podglądu dopuszcza standardowe zasoby tego samego originu.
+
+Jak otworzyć: administrator tworzy/otwiera projekt z narzędzia development, uzupełnia treść i zdjęcia, zapisuje Save draft, następnie klika Preview saved draft. Trasa /app/sites/{id}/preview ma kontrolę dostępu, REST nonce i dodatkową kontrolę administratora po stronie API dla wedding. Kod nie został otwarty w przeglądarce w W3. Zmiany niezapisane nie trafiają do podglądu; standardowy wybór Save and preview korzysta ze wspólnego PATCH.
+
+Fonty pobrano z oficjalnego google/fonts z przypiętą rewizją; lokalne subsety z polskimi znakami, serif 400 i sans 400–600, font-display:swap, bez runtime CDN/preload-all. Każda rodzina ma zachowaną licencję OFL; zmodyfikowane fonty mają własne główne nazwy Microsite ME. Źródła/licencje/SHA: renderers/wedding-modern-editorial/fonts/ i docs/THIRD-PARTY-ASSETS.md.
+
+RendererImplemented=true nie zmienia availability=development, publicznego katalogu ani SiteValidator::publishable. Nie włączono publicznej strony wedding, wejść, live preview niezapisanych danych, demonstracji, marketingowej galerii lub aktywnego RSVP. Nie uruchomiono builda; stare paczki nie zawierają W3. Przed przyszłym wydaniem trzeba dołączyć wszystkie nowe OFL/provenance do paczki runtime.
+
+Następny krok: W4 — wejścia, pełna integracja podglądu, osobne demo i presety. Nie rozpoczęto W4. Runtime, wygląd i responsywność W1–W3 nadal wymagają osobnej weryfikacji.

@@ -108,6 +108,12 @@ final class MediaService {
             return self::not_found();
         }
 
+        $file = get_attached_file( $id );
+
+        if ( ! is_string( $file ) || ! is_file( $file ) ) {
+            return self::not_found();
+        }
+
         $sizes = array();
 
         foreach ( array( 'thumbnail', 'medium', 'large', 'full' ) as $size ) {
@@ -123,6 +129,38 @@ final class MediaService {
         }
 
         return array( 'id' => $id, 'name' => $attachment->post_title, 'sizes' => $sizes );
+    }
+
+    /** Resolve only referenced assets, never the owner's whole library. */
+    public static function preview_assets( array $draft, int $owner ): array {
+        $identifiers = array();
+
+        foreach ( $draft['sections'] as $section ) {
+            if ( ! $section['enabled'] ) {
+                continue;
+            }
+
+            if ( in_array( $section['type'], array( 'hero', 'story' ), true ) && isset( $section['content']['photo'] ) ) {
+                $identifiers[] = $section['content']['photo']['attachmentId'];
+            } elseif ( 'gallery' === $section['type'] ) {
+                foreach ( $section['content']['photos'] as $photo ) {
+                    $identifiers[] = $photo['attachmentId'];
+                }
+            }
+        }
+
+        $assets = array();
+
+        foreach ( array_unique( $identifiers ) as $id ) {
+            $asset = self::resolve( $id, $owner );
+
+            if ( ! is_wp_error( $asset ) ) {
+                $assets[] = $asset;
+            }
+        }
+
+        // Missing/forbidden files have no DTO and cannot disclose their URL.
+        return $assets;
     }
 
     public static function validate_draft( array $draft, string $site_type, int $owner ): true|WP_Error {

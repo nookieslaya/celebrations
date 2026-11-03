@@ -126,6 +126,10 @@ final class SiteService {
             return $record;
         }
 
+        if ( 'wedding' === $record['siteType'] && ! current_user_can( 'manage_options' ) ) {
+            return new WP_Error( 'microsite_type_unavailable', 'Wedding previews are currently available only to administrators.', array( 'status' => 403 ) );
+        }
+
         $selection = $this->validator->selection( $record['siteType'], $record['templateId'] );
 
         if ( is_wp_error( $selection ) ) {
@@ -145,10 +149,19 @@ final class SiteService {
         }
 
         $post = $this->repository->find( $id );
-        $assets = MediaService::validate_draft( $draft, $record['siteType'], (int) $post->post_author );
 
-        if ( is_wp_error( $assets ) ) {
-            return $assets;
+        if ( ! $post ) {
+            return new WP_Error( 'microsite_not_found', 'Project not found.', array( 'status' => 404 ) );
+        }
+
+        if ( 'wedding' === $record['siteType'] ) {
+            $record['previewMedia'] = MediaService::preview_assets( $draft, (int) $post->post_author );
+        } else {
+            $assets = MediaService::validate_draft( $draft, $record['siteType'], (int) $post->post_author );
+
+            if ( is_wp_error( $assets ) ) {
+                return $assets;
+            }
         }
 
         $record['draft'] = $draft;

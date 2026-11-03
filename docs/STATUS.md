@@ -170,3 +170,28 @@ Nie uruchamiano przeglądarki, screenshotów, wizualnego podglądu, Playwright, 
 **Działanie runtime, wygląd, uploady, izolacja HTTP, współbieżne limity, zapis/odczyt oraz regresja istniejących typów nie zostały zweryfikowane.** Składnia i typy nie stanowią takiego potwierdzenia. Szczegóły i ograniczenia: docs/WEDDING.md i docs/MEDIA.md.
 
 Następny krok na osobne zlecenie: W3 — Modern Editorial, renderer wszystkich sekcji, trzy warianty hero, trzy palety i trzy pary fontów. Zakończono na W2.
+
+## Wedding W3 — Modern Editorial — 2026-11-03
+
+Zakończono w kodzie styl modern-editorial@1 i renderer wszystkich 14 sekcji: hero, invitation, countdown, venues, schedule, story, gallery, guest-info, travel, gifts, faq, rsvp, contact i footer. Kompozycje hero photo-full/split/typography wykorzystują wspólne dane; brak lub błąd zdjęcia przełącza je na typography. Renderer pomija wyłączone/puste opcjonalne sekcje, zachowuje kolejność/stabilne anchory, plain text, bezpieczne CTA/linki, natywne FAQ i jeden timer countdown z cleanupem. Nie importuje kont, routera ani klienta API.
+
+Trzy palety: Ivory & Ink (ivory-ink), Sage & Linen (sage-linen), Rose & Cocoa (rose-stone); lokalne tokeny CSS, mobile-first i clamp. Pary fontów zachowują identyfikatory W1: editorial-serif = Cormorant Garamond/Manrope, modern-romantic = Libre Baskerville/Source Sans 3, timeless-classic = Playfair Display/Inter. Pobrano oficjalne źródła Google Fonts i oryginalne licencje SIL OFL 1.1. Lokalne subsety z zakresem Latin/Latin Extended (polskie znaki), serif 400 i sans 400–600, font-display:swap. Sześć WOFF2 ma łącznie 266 880 bajtów. Copyright/OFL i pinned źródła/SHA są w katalogu fonts; główne nazwy zmodyfikowanych fontów mają aliasy Microsite ME. Brak zewnętrznych fontów w runtime i preload-all.
+
+Catalog/WeddingSections rozróżniają rendererImplemented=true od availability=development. Formularz development udostępnia trzy zaimplementowane palety/pary fontów/kompozycje hero, zachowując treść przy zmianie. Wejścia pozostają niewdrożone. Publiczny katalog nie ujawnia wedding, serwer nadal blokuje publikację także administratorowi.
+
+Minimalny prywatny podgląd zapisanego szkicu korzysta z dotychczasowych /app/sites/{id}/preview, GET sites/{id}/preview, RendererFrame i TemplatePreview. API dla wedding wymaga dodatkowo administratora, a MediaService::preview_assets przygotowuje jedną ograniczoną listę DTO dla referencji aktywnych sekcji (do 42, z deduplikacją). Weryfikuje autora/marker/status/MIME/pliki, bez biblioteki i niedozwolonych URL. Brakujące zdjęcie jest pomijane; create/update nadal odrzuca niedozwolone referencje. Renderer nie wysyła osobnych żądań API zdjęć. Iframe zachowuje origin/source, CSP, sandbox, no-store i brak nonce/draft w URL; transport obsługuje ograniczone arrays/oneOf/media. Dla wedding akceptuje wyłącznie mode=saved. Nie wdrożono live synchronizacji niezapisanych zmian, demo i publicznej trasy testowej.
+
+Kontrole uzgodnione na W3:
+
+- php -l — PASS: class-media-service.php, class-site-service.php, class-catalog.php, class-wedding-sections.php. PHP z konfiguracji LocalWP Open site shell.
+- npx tsc --noEmit — PASS; użyto obecnej konfiguracji, bez builda.
+- npm run contracts:check — PASS; brak potrzeby regeneracji.
+- Zmienione JSON Schema — nie dotyczy; schematy W1 pozostały bez zmian.
+
+Pobranie/przygotowanie fontów nie było testem renderowania; źródłowe TTF i tymczasowe narzędzia FontTools/Brotli zostały usunięte, do aplikacji nie dodano zależności. Specyfikacja docs/styles/modern-editorial.md opisuje implementację, nie pomiary kontrastu, wydajności lub raport oględzin. Nie sprawdzano wyglądu glyphów na urządzeniu ani faktycznych requestów fontów.
+
+Nie uruchamiano przeglądarki, screenshotów, Playwright, testów integracyjnych, regresji, lint/verify/build lub pomiarów. Nie tworzono danych projektu/mediów, nie resetowano bazy, nie zmieniono rejestracji, praw publikacji i motywu; nie restartowano istniejącego Vite. Nie wykonano wdrożenia, nowej paczki, commit/push. Nie dodano animacji/koperty/GSAP, aktywnego wedding RSVP, płatności, kolejnych stylów i galerii marketingowej. Istniejący packager wymaga dołączenia nowych font notices przed przyszłym wydaniem; W3 nie tworzy paczki produkcyjnej.
+
+**Runtime, wygląd i responsywność NIE zostały zweryfikowane.** Nie potwierdzono runtime W1/W2, prywatnego HTTP/mediów i fallbacków, cleanupu timera na urządzeniu lub braku regresji birthday/basic. Poprawna składnia i typy nie są takim potwierdzeniem.
+
+Dokumentacja: WEDDING.md, MEDIA.md, styles/modern-editorial.md, THIRD-PARTY-ASSETS.md oraz fonts/README.md i provenance.json. Następny krok W4 na osobne zlecenie: wejścia, pełna integracja podglądu, demo i presety. Zatrzymano się na W3.

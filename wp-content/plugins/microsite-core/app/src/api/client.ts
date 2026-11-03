@@ -13,6 +13,7 @@ export interface Site<Type extends SiteTypeId = SiteTypeId> {
   templateVersion: string;
   schemaVersion: number;
   draft: DraftBySiteType[Type];
+  previewMedia?: MediaAsset[];
   status: "draft";
   publication: {
     published: boolean;

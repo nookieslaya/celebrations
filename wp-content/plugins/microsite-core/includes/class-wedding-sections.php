@@ -47,7 +47,7 @@ final class WeddingSections {
                     array_flip( $properties['content']['required'] )
                 ),
                 'variants' => array_map( static function ( string $id ): array {
-                    return array( 'id' => $id, 'availability' => 'development' );
+                    return array( 'id' => $id, 'availability' => 'development', 'rendererImplemented' => true );
                 }, $properties['variant']['enum'] ),
                 'canDisable' => 'movable' === $position,
                 'position' => $position,
@@ -58,20 +58,21 @@ final class WeddingSections {
     }
 
     public static function style_registry( array $schema ): array {
-        $options = static function ( array $identifiers ): array {
-            return array_map( static function ( string $id ): array {
-                return array( 'id' => $id, 'availability' => 'development' );
+        $options = static function ( array $identifiers, bool $implemented ): array {
+            return array_map( static function ( string $id ) use ( $implemented ): array {
+                return array( 'id' => $id, 'availability' => 'development', 'rendererImplemented' => $implemented );
             }, $identifiers );
         };
 
         return array(
-            'palettes' => $options( $schema['properties']['appearance']['properties']['palette']['enum'] ),
-            'fontPairs' => $options( $schema['properties']['appearance']['properties']['fontPair']['enum'] ),
-            'entrances' => $options( $schema['properties']['entrance']['properties']['variant']['enum'] ),
+            'palettes' => $options( $schema['properties']['appearance']['properties']['palette']['enum'], true ),
+            'fontPairs' => $options( $schema['properties']['appearance']['properties']['fontPair']['enum'], true ),
+            'entrances' => $options( $schema['properties']['entrance']['properties']['variant']['enum'], false ),
             'presets' => array(
                 'modern-editorial' => array(
                     'id' => 'modern-editorial',
                     'name' => 'Modern Editorial',
+                    'rendererImplemented' => true,
                     'availability' => 'development',
                     'appearance' => Catalog::defaults_from_schema( $schema['properties']['appearance'] ),
                     'entrance' => Catalog::defaults_from_schema( $schema['properties']['entrance'] ),

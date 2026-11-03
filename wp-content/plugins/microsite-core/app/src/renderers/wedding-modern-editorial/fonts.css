@@ -1,0 +1,47 @@
+@font-face {
+  font-family: "Microsite ME Serif One";
+  src: url("./fonts/serif-one.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Microsite ME Sans One";
+  src: url("./fonts/sans-one.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Microsite ME Serif Two";
+  src: url("./fonts/serif-two.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Microsite ME Sans Two";
+  src: url("./fonts/sans-two.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Microsite ME Serif Three";
+  src: url("./fonts/serif-three.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Microsite ME Sans Three";
+  src: url("./fonts/sans-three.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+}

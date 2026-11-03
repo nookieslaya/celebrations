@@ -20,10 +20,24 @@ export function SectionForms(props: SectionFormProps) {
       return (
         <>
           <p>
-            Names and date come from Wedding details. Composition{" "}
-            {section.variant} is a development setting; visual variants arrive
-            in W3.
+            Names and date come from Wedding details. Changing composition
+            preserves your photo and text.
           </p>
+          <label htmlFor={`${id}-composition`}>Hero composition</label>
+          <select
+            id={`${id}-composition`}
+            value={section.variant}
+            onChange={(event) =>
+              onChange({
+                ...section,
+                variant: event.target.value as typeof section.variant,
+              })
+            }
+          >
+            <option value="photo-full">Full photograph</option>
+            <option value="split">Split photograph and typography</option>
+            <option value="typography">Typography</option>
+          </select>
           <TextField
             label="Subtitle"
             limit={textLimit("hero", "subtitle")}

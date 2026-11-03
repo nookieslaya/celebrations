@@ -69,11 +69,12 @@ final class Catalog {
             'modern-editorial' => array(
                 'id' => 'modern-editorial',
                 'name' => 'Modern Editorial',
-                'description' => 'Wedding foundation; editor and renderer are not implemented.',
+                'description' => 'Modern Editorial wedding renderer; administrator-only development preview.',
                 'availability' => 'development',
                 'version' => '1',
                 'siteTypes' => array( 'wedding' ),
-                'rendererKey' => null,
+                'rendererKey' => 'modern-editorial',
+                'rendererImplemented' => true,
                 'allowedAppearance' => array(
                     'palette' => $wedding_schema['properties']['appearance']['properties']['palette']['enum'],
                     'fontPair' => $wedding_schema['properties']['appearance']['properties']['fontPair']['enum'],
