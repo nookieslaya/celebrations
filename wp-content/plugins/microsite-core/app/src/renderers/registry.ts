@@ -33,6 +33,9 @@ const registry = new Map<string, RendererDefinition>([
     "modern-editorial@1",
     {
       siteType: "wedding",
+      supportsOpening: true,
+      supportsRsvp: true,
+      embeddedRsvp: true,
       Component: lazy(
         () => import("./wedding-modern-editorial/ModernEditorial"),
       ),

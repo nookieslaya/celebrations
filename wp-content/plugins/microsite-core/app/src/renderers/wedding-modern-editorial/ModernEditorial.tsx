@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { RendererProps } from "../registry";
+import { WeddingOpening } from "./openings/WeddingOpening";
 import { sectionAnchor } from "./format";
 import { sections } from "./sections/registry";
 import type { WeddingContext } from "./types";
@@ -12,6 +13,7 @@ export default function ModernEditorial({
   media = [],
   preview = false,
   previewContext,
+  rsvp,
 }: RendererProps) {
   const mediaById = useMemo(
     () => new Map(media.map((asset) => [asset.id, asset])),
@@ -25,6 +27,7 @@ export default function ModernEditorial({
   );
   const context: WeddingContext = {
     draft: value,
+    rsvp,
     media: mediaById,
     sections: enabled,
     preview,
@@ -38,15 +41,28 @@ export default function ModernEditorial({
     sections[section.type].visible(section, context),
   );
   return (
-    <main
+    <div
       className="modern-editorial"
       data-palette={value.appearance.palette}
       data-font-pair={value.appearance.fontPair}
     >
-      {context.sections.map((section) => (
-        <SectionInstance key={section.id} section={section} context={context} />
-      ))}
-    </main>
+      <WeddingOpening
+        value={value}
+        mediaToken={JSON.stringify(media)}
+        context={previewContext}
+        locale={context.locale}
+      >
+        <main>
+          {context.sections.map((section) => (
+            <SectionInstance
+              key={section.id}
+              section={section}
+              context={context}
+            />
+          ))}
+        </main>
+      </WeddingOpening>
+    </div>
   );
 }
 

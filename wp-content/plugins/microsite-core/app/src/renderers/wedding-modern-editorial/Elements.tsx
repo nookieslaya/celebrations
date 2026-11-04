@@ -64,7 +64,21 @@ export function EventTime({
   timeOnly?: boolean;
 }) {
   const formatted = formatEvent(value, locale, timeOnly);
-  return formatted ? <time dateTime={value.startsAt}>{formatted}</time> : null;
+  if (formatted) {
+    return <time dateTime={value.startsAt}>{formatted}</time>;
+  }
+  if (
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value.localDateTime) &&
+    value.timeZone.trim()
+  ) {
+    return (
+      <span>
+        {value.localDateTime.replace("T", " · ")} · {value.timeZone}{" "}
+        (unconfirmed)
+      </span>
+    );
+  }
+  return null;
 }
 
 export function Arrow() {

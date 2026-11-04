@@ -553,3 +553,42 @@
     grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
   }
 }
+
+.modern-editorial .me-rsvp-section .rsvp-card {
+  width: min(100%, 42rem);
+  margin: 1.5rem 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--me-text);
+  font-family: var(--me-sans);
+}
+
+.modern-editorial .rsvp-card h2 {
+  font-family: var(--me-sans);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: normal;
+}
+
+.modern-editorial .rsvp-card :where(input, select, button),
+.modern-editorial .rsvp-actions a {
+  border-color: var(--me-border);
+  border-radius: 0.125rem;
+  background: var(--me-background);
+  color: var(--me-text);
+}
+
+.modern-editorial .rsvp-card button {
+  background: var(--me-button);
+  color: var(--me-button-text);
+}
+
+.modern-editorial .rsvp-card :focus-visible {
+  outline-color: var(--me-text);
+}
+
+.modern-editorial .rsvp-card label {
+  font-weight: 600;
+}

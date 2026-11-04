@@ -57,6 +57,17 @@ final class WeddingConfig {
             }
 
             $content = $section['content'];
+            if ( 'rsvp' === $section['type'] && isset( $content['settings'] ) ) {
+                $settings = RsvpConfig::normalise_configuration( $draft['content']['event'], $content['settings'], true );
+                if ( is_wp_error( $settings ) ) {
+                    return new WP_Error( $settings->get_error_code(), $settings->get_error_message(), array(
+                        'status' => 400,
+                        'fields' => array( 'sections.' . $section['id'] . '.content.settings.deadlineLocal' => $settings->get_error_message() ),
+                    ) );
+                }
+                $draft['sections'][ $index ]['content']['settings'] = $settings;
+            }
+
 
             if ( 'venues' === $section['type'] ) {
                 if ( count( $content['venueIds'] ) !== count( array_unique( $content['venueIds'] ) ) ) {

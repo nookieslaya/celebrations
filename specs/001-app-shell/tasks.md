@@ -175,4 +175,45 @@
 - [x] Rozdzielenie rendererImplemented i dostępności publicznej; brak publikacji, live sync, demo, wejść i aktywnego RSVP.
 - [x] Wyłącznie php -l, TypeScript i kontrola aktualności kontraktów; schematy bez zmian.
 - [x] Aktualizacja dokumentacji i STATUS bez deklarowania wizualnej/runtime weryfikacji.
-- [ ] W4 na osobne zlecenie: wejścia, pełna integracja podglądu, osobne demo i presety.
+- [x] W4: wejścia, live preview, administracyjne demo i fabryka presetu — implementacja poniżej; bez weryfikacji runtime.
+
+
+## Wedding W4 — wejścia, live preview, demo i preset
+
+- [x] Rejestr opcji z nazwami/opisami z backendu, hero/paleta/fonty/wejścia w Appearance.
+- [x] Osobna warstwa GSAP reveal/envelope/typography, Replay, Skip, cykl życia, reduced motion i fallbacki.
+- [x] Wspólne iframe live/saved/demo, bez remountu całej strony przy zmianie danych.
+- [x] Zbiorcze autoryzowane niezapisane media, normalizacja terminów, abort/sequence/ochrona przed starym wynikiem.
+- [x] Serwerowa fabryka presetu wyłącznie dla nowego projektu, świeże ID i puste dane bez prywatnych zdjęć.
+- [x] Demo administracyjne z kompletną osobną fixture, lokalnymi legalnymi zdjęciami i oznaczeniem demonstracji.
+- [x] Jawnie zlecony pełny przykład Olivia & James: Site 12, administrator radek, import przez moduł mediów, komenda z markerem i opcją force.
+- [x] Zachowanie development i blokady publikacji/aktywnego RSVP, bez zmian innych projektów.
+- [x] Tylko uzgodnione kontrole PHP/TypeScript/kontraktów; utworzenie danych nie jest testem runtime.
+- [x] Dokumentacja WEDDING/MEDIA/stylu/źródeł oraz STATUS z ograniczeniami i linkami.
+- [x] W5: adapter istniejącego RSVP, gotowość publikacji i kontrolowana publikacja administracyjna — poniżej.
+
+
+## Wedding W5 — RSVP i gotowość publikacji
+
+- [x] Adapter typu PHP/React ze wspólnym backendem, formularzem i tabelami odpowiedzi.
+- [x] Opcjonalne settings, zgodność starych danych, pojedynczy enabled i deadline przez EventDate.
+- [x] Edytor ustawień, publiczne RSVP i demonstracyjny podgląd; odpowiedź na całą uroczystość.
+- [x] Wspólny panel odpowiedzi niezależny od enabled sekcji.
+- [x] Backendowa gotowość, stabilne ścieżki błędów i przejście do sekcji.
+- [x] Jawna publikacja administracyjna development bez odblokowania zwykłych klientów.
+- [x] Pełny snapshot, metadata i ograniczona projekcja mediów/treści.
+- [x] Kontrole statyczne i dodatkowo zlecona weryfikacja runtime/animacji/wyglądu/responsywności; wyniki w STATUS.
+- [x] Dokumentacja WEDDING, RSVP, PUBLICATION, STATUS.
+- [ ] W6 na osobne zlecenie: pełna regresja, rzeczywiste urządzenia/przeglądarki i staging.
+
+
+## Korekta ergonomii edytora po W5
+
+- [x] Wspólna powłoka bez stałego podglądu, pełna szerokość i zwinięta globalna nawigacja.
+- [x] Spójny pasek projektu, stany zapisu i dotychczasowa operacja Save changes.
+- [x] Nawigacja wedding: wspólne dane, sekcje po ID, Appearance, On/Off; akcje wybranej sekcji i zwijana lista.
+- [x] Preview tylko na żądanie z bieżącym draftem, Mobile/Desktop/Replay i odmontowaniem iframe po powrocie.
+- [x] Zachowanie zamontowanego formularza, danych, wyboru, walidacji, scrolla i focusu; istniejąca ochrona opuszczania edytora.
+- [x] Wyłącznie typecheck oraz zapis zakresu i ograniczeń w STATUS; bez przeglądarki/builda/testów.
+
+Plan W1–W6 pozostaje bez zmian; ta korekta nie rozpoczyna W6.

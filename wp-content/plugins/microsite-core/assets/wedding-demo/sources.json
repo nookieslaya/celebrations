@@ -1,0 +1,47 @@
+[
+  {
+    "key": "couple",
+    "id": 15283474,
+    "title": "Photo of the Newlyweds in a Garden",
+    "alt": "A newlywed couple standing together in a sunlit garden.",
+    "author": "Eugenia Remark",
+    "page": "https://www.pexels.com/photo/15283474/",
+    "download": "https://images.pexels.com/photos/15283474/pexels-photo-15283474.jpeg?auto=compress&cs=tinysrgb&w=1440",
+    "license": "Pexels License",
+    "licenseUrl": "https://www.pexels.com/license/",
+    "downloaded": "2026-11-03",
+    "file": "couple.jpg",
+    "bytes": 364537,
+    "sha256": "b35787779f4e942000a6b4c754fc0b00b7c8085d057e68044b905239545cf2ff"
+  },
+  {
+    "key": "table",
+    "id": 15283448,
+    "title": "Photo of a Wedding Table in the Garden",
+    "alt": "An outdoor reception table under mature trees with white linen and floral arrangements.",
+    "author": "Eugenia Remark",
+    "page": "https://www.pexels.com/photo/15283448/",
+    "download": "https://images.pexels.com/photos/15283448/pexels-photo-15283448.jpeg?auto=compress&cs=tinysrgb&w=1440",
+    "license": "Pexels License",
+    "licenseUrl": "https://www.pexels.com/license/",
+    "downloaded": "2026-11-03",
+    "file": "table.jpg",
+    "bytes": 660774,
+    "sha256": "13245cbd066ca5524b4d21c0ac0c27abbaaafec5f5dbc451bb96a6252c457ce7"
+  },
+  {
+    "key": "bouquet",
+    "id": 14270535,
+    "title": "Bridal Bouquet of Flowers",
+    "alt": "A softly coloured bridal bouquet with roses, peonies and greenery.",
+    "author": "Eugenia Remark",
+    "page": "https://www.pexels.com/photo/14270535/",
+    "download": "https://images.pexels.com/photos/14270535/pexels-photo-14270535.jpeg?auto=compress&cs=tinysrgb&w=1440",
+    "license": "Pexels License",
+    "licenseUrl": "https://www.pexels.com/license/",
+    "downloaded": "2026-11-03",
+    "file": "bouquet.jpg",
+    "bytes": 468467,
+    "sha256": "9dfb05dc89dc992d8f4626c83925854dee15c23fbdbf8fb0901e82e34fd9c1c2"
+  }
+]

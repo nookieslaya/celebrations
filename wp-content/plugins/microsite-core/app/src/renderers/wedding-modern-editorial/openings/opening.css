@@ -1,0 +1,139 @@
+.modern-editorial .me-opening-root {
+  position: relative;
+}
+
+.modern-editorial .me-opening-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 3rem clamp(1rem, 5vw, 4rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--me-background);
+  color: var(--me-text);
+  text-align: center;
+}
+
+.modern-editorial .me-opening-overlay h2 {
+  max-width: 100%;
+  margin: 1rem 0;
+  font-size: clamp(2rem, 6vw, 4.5rem);
+  overflow-wrap: anywhere;
+}
+
+.modern-editorial .me-opening-typography {
+  width: min(100%, 55rem);
+}
+
+.modern-editorial .me-opening-name {
+  display: block;
+}
+
+.modern-editorial .me-opening-and {
+  font-size: 0.6em;
+}
+
+.modern-editorial .me-opening-line {
+  width: min(12rem, 50%);
+  height: 1px;
+  background: var(--me-accent);
+  margin: 2rem auto;
+}
+
+.modern-editorial .me-opening-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  flex: 0 0 auto;
+}
+
+.modern-editorial .me-skip {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  min-height: 2.75rem;
+  padding: 0.75rem;
+  cursor: pointer;
+  font: 400 0.9375rem / 1.5 var(--me-sans);
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+.modern-editorial .me-envelope-art {
+  position: relative;
+  isolation: isolate;
+  width: min(32rem, 100%);
+  min-height: 14rem;
+  margin-top: 4rem;
+  margin-bottom: 1rem;
+  padding-top: 0.75rem;
+  perspective: 1200px;
+}
+
+.modern-editorial .me-envelope-back {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: var(--me-surface);
+  border: 1px solid var(--me-border);
+  box-shadow: 0 1rem 3rem rgb(0 0 0 / 8%);
+}
+
+.modern-editorial .me-envelope-card {
+  position: relative;
+  z-index: 1;
+  min-height: 13rem;
+  margin-inline: 1rem;
+  padding: 1.25rem;
+  background: var(--me-background);
+  border: 1px solid var(--me-border);
+}
+
+.modern-editorial .me-envelope-card h2 {
+  font-size: clamp(1.75rem, 5vw, 3rem);
+}
+
+.modern-editorial .me-envelope-card > p:last-child {
+  font-size: 0.8125rem;
+}
+
+.modern-editorial .me-envelope-pocket {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: var(--me-surface);
+  border: 1px solid var(--me-border);
+  clip-path: polygon(0 0, 50% 55%, 100% 0, 100% 100%, 0 100%);
+}
+
+.modern-editorial .me-envelope-flap {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 58%;
+  z-index: 3;
+  transform-origin: center top;
+  backface-visibility: hidden;
+  background: var(--me-background);
+  border-top: 1px solid var(--me-border);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+.modern-editorial .me-envelope-address {
+  width: min(100%, 32rem);
+  font: 400 clamp(1.75rem, 5vw, 3rem) / 1.2 var(--me-serif);
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modern-editorial .me-opening-overlay {
+    display: none;
+  }
+}

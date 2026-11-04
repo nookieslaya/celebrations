@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import type { DraftBySiteType } from "../generated/drafts";
 import type { SiteTypeId } from "../api/client";
+import { focusWeddingField, weddingFieldLabel } from "./wedding/readiness";
 import { WeddingFields } from "./wedding/WeddingEditor";
 import { BasicPageFields } from "./BasicPageEditor";
 import { BirthdayInvitationFields } from "./BirthdayInvitationEditor";
@@ -20,6 +21,8 @@ export interface EditorField {
 }
 
 export interface EditorModule<Type extends SiteTypeId> {
+  focusField?: (path: string, projectId: number) => void;
+  fieldLabel?: (path: string, draft: DraftBySiteType[Type]) => string;
   steps?: EditorStep[];
   fields?: Record<string, EditorField>;
   Fields: ComponentType<{
@@ -35,7 +38,11 @@ export interface EditorModule<Type extends SiteTypeId> {
 type EditorRegistry = { [Type in SiteTypeId]?: EditorModule<Type> };
 
 const registry: EditorRegistry = {
-  wedding: { Fields: WeddingFields },
+  wedding: {
+    Fields: WeddingFields,
+    focusField: focusWeddingField,
+    fieldLabel: weddingFieldLabel,
+  },
   "birthday-invitation": {
     Fields: BirthdayInvitationFields,
     steps: [

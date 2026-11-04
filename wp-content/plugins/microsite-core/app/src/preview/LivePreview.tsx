@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import { getRenderer } from "../renderers/registry";
 import { RendererFrame } from "./RendererFrame";
-import type { PreviewDocument } from "./protocol";
+import type { PreviewDocument, PreviewMode } from "./protocol";
 
 export function LivePreview({
   document,
   mobileVisible,
+  mode = "live",
 }: {
   document: PreviewDocument;
   mobileVisible: boolean;
+  mode?: PreviewMode;
 }) {
   const [viewport, setViewport] = useState<"mobile" | "desktop">("mobile");
   const [replay, setReplay] = useState(0);
@@ -25,7 +27,9 @@ export function LivePreview({
   return (
     <section className="live-preview-panel" aria-label="Visual preview">
       <p className="live-preview-label">
-        Live preview — changes are not published
+        {mode === "demo"
+          ? "Demonstration — no project is created"
+          : "Live preview — changes are not published"}
       </p>
       <div className="live-preview-controls">
         <div role="group" aria-label="Preview viewport">
@@ -58,6 +62,7 @@ export function LivePreview({
       </div>
       <RendererFrame
         document={document}
+        mode={mode}
         viewport={viewport}
         replay={replay}
         active={!narrow || mobileVisible}

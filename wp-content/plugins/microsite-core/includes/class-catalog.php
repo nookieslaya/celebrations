@@ -36,11 +36,12 @@ final class Catalog {
             'wedding' => array(
                 'id' => 'wedding',
                 'name' => 'Wedding',
+                'administrativePublication' => true,
                 'availability' => 'development',
                 'schemaVersion' => 1,
                 'schema' => $wedding_schema,
                 'defaults' => self::defaults_from_schema( $wedding_schema ),
-                'features' => array(),
+                'features' => array( 'rsvp' ),
                 'normalizer' => array( WeddingConfig::class, 'normalise' ),
                 'publishRequired' => array(),
             ),
@@ -74,6 +75,7 @@ final class Catalog {
                 'version' => '1',
                 'siteTypes' => array( 'wedding' ),
                 'rendererKey' => 'modern-editorial',
+                'administrativePublication' => true,
                 'rendererImplemented' => true,
                 'allowedAppearance' => array(
                     'palette' => $wedding_schema['properties']['appearance']['properties']['palette']['enum'],

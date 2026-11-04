@@ -59,7 +59,9 @@ final class MediaService {
 
         $post = ( new SiteRepository() )->find( $id );
 
-        if ( ! $post || ! $permissions->can_access( $post ) ) {
+        $data = $post ? get_post_meta( $post->ID, '_microsite_data', true ) : array();
+        $development_denied = 'wedding' === ( $data['siteType'] ?? '' ) && ! current_user_can( 'manage_options' );
+        if ( ! $post || $development_denied || ! $permissions->can_access( $post ) ) {
             return self::not_found();
         }
 
@@ -189,7 +191,53 @@ final class MediaService {
         return true;
     }
 
+    public static function resolve_ids( array $identifiers, int $owner ): array {
+        $assets = array();
+        foreach ( array_unique( $identifiers ) as $id ) {
+            $asset = self::resolve( $id, $owner );
+            if ( ! is_wp_error( $asset ) ) {
+                $assets[] = $asset;
+            }
+        }
+        return $assets;
+    }
+
+    /** CLI-only import of a registered, licensed demonstration photograph. */
+    public static function import_sample( string $key, int $owner ): array|WP_Error {
+        if ( ! defined( 'WP_CLI' ) || ! WP_CLI || ! current_user_can( 'manage_options' ) || $owner !== get_current_user_id() ) {
+            return new WP_Error( 'microsite_forbidden', 'Sample imports require the owning administrator in WP-CLI.', array( 'status' => 403 ) );
+        }
+        $source = WeddingDemo::asset_path( $key );
+        if ( ! $source || ! is_file( $source ) ) {
+            return new WP_Error( 'microsite_media_missing', 'The registered sample photograph is missing.', array( 'status' => 400 ) );
+        }
+        $existing = get_posts( array(
+            'post_type' => 'attachment', 'post_status' => 'inherit', 'author' => $owner,
+            'meta_key' => '_microsite_sample_photo', 'meta_value' => $key,
+            'fields' => 'ids', 'posts_per_page' => 1,
+        ) );
+        if ( $existing ) {
+            return self::resolve( (int) $existing[0], $owner );
+        }
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        $temporary = wp_tempnam( basename( $source ) );
+        if ( ! $temporary || ! copy( $source, $temporary ) ) {
+            return new WP_Error( 'microsite_upload_failed', 'Could not prepare the sample import.', array( 'status' => 500 ) );
+        }
+        try {
+            return self::process( $owner, array( 'name' => basename( $source ), 'tmp_name' => $temporary, 'error' => UPLOAD_ERR_OK ), true, $key );
+        } finally {
+            if ( is_file( $temporary ) ) {
+                wp_delete_file( $temporary );
+            }
+        }
+    }
+
     public static function upload( int $owner, array $file ): array|WP_Error {
+        return self::process( $owner, $file );
+    }
+
+    private static function process( int $owner, array $file, bool $sideload = false, ?string $sample_key = null ): array|WP_Error {
         global $wpdb;
         $limits = self::limits();
 
@@ -199,7 +247,7 @@ final class MediaService {
 
         $temporary = $file['tmp_name'];
 
-        if ( ! is_string( $temporary ) || ! is_uploaded_file( $temporary ) ) {
+        if ( ! is_string( $temporary ) || ( ! $sideload && ! is_uploaded_file( $temporary ) ) ) {
             return new WP_Error( 'microsite_upload_invalid', 'A valid uploaded file is required.', array( 'status' => 400 ) );
         }
 
@@ -260,20 +308,28 @@ final class MediaService {
             require_once ABSPATH . 'wp-admin/includes/image.php';
             require_once ABSPATH . 'wp-admin/includes/media.php';
 
-            $previous = $_FILES['microsite_photo'] ?? null;
-            $_FILES['microsite_photo'] = $file;
-
-            try {
-                $id = media_handle_upload( 'microsite_photo', 0, array(
-                    'post_author' => $owner,
-                    'post_status' => 'inherit',
-                    'meta_input' => array( self::OWNER_KEY => $owner ),
-                ), array( 'test_form' => false, 'mimes' => $mimes ) );
-            } finally {
-                if ( null === $previous ) {
-                    unset( $_FILES['microsite_photo'] );
-                } else {
-                    $_FILES['microsite_photo'] = $previous;
+            $post_data = array(
+                'post_author' => $owner,
+                'post_status' => 'inherit',
+                'meta_input' => array( self::OWNER_KEY => $owner ),
+            );
+            if ( null !== $sample_key ) {
+                $post_data['meta_input']['_microsite_sample_photo'] = $sample_key;
+                $post_data['meta_input']['_microsite_sample_license'] = 'Eugenia Remark / Pexels License; assets/wedding-demo/sources.json';
+            }
+            if ( $sideload ) {
+                $id = media_handle_sideload( $file, 0, null, $post_data );
+            } else {
+                $previous = $_FILES['microsite_photo'] ?? null;
+                $_FILES['microsite_photo'] = $file;
+                try {
+                    $id = media_handle_upload( 'microsite_photo', 0, $post_data, array( 'test_form' => false, 'mimes' => $mimes ) );
+                } finally {
+                    if ( null === $previous ) {
+                        unset( $_FILES['microsite_photo'] );
+                    } else {
+                        $_FILES['microsite_photo'] = $previous;
+                    }
                 }
             }
 

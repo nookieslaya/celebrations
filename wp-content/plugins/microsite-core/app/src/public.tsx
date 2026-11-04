@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { createRoot } from "react-dom/client";
+import type { MediaAsset } from "./media/types";
 import type { Site } from "./api/client";
 import { getRenderer } from "./renderers/registry";
 import "./public.css";
@@ -16,7 +17,7 @@ type PublicSnapshot = Pick<
   Site,
   "siteType" | "templateId" | "templateVersion" | "schemaVersion"
 > &
-  Site["draft"];
+  Site["draft"] & { media?: MediaAsset[] };
 
 class PublicBoundary extends Component<
   { children: ReactNode },
@@ -81,12 +82,23 @@ if (root && data?.textContent) {
             }
           >
             <Renderer
-              value={
-                {
-                  content: snapshot.content,
-                  appearance: snapshot.appearance,
-                } as Site["draft"]
-              }
+              value={(() => {
+                const {
+                  siteType,
+                  templateId,
+                  templateVersion,
+                  schemaVersion,
+                  media,
+                  ...draft
+                } = snapshot;
+                void siteType;
+                void templateId;
+                void templateVersion;
+                void schemaVersion;
+                void media;
+                return draft as Site["draft"];
+              })()}
+              media={snapshot.media}
               introKey={window.location.pathname}
               rsvpAvailable={rsvpOpen}
               rsvp={renderer?.embeddedRsvp ? form : undefined}

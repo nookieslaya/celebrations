@@ -1,4 +1,4 @@
-# Modern Editorial — specyfikacja implementacji W3
+# Modern Editorial — specyfikacja implementacji W3/W4
 
 Data: 2026-11-03. To specyfikacja kodu, nie raport oględzin lub potwierdzenie wyglądu, responsywności czy runtime. Renderer `modern-editorial@1` obsługuje wyłącznie typ wedding. Publiczna dostępność nadal ma stan development; rendererImplemented=true nie daje prawa publikacji.
 
@@ -83,12 +83,39 @@ Puste opcjonalne sekcje/listy/pola są pomijane; sama pusta galeria czy harmonog
 
 GET sites/{id}/preview pozostaje wspólną operacją; dla wedding wymaga także administratora i zwraca previewMedia tylko dla zdjęć wskazanych przez włączone sekcje (maks. 42 unikalne referencje). Backend sprawdza autora, marker, MIME/status i istnienie pliku przez wspólny MediaService. Brakujące/niedozwolone zdjęcie jest pomijane w DTO, bez ujawnienia URL; szkic nie jest zmieniany. Próba zapisania niedozwolonej referencji nadal jest błędem.
 
-Powłoka przekazuje gotowe DTO przez istniejący RendererFrame do TemplatePreview. Renderer nie wysyła requestów dla zdjęć i nie otrzymuje biblioteki użytkownika. Kontrola wiadomości zachowuje origin/source i ograniczenia struktury, dodając arrays/oneOf i ograniczone DTO mediów; wedding jest przyjmowane wyłącznie w trybie saved. Brak nonce/sesji w wiadomości, URL lub kodzie renderera. Iframe nadal ma restrykcyjne CSP i sandbox, w tym blokadę zewnętrznej nawigacji w prywatnym podglądzie. Linki są widoczne, ale powłoka podglądu blokuje ich otwieranie poza anchorami.
+Powłoka przekazuje gotowe DTO przez istniejący RendererFrame do TemplatePreview. Renderer nie wysyła requestów dla zdjęć i nie otrzymuje biblioteki użytkownika. Kontrola wiadomości zachowuje origin/source i ograniczenia struktury, dodając arrays/oneOf i ograniczone DTO mediów; od W4 wedding obsługuje saved/live/demo, przy niezmienionej walidacji origin/source i ograniczonej reprezentacji mediów. Brak nonce/sesji w wiadomości, URL lub kodzie renderera. Iframe nadal ma restrykcyjne CSP i sandbox, w tym blokadę zewnętrznej nawigacji w prywatnym podglądzie. Linki są widoczne, ale powłoka podglądu blokuje ich otwieranie poza anchorami.
 
 Photo wybiera large/medium zamiast bezwarunkowego oryginału, przekazuje srcset/sizes oraz wymiary; hero eager/high, zdjęcia poniżej lazy. CSS określa proporcje. Nieautoryzowany plik nie ma DTO; błąd ładowania usuwa img lub przełącza hero na typografię. Standardowe lokalne uploads są wspierane; nie wprowadzono obsługi prywatnego storage lub zewnętrznego CDN. Pliki uploads mogą być publiczne przez URL mimo prywatnego szkicu.
 
 ## Responsywność i dostępność
 
-Mobile-first, progi 36rem i 56rem. Kontenery/grids mają minmax(0, ...) i min-width:0; obrazy max-width:100%, teksty overflow-wrap:anywhere. Nie używamy ukrywania poziomego overflow do maskowania uciętej treści. Przyciski mają min-height:3.25rem, odnośniki i summary co najmniej 2.75rem. Focus jest widoczny; nagłówki h1/h2/h3 i natywne listy/FAQ zachowują semantykę. Countdown nie ogłasza sekund przez aria-live. Nie dodano ruchu wymagającego reduced motion ani GSAP.
+Mobile-first, progi 36rem i 56rem. Kontenery/grids mają minmax(0, ...) i min-width:0; obrazy max-width:100%, teksty overflow-wrap:anywhere. Nie używamy ukrywania poziomego overflow do maskowania uciętej treści. Przyciski mają min-height:3.25rem, odnośniki i summary co najmniej 2.75rem. Focus jest widoczny; nagłówki h1/h2/h3 i natywne listy/FAQ zachowują semantykę. Countdown nie ogłasza sekund przez aria-live. W4 dodaje osobną warstwę wejść GSAP z pominięciem ruchu przy prefers-reduced-motion; sekcje strony nadal nie mają scrollowej choreografii.
 
-Nie oceniano zachowania powiększenia, maksymalnych treści, fizycznych urządzeń ani faktycznego overflow. Wymagają osobnego zlecenia. Live preview niezapisanych zmian, wejścia, demo i presety pozostają W4; aktywne RSVP i publikacja W5; dokładna weryfikacja W6.
+Nie oceniano zachowania powiększenia, maksymalnych treści, fizycznych urządzeń ani faktycznego overflow. Wymagają osobnego zlecenia. Live preview, wejścia, demo i preset są zaimplementowane w W4; aktywne RSVP i publikacja pozostają W5, dokładna weryfikacja W6.
+
+
+## Warstwa wejść W4
+
+WeddingOpening opakowuje ten sam main/renderer, nie tworzy kopii strony. Dostaje dane wspólne, wariant wejścia i PreviewContext. Jawny openings/registry.ts mapuje reveal/envelope/typography na implementacje, wszystkie zgodne z trzema hero. Wybory nazw/opisów pochodzą z WeddingSections::editor_options w chronionym endpointcie backendu; nie ma drugiej listy w formularzu.
+
+Reveal trwa około 0.95–1.05 s, animuje tylko dzieci hero-content: opacity i przesunięcie 14px, bez obowiązkowego kliknięcia i blokowania dostępu. Envelope: kieszeń/klapka/karta w palecie, imiona i termin; Open invitation uruchamia sekwencję około 2.6 s, Skip/Escape działa w trakcie. Typography animuje całe wiersze imion i linię przez około 1.55 s; bez podziału liter, dzięki czemu Unicode zachowuje naturalne brzmienie i nazwę dostępną.
+
+Overlay modalnych wejść ma inert/aria-hidden na stronie pod spodem, kontrolę Tab, czytelną etykietę dialogu, kontrolki minimum 44px i powrót focusu do h1. Overflow jest przywracany po zakończeniu/cleanup; safe center/overflow:auto pozwala na dłuższe imiona. Nie dodano audio, konfetti, scroll-jackingu lub animowania wszystkich sekcji podczas scrolla.
+
+Timeline jest we własnym gsap.context, z revert/kill i cleanupem; closed/opening/opened oraz ref blokują wielokrotne otwarcie. active pauzuje, nie tworzy kolejnego timeline. Reduced motion oznacza natychmiast otwartą stronę, bez flap 3D, przesuwania karty i opóźnionego dostępu. Zmiana danych podczas intro kończy je i zachowuje aktualne treści; nie przenosi wtedy focusu z formularza. Skip/Replay są kontrolkami klawiaturowymi. Awaria animacji/cleanup odsłania stronę, a aktywne opening ma limit awaryjny 5 s. Brak trwałego stanu pominięcia między projektami; Replay zależy tylko od bieżącego podglądu.
+
+Live jest od razu otwarte. Replay opening odtwarza aktualne wejście bez modyfikacji draft. Nie zmienia key całego renderera i nie resetuje scrolla przy pisaniu, wyborze palety lub zmianie kolejności. Dane i media nie są przechowywane w URL lub przekazywane z nonce do iframe. Mobile/Desktop zachowują rzeczywiste wymiary istniejącej infrastruktury.
+
+## Preset, demo i pełny przykład W4
+
+Preset jest materializowany przez WeddingPresets tylko dla nowego Site. Serwer stosuje początkowy układ/aktywność/warianty/styl/wejście i nadaje świeże ID. Puste dane osobowe i listy nie korzystają z demo lub prywatnych attachmentId; późniejsza zmiana definicji nie modyfikuje istniejących projektów. Nie ma Apply preset na istniejącym projekcie.
+
+Demo administracyjne: /app/sites/new?demo=modern-editorial. Wspólny iframe/renderer, opcje hero/paleta/fonty/wejście, Mobile/Desktop i Replay; widoczne oznaczenie fikcyjnej demonstracji, bez Site i bez odpowiedzi RSVP. Źródłowe fotografie Eugenii Remark z Pexels są lokalnymi assetami, z dokumentacją autora/licencji i bez hotlinkowania. Pokazane osoby i miejsca nie są fikcyjnymi bohaterami/lokalizacjami.
+
+Na dodatkowe zlecenie utworzono osobny, wypełniony Site 12: Olivia & James, split/Ivory & Ink/Cormorant + Manrope/reveal. Wszystkie sekcje są uzupełnione, contact wyłączone z zachowanymi bezpiecznymi danymi example.com. Pozostała kolejność: hero → invitation → story → venues → schedule → guest-info → travel → gallery → gifts → faq → countdown → rsvp → footer. Uroczystość 17 lipca 2027, 15:00 Europe/London, fikcyjne miejsca koło Bath. Wybór kolejności akcentuje osobiste zaproszenie, opowieść, logistykę, fotografie i spokojne zakończenie. To zamierzona kompozycja, nie potwierdzona oględzinami.
+
+Projekt przygotowuje idempotentna komenda wp microsite wedding-example --user=radek w LocalWP Open site shell. Używa wspólnego zapisu/walidacji oraz jawnego importu zarejestrowanych zdjęć przez MediaService; nie SQL INSERT ani prywatnych plików klienta. Bez --force istniejący oznaczony przykład pozostaje nietknięty. Szczegóły i linki: docs/WEDDING.md. Nie odblokowano publikacji.
+
+## Zakres kontroli
+
+W4 obejmuje tylko php -l, TypeScript i zgodność kontraktów; schemat W1 nie został zmieniony. Utworzenie Site 12 i import zdjęć są operacją przygotowania danych na wyraźne zlecenie, nie testem UI. Nie uruchomiono przeglądarki, screenshotów, testów integracyjnych ani builda. Runtime, animacje, wygląd i responsywność nie zostały zweryfikowane.

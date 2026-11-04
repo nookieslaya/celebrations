@@ -1,72 +1,105 @@
 import { useId } from "react";
-import schema from "../../../../contracts/wedding.v1.json";
 import type { WeddingDraft } from "../../generated/drafts";
-import {
-  fontPairLabels,
-  paletteLabels,
-} from "../../renderers/wedding-modern-editorial/style";
+import type { WeddingOptions, WeddingOption } from "./development";
+
+function OptionField<Id extends string>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: WeddingOption<Id>[];
+  value: Id;
+  onChange: (id: Id) => void;
+}) {
+  const id = useId();
+  const chosen = options.find((option) => option.id === value);
+  return (
+    <div className="wedding-field">
+      <label htmlFor={id}>{label}</label>
+      <select
+        id={id}
+        value={value}
+        aria-describedby={`${id}-description`}
+        onChange={(event) => {
+          const option = options.find(
+            (candidate) => candidate.id === event.target.value,
+          );
+          if (option) {
+            onChange(option.id);
+          }
+        }}
+      >
+        {options.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.name}
+          </option>
+        ))}
+      </select>
+      <p className="field-help" id={`${id}-description`}>
+        {chosen?.description}
+      </p>
+    </div>
+  );
+}
 
 export function AppearanceFields({
   value,
   onChange,
+  options,
 }: {
   value: WeddingDraft;
   onChange: (draft: WeddingDraft) => void;
+  options: WeddingOptions;
 }) {
-  const id = useId();
+  const hero = value.sections.find((section) => section.type === "hero");
   return (
     <section aria-label="Appearance">
       <h2>Appearance</h2>
       <p>
-        Modern Editorial · Development preview only. Save the draft to view your
-        choices.
+        Modern Editorial · Development preview only. Changes remain private
+        until you save.
       </p>
-      <label htmlFor={`${id}-palette`}>Palette</label>
-      <select
-        id={`${id}-palette`}
+      {hero && (
+        <OptionField
+          label="Hero composition"
+          options={options.heroVariants}
+          value={hero.variant}
+          onChange={(variant) =>
+            onChange({
+              ...value,
+              sections: value.sections.map((section) =>
+                section.id === hero.id && section.type === "hero"
+                  ? { ...section, variant }
+                  : section,
+              ),
+            })
+          }
+        />
+      )}
+      <OptionField
+        label="Palette"
+        options={options.palettes}
         value={value.appearance.palette}
-        onChange={(event) =>
-          onChange({
-            ...value,
-            appearance: {
-              ...value.appearance,
-              palette: event.target
-                .value as WeddingDraft["appearance"]["palette"],
-            },
-          })
+        onChange={(palette) =>
+          onChange({ ...value, appearance: { ...value.appearance, palette } })
         }
-      >
-        {schema.properties.appearance.properties.palette.enum.map((palette) => (
-          <option key={palette} value={palette}>
-            {paletteLabels[palette as WeddingDraft["appearance"]["palette"]]}
-          </option>
-        ))}
-      </select>
-      <label htmlFor={`${id}-font`}>Font pair</label>
-      <select
-        id={`${id}-font`}
+      />
+      <OptionField
+        label="Font pair"
+        options={options.fontPairs}
         value={value.appearance.fontPair}
-        onChange={(event) =>
-          onChange({
-            ...value,
-            appearance: {
-              ...value.appearance,
-              fontPair: event.target
-                .value as WeddingDraft["appearance"]["fontPair"],
-            },
-          })
+        onChange={(fontPair) =>
+          onChange({ ...value, appearance: { ...value.appearance, fontPair } })
         }
-      >
-        {schema.properties.appearance.properties.fontPair.enum.map((pair) => (
-          <option key={pair} value={pair}>
-            {fontPairLabels[pair as WeddingDraft["appearance"]["fontPair"]]}
-          </option>
-        ))}
-      </select>
-      <p className="field-help">
-        Saved entrance: {value.entrance.variant}. Animated entrances will be
-        available in W4.
-      </p>
+      />
+      <OptionField
+        label="Opening"
+        options={options.entrances}
+        value={value.entrance.variant}
+        onChange={(variant) => onChange({ ...value, entrance: { variant } })}
+      />
     </section>
   );
 }

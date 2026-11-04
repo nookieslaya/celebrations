@@ -16,31 +16,30 @@ final class RsvpConfig {
             return $draft;
         }
 
-        $configuration = $draft['content']['rsvp'];
-
-        if ( '' === $configuration['deadlineLocal'] ) {
-            $draft['content']['rsvp']['deadlineAt'] = '';
-            return $draft;
+        $configuration = self::normalise_configuration( $draft['content']['event'], $draft['content']['rsvp'] );
+        if ( is_wp_error( $configuration ) ) {
+            return $configuration;
         }
+        $draft['content']['rsvp'] = $configuration;
+        return $draft;
+    }
 
-        // Reuse the event's existing calendar, IANA and DST validation.
-        $deadline = $draft;
-        $deadline['content']['event']['localDateTime'] = $configuration['deadlineLocal'];
-        $deadline = EventDate::normalise( $deadline );
-
+    public static function normalise_configuration( array $event, array $configuration, bool $allow_incomplete = false ): array|WP_Error {
+        if ( '' === $configuration['deadlineLocal'] ) {
+            $configuration['deadlineAt'] = '';
+            return $configuration;
+        }
+        $deadline = EventDate::normalise( array( 'content' => array( 'event' => array_replace( $event, array( 'localDateTime' => $configuration['deadlineLocal'] ) ) ) ) );
         if ( is_wp_error( $deadline ) ) {
             return self::invalid( $deadline->get_error_message() );
         }
-
         $deadline_at = $deadline['content']['event']['startsAt'];
-        $starts_at = $draft['content']['event']['startsAt'];
-
-        if ( '' === $starts_at || strcmp( $deadline_at, $starts_at ) > 0 ) {
+        $starts_at = $event['startsAt'];
+        if ( ( '' === $starts_at && ! $allow_incomplete ) || ( '' !== $starts_at && strcmp( $deadline_at, $starts_at ) > 0 ) ) {
             return self::invalid( 'The RSVP deadline must be on or before the event starts. Complete the event date first.' );
         }
-
-        $draft['content']['rsvp']['deadlineAt'] = $deadline_at;
-        return $draft;
+        $configuration['deadlineAt'] = $deadline_at;
+        return $configuration;
     }
 
     private static function invalid( string $message ): WP_Error {

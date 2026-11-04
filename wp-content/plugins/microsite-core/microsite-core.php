@@ -21,6 +21,9 @@ register_deactivation_hook( __FILE__, array( App::class, 'deactivate' ) );
 
 require_once __DIR__ . '/includes/class-event-date.php';
 require_once __DIR__ . '/includes/class-rsvp-config.php';
+require_once __DIR__ . '/includes/class-rsvp-context.php';
+require_once __DIR__ . '/includes/class-wedding-readiness.php';
+require_once __DIR__ . '/includes/class-site-presentation.php';
 require_once __DIR__ . '/includes/class-project-lock.php';
 require_once __DIR__ . '/includes/class-rsvp-database.php';
 require_once __DIR__ . '/includes/class-rsvp-service.php';
@@ -29,6 +32,10 @@ require_once __DIR__ . '/includes/class-preview-access.php';
 require_once __DIR__ . '/includes/class-wedding-config.php';
 require_once __DIR__ . '/includes/class-wedding-sections.php';
 require_once __DIR__ . '/includes/class-catalog.php';
+require_once __DIR__ . '/includes/class-wedding-presets.php';
+require_once __DIR__ . '/includes/class-wedding-demo.php';
+require_once __DIR__ . '/includes/class-wedding-controller.php';
+require_once __DIR__ . '/includes/class-wedding-example.php';
 require_once __DIR__ . '/includes/class-site-type.php';
 require_once __DIR__ . '/includes/class-permissions.php';
 require_once __DIR__ . '/includes/class-site-validator.php';
@@ -67,6 +74,7 @@ function boot_backend(): void {
     $repository = new SiteRepository();
     $validator = new SiteValidator( $catalog );
     $service = new SiteService( $repository, $validator, $permissions );
+    add_action( 'rest_api_init', array( new WeddingController( $catalog, $validator ), 'register_routes' ) );
     $controller = new SitesController( $catalog, $service, $permissions );
     add_action( 'rest_api_init', array( new MediaController(), 'register_routes' ) );
     add_filter( 'rest_attachment_query', array( MediaService::class, 'exclude_from_core_rest' ) );
@@ -82,6 +90,7 @@ function boot_backend(): void {
     add_action( 'template_redirect', array( new PublicPage( $publication ), 'render' ), -2 );
 
     if ( defined( 'WP_CLI' ) && WP_CLI ) {
+        \WP_CLI::add_command( 'microsite wedding-example', array( new WeddingExample( $service ), 'run' ) );
         \WP_CLI::add_command( 'microsite publication-right', function ( array $args ) use ( $publication ): void {
             if ( count( $args ) !== 2 || ! ctype_digit( $args[0] ) || ! in_array( $args[1], array( 'grant', 'revoke' ), true ) ) {
                 \WP_CLI::error( 'Usage: wp microsite publication-right <project-id> grant|revoke --user=<administrator>' );

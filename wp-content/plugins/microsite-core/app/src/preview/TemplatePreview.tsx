@@ -1,6 +1,7 @@
 import { Component, Suspense, type ReactNode } from "react";
 import { getRenderer } from "../renderers/registry";
 import { InvitationLoader } from "../components/InvitationLoader";
+import { rsvpConfiguration } from "../rsvp/configuration";
 import { PreviewRsvp } from "./PreviewRsvp";
 import type { PreviewUpdate } from "./protocol";
 
@@ -30,11 +31,10 @@ export function TemplatePreview({ document, context }: PreviewUpdate) {
   }
   const Renderer = definition.Component;
   const value = document.draft;
-  const configuration =
-    "rsvp" in value.content ? value.content.rsvp : undefined;
+  const configuration = rsvpConfiguration(document.siteType, value);
   const rsvp =
-    definition.supportsRsvp && configuration?.enabled ? (
-      <PreviewRsvp maximum={configuration.maxPartySize} />
+    definition.supportsRsvp && configuration.enabled ? (
+      <PreviewRsvp maximum={configuration.maximum} />
     ) : undefined;
   return (
     <PreviewBoundary>

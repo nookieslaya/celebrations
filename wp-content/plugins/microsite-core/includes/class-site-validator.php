@@ -14,7 +14,7 @@ final class SiteValidator {
 
     public function payload( array $payload, bool $creating ): true|WP_Error {
         $allowed = $creating
-            ? array( 'name', 'siteType', 'templateId', 'draft' )
+            ? array( 'name', 'siteType', 'templateId', 'draft', 'presetId' )
             : array( 'name', 'draft' );
 
         foreach ( array_keys( $payload ) as $key ) {
@@ -104,7 +104,10 @@ final class SiteValidator {
             return $selection;
         }
 
-        if ( ! $this->catalog->is_available( $selection['type'] ) || ! $this->catalog->is_available( $selection['template'] ) ) {
+        $administrative = ! empty( $selection['type']['administrativePublication'] )
+            && ! empty( $selection['template']['administrativePublication'] )
+            && ! empty( $selection['template']['rendererImplemented'] );
+        if ( ! $administrative && ( ! $this->catalog->is_available( $selection['type'] ) || ! $this->catalog->is_available( $selection['template'] ) ) ) {
             return new WP_Error( 'microsite_type_unavailable', 'This site type has no production renderer and cannot be published.', array( 'status' => 403 ) );
         }
 
@@ -118,6 +121,11 @@ final class SiteValidator {
 
         if ( is_wp_error( $draft ) ) {
             return $draft;
+        }
+
+        if ( 'wedding' === $record['siteType'] ) {
+            $post = $normalise && isset( $record['id'] ) ? get_post( $record['id'] ) : null;
+            return WeddingReadiness::check( $draft, $post ? (int) $post->post_author : null );
         }
 
         $fields = array();

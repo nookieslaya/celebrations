@@ -3,7 +3,7 @@ import { ApiError } from "../../api/client";
 import { useSession } from "../../auth/SessionProvider";
 import { ErrorNotice } from "../../components/Async";
 import { appBase } from "../../config";
-import { useRouter } from "../../routing/Router";
+import { Link, useRouter } from "../../routing/Router";
 
 export function DevelopmentWedding() {
   const { api, session } = useSession();
@@ -31,6 +31,7 @@ export function DevelopmentWedding() {
         name: name.trim(),
         siteType: "wedding",
         templateId: "modern-editorial",
+        presetId: "modern-editorial",
       });
       navigate(`${appBase}/sites/${site.id}`);
     } catch (failure) {
@@ -56,6 +57,14 @@ export function DevelopmentWedding() {
         Create a private development draft. Wedding is hidden from the customer
         gallery and cannot be published.
       </p>
+      <p>
+        <Link
+          className="button"
+          href={`${appBase}/sites/new?demo=modern-editorial`}
+        >
+          View Modern Editorial demo
+        </Link>
+      </p>
       <form onSubmit={(event) => void create(event)}>
         <label htmlFor="development-wedding-name">Project name</label>
         <input
@@ -71,7 +80,7 @@ export function DevelopmentWedding() {
           className="button"
           disabled={busy || uncertain || !name.trim()}
         >
-          {busy ? "Creating…" : "Create development wedding"}
+          {busy ? "Creating…" : "Create from Modern Editorial"}
         </button>
       </form>
       {error !== null && <ErrorNotice error={error} />}

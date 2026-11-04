@@ -84,3 +84,15 @@ export function defaultSection(type: WeddingSection["type"]): WeddingSection {
   // This is the trusted JSON Schema default, never client-provided executable code.
   return { ...structuredClone(defaults), id: stableId() } as WeddingSection;
 }
+
+export function defaultRsvpSettings(): NonNullable<
+  SectionOf<"rsvp">["content"]["settings"]
+> {
+  const defaults = schema.properties.sections.default.find(
+    (section) => section.type === "rsvp",
+  )?.content.settings;
+  if (!defaults) {
+    throw new Error("Missing RSVP settings defaults in wedding schema.");
+  }
+  return structuredClone(defaults);
+}

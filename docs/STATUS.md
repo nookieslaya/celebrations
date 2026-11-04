@@ -195,3 +195,87 @@ Nie uruchamiano przeglądarki, screenshotów, Playwright, testów integracyjnych
 **Runtime, wygląd i responsywność NIE zostały zweryfikowane.** Nie potwierdzono runtime W1/W2, prywatnego HTTP/mediów i fallbacków, cleanupu timera na urządzeniu lub braku regresji birthday/basic. Poprawna składnia i typy nie są takim potwierdzeniem.
 
 Dokumentacja: WEDDING.md, MEDIA.md, styles/modern-editorial.md, THIRD-PARTY-ASSETS.md oraz fonts/README.md i provenance.json. Następny krok W4 na osobne zlecenie: wejścia, pełna integracja podglądu, demo i presety. Zatrzymano się na W3.
+
+## Wedding W4 — wejścia, live preview, demo i preset — 2026-11-03
+
+Zakończono implementację W4 bez odblokowania wedding dla klientów lub publikacji. Appearance pobiera nazwy/opisy/opcje z chronionego rejestru backendu: trzy hero, trzy palety, trzy pary fontów i reveal/envelope/typography. Zmiany są lokalne i nie zapisują automatycznie szkicu. Preset jest fabryką wyłącznie nowego projektu, z nowymi ID, pustymi danymi osobowymi/listami i bez prywatnych attachmentId; PATCH nie przyjmuje presetId.
+
+Oddzielna WeddingOpening wykorzystuje istniejący GSAP i jawny rejestr: reveal około 1 s, envelope około 2.6 s, typography około 1.55 s. Projekt przewiduje closed/opening/opened, ochronę wielokrotnego Open, Skip/Escape, kontekst/timeline cleanup, pauzę hidden, inert/focus/scroll restoration, reduced motion bez animacji i fallback po błędzie. Animowane są całe linie Unicode, nie sztuczny podział znaków. Zmiana danych podczas intro kończy animację; Replay nie jest zmianą treści i uruchamia bieżący wariant. Nie ma wspólnego stanu „skipped” dla projektów.
+
+WeddingLivePreview korzysta z tego samego RendererFrame/TemplatePreview/ModernEditorial, domyślnie otwartego, z Mobile/Desktop i Replay. POST sites/{id}/media/resolve jest administracyjną operacją read-only z nonce i prawami projektu, limitem 42 ID/body 2 MB oraz autoryzacją właściciela. Zwraca ograniczone media i opcjonalnie znormalizowany przez istniejący EventDate draft. UI stosuje debounce 180 ms, abort/sequence/klucz wyboru i kopiuje jedynie aktualne potwierdzone terminy, nie starą treść. Nie wysyła per-image requestów z renderera. Saved preview pozostaje osobną operacją.
+
+Demo administracyjne jest na /app/sites/new?demo=modern-editorial. Używa istniejącego mechanizmu demo/iframe i tego samego renderera, pozwala wybierać opcje i Replay, nie tworzy Site i nie zapisuje odpowiedzi. Fixture PHP jest osobna od pustych defaults. Publiczny katalog nie ujawnia wedding; prywatne dane, media i demo mają serwerowe ograniczenia development. Aktywne RSVP/publikacja/płatności pozostają poza W4.
+
+### Jawnie zlecone przygotowanie danych
+
+Utworzono przez SiteService i jego pełną walidację **Site 12 — Modern Editorial — Olivia & James**, właściciel: istniejący administrator radek (ID 1). Wybrano split / Ivory & Ink / Cormorant Garamond + Manrope / reveal. Termin: 17 lipca 2027 o 15:00 Europe/London, UTC ustalone przez normalizer. Wszystkie 14 sekcji ma oryginalne treści angielskie; contact wyłączone z zachowaniem danych example.com. Miejsca są fikcyjne, bez rezerwacji i partnerstw.
+
+Zaimportowano trzy lokalne zdjęcia Eugenii Remark z Pexels przez wspólny MediaService/WordPress Media Library, z kontrolą formatów, limitów, autora i markera modułu; przypisano do właściciela, zachowano pochodzenie/licencję i alt per użycie. Import jest ograniczony do WP-CLI administratora i zaufanych kluczy, nie dowolnych ścieżek/URL. Nie zastępuje normalnego uploadu i nie kopiuje zdjęć do zwykłych pustych presetów. Źródła/atrybucja/SHA: assets/wedding-demo/README.md i sources.json, THIRD-PARTY-ASSETS.md. Zdjęć nie oglądano w ramach testu wizualnego.
+
+- Edytor: http://celebrations.local/app/sites/12
+- Prywatny podgląd: http://celebrations.local/app/sites/12/preview
+- Demo: http://celebrations.local/app/sites/new?demo=modern-editorial
+- Powtórne przygotowanie w LocalWP Open site shell: `wp microsite wedding-example --user=radek`. Zwykłe uruchomienie nie nadpisuje oznaczonego przykładu; `--force` jawnie zastępuje jego nazwę i cały draft. Nie uruchamiano drugiego przebiegu/force jako testu.
+
+Komenda zakończyła się sukcesem. To operacja przygotowania danych, **nie test runtime/UI/animacji**. Nie zmieniono innych istniejących projektów, rejestracji, motywu, praw publikacji ani snapshotów. Nie resetowano żadnej bazy i nie tworzono bazy testowej. Uploady/derywaty pozostają ignorowanymi danymi WP, nie źródłami w Git.
+
+### Kontrole uzgodnione na W4
+
+- php -l — PASS dla 10 nowych/zmienionych PHP: microsite-core.php, data/wedding-demo.php, class-media-service.php, class-site-service.php, class-site-validator.php, class-wedding-sections.php, class-wedding-controller.php, class-wedding-presets.php, class-wedding-demo.php i class-wedding-example.php. PHP z konfiguracji LocalWP Open site shell.
+- npx tsc --noEmit — PASS po zmianach; bez produkcyjnego builda.
+- npm run contracts:check — PASS; wygenerowane kontrakty aktualne.
+- Kontrola zmienionych JSON Schema — nie dotyczy: nie zmieniano kontraktu W1 lub innych schematów. Nowy sources.json to dokumentacja assetów, nie kontrakt danych klienta.
+
+Sprawdzono oficjalną dokumentację GSAP context/timeline/revert/pause oraz konkretne strony zdjęć i licencję Pexels. Nie instalowano nowej biblioteki animacji. Nie uruchamiano przeglądarki, screenshotów, Playwright, testów integracyjnych, regresji, lint/verify/build ani pomiarów. Nie dodano zestawu testów, nie restartowano istniejącego Vite, nie wykonano paczki, commit/push ani wdrożenia. Istniejący packager wymaga przed przyszłym wydaniem dołączenia JPEG demo i nowych licencji/font notices; starsze paczki nie zawierają W4.
+
+**Runtime, animacje, wygląd i responsywność nie zostały zweryfikowane.** Nie sprawdzano HTTP/wyścigów/klawiatury/StrictMode/HMR/reduced motion w przeglądarce, faktycznego cleanupu lub idempotencji w drugim przebiegu ani regresji pozostałych typów. Składnia/typy oraz jednorazowe przygotowanie danych nie są takim potwierdzeniem.
+
+Zaktualizowano WEDDING.md, MEDIA.md, specyfikację stylu i dokumentację źródeł/licencji. Następny krok: W5 na osobne zlecenie — adapter istniejącego RSVP i gotowość publikacji/pełny przepływ. Zakończono na W4.
+
+
+## Wedding W5 — 2026-11-04
+
+Zaimplementowano adapter współdzielonego RSVP, opcjonalne ustawienia sekcji z kompatybilnością starych danych, edytor, prawdziwy publiczny formularz i istniejący panel odpowiedzi. Jedna odpowiedź obejmuje całą uroczystość. WeddingReadiness jest częścią wspólnej walidacji publikacji; stabilne ścieżki otwierają sekcje edytora. Wedding/modern-editorial pozostają development i ukryte dla klientów. Jawne administrativePublication pozwala administratorowi z capabilities, dostępem i prawem projektu świadomie publikować. Snapshot obejmuje sections/entrance; publiczne metadata/media korzystają ze snapshotu, bez biblioteki i wyłączonych treści.
+
+Pierwotny załącznik ograniczał W5 do kontroli statycznych. Bieżąca dodatkowa prośba użytkownika „a pozniej zweryfikuj Runtime, animacje, wygląd i responsywność” rozszerzyła zakres o poniższe ukierunkowane sprawdzenie. Nie deklarujemy pełnej regresji W6.
+
+### Wykonane kontrole
+
+- PASS — php -l 13 plików W5: microsite-core.php; class-rsvp-config/context/service; class-wedding-config/readiness/demo; class-site-presentation/validator; class-catalog/publication/public-page; data/wedding-demo.php. PHP w środowisku LocalWP.
+- PASS — wedding.v1.json: jsonschema Draft4Validator.check_schema; generowane kontrakty aktualne (contracts:generate/check).
+- PASS — npx tsc --noEmit, npm run lint, npm run build. Publiczny renderer testowano z manifestu, bez klienta Vite w dokumencie. Istniejącego Vite nie restartowano.
+- PASS — 11 istniejących grup RSVP (realne sesje HTTP WordPress i Chromium): kompatybilność urodzin, daty/DST, walidacja, Origin, idempotencja/concurrency, sekrety, właściciel, deadline, wyłączenie/wycofanie/usuwanie, rate limits i formularz/panel. Pierwszy przebieg zatrzymał się na 403 w teście zmieniającym tymczasowy WP_HOME; kolejny ukończył wszystkie 11 grup. Nie uznajemy pierwszej próby za PASS ani problemu za trwale naprawiony.
+- PASS — 6 ukierunkowanych grup wedding na istniejącej chronionej bazie microsite_test_430601248a09bf6c: ukryty katalog i odmowa klientowi; niepełny preset i starsze RSVP; publikacja administracyjna syntetycznego projektu; anonimowy snapshot/metadata/media; zapis i idempotentny replay; niezależny szkic; wyłączenie/wycofanie i usuwanie przez sekret; deadline/DST; odmowa cudzych mediów; kompatybilność basic-page.
+- PASS — publiczny formularz wedding w Chromium: wysłanie, sukces, prywatny link zarządzania i suma w panelu. Wyłącznie syntetyczne dane izolowanej bazy.
+- PASS — live editor zmienia imię w iframe bez zapisu; envelope closed/opening/opened, inert, Open/Skip/Replay i usunięcie overlay; typography/reveal Replay; przywrócone przewijanie; demo; reduced motion; brak pageerror. Pierwsza próba UI miała błędny locator Email, poprawiono tymczasowy scenariusz na Email address; po poprawce ukończono 6 grup.
+- PASS — ukierunkowany wygląd/responsywność Chromium 1440×1000 i 390×844: zdjęcie hero ładuje się, brak poziomego overflow; obejrzano screenshoty hero i RSVP obu szerokości oraz kopertę w edytorze. Pola i tekst mieszczą się, typografia/paleta są spójne. Dotyczy jednego zestawu split/Ivory & Ink/editorial-serif, nie wszystkich kombinacji.
+- PASS — odczyt stanu LocalWP Site 12 po kontroli: owner 1, published=false, brak prawa publikacji. Nie nadano prawa, nie opublikowano ani nie nadpisano szkicu.
+
+Runner korzystał z zabezpieczeń istniejącego run-integration: różna DB_NAME, marker projektu, prefiks ms_test_, lock i tymczasowy wp-config. Nie utworzono kolejnej bazy i nie zmieniono wp-config.php strony. Osieroconą blokadę usunięto dopiero po potwierdzeniu braku zapisanego PID. Tymczasowy runner służył jednorazowej kontroli; nie dodano stałej suity. Zrzuty pozostają ignorowane w app/test-results/wedding-w5. Wbudowane połączenie przeglądarkowe było niedostępne, użyto istniejącego lokalnego Chromium/Playwright. Serwer i konfigurację posprzątano; baza pozostała do ponownego użycia.
+
+Oględziny wykryły nieaktualny tekst W4 nad prawdziwym formularzem, mówiący o braku zapisu. Poprawiono źródłową fixture i ponownie sprawdzono ślubny przepływ. Istniejący przykład 12 celowo zachowuje dawny tekst oraz brak settings — przed publikacją administrator musi poprawić tekst i włączyć skonfigurowane RSVP albo wyłączyć sekcję. Nie uruchamiać --force dla tej korekty, bo nadpisuje cały draft.
+
+### Ograniczenia i następny krok
+
+Nie sprawdzano rzeczywistych urządzeń, Safari/Firefox, całej macierzy wariantów, każdej sekcji przy każdej szerokości, wydajności, długiego działania, wyścigów StrictMode/HMR ani hostingu produkcyjnego/staging. Nie wykonano pełnej regresji kont/bezpieczeństwa innych modułów. Widoki testowe nie potwierdzają wyglądu zmodyfikowanego ręcznie Site 12. Pierwszy błąd testu Origin pozostaje obserwacją do ustabilizowania w W6. PHPCS/CI pozostają długiem. Nie przygotowano paczki; packager wymaga assetów W4 przed wydaniem. Nie wykonano commit/push.
+
+Edytor: http://celebrations.local/app/sites/12. Odpowiedzi: http://celebrations.local/app/sites/12/responses. Przykład nie ma publicznego linku, bo jest nieopublikowany. Procedura publikacji: docs/WEDDING.md i docs/PUBLICATION.md. Zakończono W5; W6 wymaga osobnego zlecenia.
+
+
+## Ergonomia edytora — 2026-11-04
+
+Wspólny EditorView otwiera teraz pełny obszar roboczy bez stałej kolumny podglądu. Na trasie edycji ukryto globalny sidebar 250 px, usunięto limit main 1100 px i zmniejszono odstępy powłoki. Pola mają adekwatne limity: zwykłe input/select do 40rem, textarea do 56rem, liczby/terminy do 22rem. Pozostają kolory i typografia panelu.
+
+Pasek projektu grupuje Back to projects, nazwę, stan, Preview i Save changes. Korzysta z istniejącego zapisu i jego blokad. Stany: Unsaved changes, Saving, Saved po odpowiedzi backendu, Save failed; początkowy odczyt pokazuje No unsaved changes. Kreator urodzinowy zachowuje kroki i Save & continue z tą samą operacją zapisu.
+
+Wedding ma zwijaną nawigację danych wspólnych, sekcji po stabilnych ID i Appearance. Widoczne są aktualny wybór i On/Off. Enabled i Move up/down znajdują się przy wybranej sekcji. Na węższym ekranie Sections otwiera listę; wybór zamyka ją i oddaje focus formularzowi. Błędy gotowości nadal wybierają właściwy obszar.
+
+Preview jest lokalnym trybem tego samego workspace, bez nawigacji, zapisu lub publikacji. Montuje rzeczywiste iframe dopiero po kliknięciu, z bieżącymi danymi; wedding wtedy rozwiązuje media i terminy. Mobile/Desktop zmieniają rzeczywisty viewport istniejącego iframe; live intro jest początkowo pominięte, Replay pozostaje świadomy. Preview RSVP jest demonstracyjne. Back to editing odmontowuje iframe wraz z zasobami renderera, przywraca zapisane scrollX/Y oraz focus na Preview. Nadrzędny formularz pozostaje zamontowany, co zachowuje draft, wybrany krok/sekcję i walidację. Nie zmieniano protokołu postMessage, uprawnień, kluczy projektu/sesji ani ochrony opuszczania edytora. Preview saved draft zachowano osobno.
+
+Kontrole na bieżące zlecenie:
+
+- PASS — istniejący typecheck: npx tsc --noEmit po końcowych zmianach TypeScript.
+- PHP i kontrakty — nie zmieniano; php -l i contracts:check nie uruchamiano.
+- Nie uruchamiano builda, lint, przeglądarki, screenshotów, Playwright ani testów integracyjnych. Nie dodano zestawu testów.
+
+Runtime, faktyczne zachowanie focusu/scrolla, wygląd, responsywność i cleanup nowego workspace nie były sprawdzane w przeglądarce. Wyniki wcześniejszego W5 nie stanowią weryfikacji tej korekty. Nie zmieniano danych projektów/bazy ani istniejącego Vite. Nie wykonano commit/push. Plan W1–W6 pozostaje bez zmian; zakończono korektę ergonomii, W6 nadal na osobne zlecenie.

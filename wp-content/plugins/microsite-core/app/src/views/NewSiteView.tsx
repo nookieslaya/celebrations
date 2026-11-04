@@ -1,3 +1,4 @@
+import { WeddingDemoView } from "../editors/wedding/WeddingDemoView";
 import { useCallback, useRef, useState, type FormEvent } from "react";
 import { ApiError, type SiteTypeId } from "../api/client";
 import { useSession } from "../auth/SessionProvider";
@@ -96,6 +97,13 @@ export function NewSiteView() {
         setBusy(false);
       }
     }
+  }
+
+  if (
+    query.get("demo") === "modern-editorial" &&
+    session.user?.canDevelopWedding
+  ) {
+    return <WeddingDemoView />;
   }
 
   if (catalog.loading) {

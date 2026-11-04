@@ -24,15 +24,15 @@ final class RsvpService {
 
     public function status( string $public_id ): array {
         $snapshot = $this->publication->public_snapshot( $public_id );
-        $supported = $snapshot && in_array( 'rsvp', $this->catalog->type( $snapshot['siteType'] )['features'], true );
-        $configuration = $supported ? ( $snapshot['content']['rsvp'] ?? null ) : null;
-        $enabled = $configuration && $configuration['enabled'];
-        $event = $snapshot['content']['event'] ?? null;
+        $context = RsvpContext::resolve( $snapshot );
+        $configuration = $context['configuration'];
+        $enabled = $context['enabled'];
+        $event = $context['event'];
         $starts = $event ? strtotime( $event['startsAt'] ) : false;
         $deadline = ! empty( $configuration['deadlineAt'] ) ? strtotime( $configuration['deadlineAt'] ) : $starts;
         $open = $enabled && $starts && $deadline && self::now() < min( $starts, $deadline );
 
-        return array(
+        $status = array(
             'enabled' => (bool) $enabled,
             'open' => (bool) $open,
             'reason' => $open ? null : ( $enabled ? 'RSVP is closed.' : 'RSVP is unavailable.' ),
@@ -40,6 +40,10 @@ final class RsvpService {
             'deadlineAt' => $enabled ? ( $configuration['deadlineAt'] ?: $event['startsAt'] ) : null,
             'timeZone' => $enabled ? $event['timeZone'] : null,
         );
+        if ( null !== $context['eventName'] ) {
+            $status['eventName'] = $context['eventName'];
+        }
+        return $status;
     }
 
     public function create( string $public_id, array $payload, string $secret, string $key ): array|WP_Error {

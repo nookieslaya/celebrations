@@ -1,0 +1,161 @@
+/* Workspace sizing belongs to the shared editor, independent of site type. */
+.layout-editor > aside {
+  display: none;
+}
+
+.layout-editor > .content {
+  width: 100%;
+  margin-left: 0;
+}
+
+.layout-editor > .content > header {
+  height: 48px;
+  padding-inline: 24px;
+}
+
+.layout-editor > .content > main {
+  width: 100%;
+  max-width: none;
+  padding: 0 24px 24px;
+}
+
+.layout-editor > .content > footer {
+  display: none;
+}
+
+.editor-workspace {
+  min-height: calc(100svh - 48px);
+}
+
+.editor-workspace [hidden] {
+  display: none !important;
+}
+
+.editor-action-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-block: 12px;
+  background: #fafbf8;
+  border-bottom: 1px solid #e0e7d8;
+}
+
+.editor-action-bar h1 {
+  flex: 1 1 12rem;
+  min-width: 0;
+  margin: 0;
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+
+.editor-save-state {
+  font-size: 12px;
+  color: #52694f;
+}
+
+.editor-workspace .editor-layout {
+  display: block;
+  margin-top: 20px;
+}
+
+.editor-fields-panel {
+  padding: 20px;
+  min-height: calc(100svh - 200px);
+}
+
+.editor-fields-panel input:not([type="checkbox"]):not([type="radio"]),
+.editor-fields-panel select {
+  max-width: 40rem;
+}
+
+.editor-fields-panel textarea {
+  max-width: 56rem;
+}
+
+.editor-fields-panel input[type="number"],
+.editor-fields-panel input[type="datetime-local"] {
+  max-width: 22rem;
+}
+
+.editor-secondary-actions {
+  margin-top: 20px;
+}
+
+.editor-secondary-actions > .button {
+  margin: 0 10px 10px 0;
+}
+
+.editor-preview-workspace {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  overflow: auto;
+  background: #edf0e9;
+  padding: 0 20px 20px;
+}
+
+.layout-editor:has(.editor-workspace[data-mode="preview"]) > .content > header {
+  display: none;
+}
+
+.editor-preview-heading {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-block: 10px;
+  background: #edf0e9;
+}
+
+.editor-preview-heading p {
+  margin: 0;
+  font-size: 12px;
+}
+
+.editor-preview-workspace .live-preview-panel {
+  position: static;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+}
+
+.editor-preview-workspace .live-preview-label {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .layout-editor > .content > main {
+    padding-inline: 12px;
+  }
+
+  .editor-action-bar {
+    position: static;
+    gap: 10px;
+  }
+
+  .editor-action-bar h1 {
+    flex-basis: calc(100% - 12rem);
+    font-size: 20px;
+  }
+
+  .editor-action-bar .editor-save-state {
+    margin-right: auto;
+  }
+
+  .editor-fields-panel {
+    padding: 16px;
+  }
+
+  .editor-preview-workspace {
+    padding-inline: 10px;
+  }
+}

@@ -152,7 +152,9 @@ function Workspace() {
   }
 
   return (
-    <div className="layout">
+    <div
+      className={`layout${session.user && editorMatch ? " layout-editor" : ""}`}
+    >
       <aside>
         <Link className="brand" href={`${appBase}/sites`}>
           <span className="brand-icon">✳</span>

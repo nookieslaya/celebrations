@@ -188,7 +188,6 @@ export function isPreviewUpdate(value: unknown): value is PreviewUpdate {
   }
   if (document.siteType === "wedding") {
     if (
-      context.mode !== "saved" ||
       !Array.isArray(document.previewMedia) ||
       document.previewMedia.length > 42 ||
       !document.previewMedia.every(isMediaAsset)

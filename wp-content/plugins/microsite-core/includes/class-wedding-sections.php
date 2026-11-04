@@ -57,6 +57,34 @@ final class WeddingSections {
         return $definitions;
     }
 
+    public static function editor_options( array $schema ): array {
+        $labels = array(
+            'photo-full' => array( 'Full photograph', 'Names and date over a large photograph.' ),
+            'split' => array( 'Split composition', 'A photograph beside spacious editorial typography.' ),
+            'typography' => array( 'Typography', 'Names, a fine line and a quiet typographic composition.' ),
+            'ivory-ink' => array( 'Ivory & Ink', 'Warm ivory with ink-black type and muted brass accents.' ),
+            'sage-linen' => array( 'Sage & Linen', 'Soft linen with deep green type.' ),
+            'rose-stone' => array( 'Rose & Cocoa', 'Pale rose with warm cocoa type.' ),
+            'editorial-serif' => array( 'Cormorant Garamond + Manrope', 'Expressive serif with a clean everyday sans.' ),
+            'modern-romantic' => array( 'Libre Baskerville + Source Sans 3', 'Quiet book typography with a humanist sans.' ),
+            'timeless-classic' => array( 'Playfair Display + Inter', 'Classic contrast with a precise modern sans.' ),
+            'reveal' => array( 'Quiet reveal', 'A gentle, automatic reveal in about one second.' ),
+            'envelope' => array( 'An invitation to open', 'A layered envelope with Open invitation and Skip intro.' ),
+        );
+        $options = static function ( array $ids ) use ( $labels ): array {
+            return array_map( static function ( string $id ) use ( $labels ): array {
+                return array( 'id' => $id, 'name' => $labels[ $id ][0], 'description' => $labels[ $id ][1] );
+            }, $ids );
+        };
+        $hero = self::definitions( $schema )['hero'];
+        return array(
+            'heroVariants' => $options( array_column( $hero['variants'], 'id' ) ),
+            'palettes' => $options( $schema['properties']['appearance']['properties']['palette']['enum'] ),
+            'fontPairs' => $options( $schema['properties']['appearance']['properties']['fontPair']['enum'] ),
+            'entrances' => $options( $schema['properties']['entrance']['properties']['variant']['enum'] ),
+        );
+    }
+
     public static function style_registry( array $schema ): array {
         $options = static function ( array $identifiers, bool $implemented ): array {
             return array_map( static function ( string $id ) use ( $implemented ): array {
@@ -67,11 +95,12 @@ final class WeddingSections {
         return array(
             'palettes' => $options( $schema['properties']['appearance']['properties']['palette']['enum'], true ),
             'fontPairs' => $options( $schema['properties']['appearance']['properties']['fontPair']['enum'], true ),
-            'entrances' => $options( $schema['properties']['entrance']['properties']['variant']['enum'], false ),
+            'entrances' => $options( $schema['properties']['entrance']['properties']['variant']['enum'], true ),
             'presets' => array(
                 'modern-editorial' => array(
                     'id' => 'modern-editorial',
                     'name' => 'Modern Editorial',
+                    'description' => 'A fresh editorial page with empty personal details.',
                     'rendererImplemented' => true,
                     'availability' => 'development',
                     'appearance' => Catalog::defaults_from_schema( $schema['properties']['appearance'] ),

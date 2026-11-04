@@ -8,6 +8,7 @@ export interface GuestResponse {
 }
 
 export interface RsvpStatus {
+  eventName?: string;
   enabled: boolean;
   open: boolean;
   reason: string | null;

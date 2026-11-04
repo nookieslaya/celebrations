@@ -260,6 +260,11 @@ export type WeddingDraft = {
       "heading": string;
       "text": string;
       "module": "shared-rsvp";
+      "settings"?: {
+        "maxPartySize": number;
+        "deadlineLocal": string;
+        "deadlineAt": string;
+      };
     };
   } | {
     "id": string;

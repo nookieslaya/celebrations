@@ -37,6 +37,18 @@ final class SiteService {
             return new WP_Error( 'microsite_type_unavailable', 'This site type is in development.', array( 'status' => 403 ) );
         }
 
+        if ( array_key_exists( 'presetId', $payload ) ) {
+            if ( 'wedding' !== $selection['type']['id'] || ! is_string( $payload['presetId'] ) || isset( $payload['draft'] ) ) {
+                return new WP_Error( 'microsite_preset_invalid', 'A wedding preset can initialize a new project without an additional draft.', array( 'status' => 400 ) );
+            }
+            $payload['draft'] = WeddingPresets::create( new Catalog(), $payload['presetId'] );
+            if ( is_wp_error( $payload['draft'] ) ) {
+                return $payload['draft'];
+            }
+        } elseif ( 'wedding' === $selection['type']['id'] && ! array_key_exists( 'draft', $payload ) ) {
+            $payload['draft'] = WeddingPresets::create( new Catalog(), 'modern-editorial' );
+        }
+
         $draft = array_key_exists( 'draft', $payload )
             ? $payload['draft']
             : $selection['type']['defaults'];
@@ -186,7 +198,10 @@ final class SiteService {
     private function accessible_post( int $id ): WP_Post|WP_Error {
         $post = $this->repository->find( $id );
 
-        if ( ! $post || ! $this->permissions->can_access( $post ) ) {
+        $data = $post ? get_post_meta( $post->ID, '_microsite_data', true ) : array();
+        $development_denied = 'wedding' === ( $data['siteType'] ?? '' ) && ! current_user_can( 'manage_options' );
+
+        if ( ! $post || $development_denied || ! $this->permissions->can_access( $post ) ) {
             return new WP_Error(
                 'microsite_not_found',
                 'Project not found.',

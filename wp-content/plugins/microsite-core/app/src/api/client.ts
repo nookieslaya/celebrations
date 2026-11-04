@@ -1,3 +1,5 @@
+import type { WeddingDevelopment } from "../editors/wedding/development";
+import type { WeddingDraft } from "../generated/drafts";
 import type { MediaAsset, MediaList } from "../media/types";
 import type { ResponseList } from "../rsvp/api";
 import type { DraftBySiteType } from "../generated/drafts";
@@ -67,6 +69,7 @@ export interface CreateSite<Type extends SiteTypeId> {
   siteType: Type;
   templateId: string;
   draft?: DraftBySiteType[Type];
+  presetId?: string;
 }
 
 export interface UpdateSite<Type extends SiteTypeId> {
@@ -220,6 +223,27 @@ export function createApiClient(options: ApiClientOptions) {
   }
 
   return {
+    weddingDevelopment: (signal?: AbortSignal) =>
+      request<WeddingDevelopment>(
+        "development/wedding",
+        "GET",
+        undefined,
+        true,
+        signal,
+      ),
+    resolveWeddingMedia: (
+      id: number,
+      ids: number[],
+      draft: WeddingDraft,
+      signal?: AbortSignal,
+    ) =>
+      request<{ media: MediaAsset[]; draft: WeddingDraft | null }>(
+        `sites/${id}/media/resolve`,
+        "POST",
+        { ids, draft },
+        true,
+        signal,
+      ),
     media: (id: number, page = 1, signal?: AbortSignal) =>
       request<MediaList>(
         `sites/${id}/media?page=${page}`,

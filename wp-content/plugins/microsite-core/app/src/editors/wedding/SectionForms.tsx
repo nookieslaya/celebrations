@@ -2,6 +2,7 @@ import { useId } from "react";
 import type { WeddingDraft } from "../../generated/drafts";
 import { MediaPicker } from "../../media/MediaPicker";
 import { TextField } from "./Fields";
+import { WeddingRsvpFields } from "./RsvpFields";
 import { ListSectionFields } from "./ListSectionFields";
 import { textLimit, type WeddingSection } from "./model";
 
@@ -23,21 +24,9 @@ export function SectionForms(props: SectionFormProps) {
             Names and date come from Wedding details. Changing composition
             preserves your photo and text.
           </p>
-          <label htmlFor={`${id}-composition`}>Hero composition</label>
-          <select
-            id={`${id}-composition`}
-            value={section.variant}
-            onChange={(event) =>
-              onChange({
-                ...section,
-                variant: event.target.value as typeof section.variant,
-              })
-            }
-          >
-            <option value="photo-full">Full photograph</option>
-            <option value="split">Split photograph and typography</option>
-            <option value="typography">Typography</option>
-          </select>
+          <p className="field-help">
+            Choose the hero composition in Appearance.
+          </p>
           <TextField
             label="Subtitle"
             limit={textLimit("hero", "subtitle")}
@@ -198,29 +187,11 @@ export function SectionForms(props: SectionFormProps) {
       );
     case "rsvp":
       return (
-        <>
-          <TextField
-            label="Heading"
-            limit={textLimit("rsvp", "heading")}
-            value={section.content.heading}
-            onChange={(heading) =>
-              onChange({ ...section, content: { ...section.content, heading } })
-            }
-          />
-          <TextField
-            label="Introduction"
-            multiline
-            limit={textLimit("rsvp", "text")}
-            value={section.content.text}
-            onChange={(text) =>
-              onChange({ ...section, content: { ...section.content, text } })
-            }
-          />
-          <p className="notice">
-            The shared RSVP module will be connected in W5. No guest responses
-            can be submitted for this development project.
-          </p>
-        </>
+        <WeddingRsvpFields
+          section={section}
+          timeZone={draft.content.event.timeZone}
+          onChange={onChange}
+        />
       );
     case "footer":
       return (

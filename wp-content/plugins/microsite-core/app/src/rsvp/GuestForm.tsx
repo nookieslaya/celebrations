@@ -153,6 +153,12 @@ export function GuestForm({
   return (
     <section className="rsvp-card" aria-labelledby="guest-rsvp-heading">
       <h2 id="guest-rsvp-heading">RSVP</h2>
+      {status?.eventName && (
+        <p>
+          {status.eventName} · One response covers the whole celebration,
+          including the person replying.
+        </p>
+      )}
       {error !== null && (
         <p role="alert" className="rsvp-error">
           {error instanceof Error ? error.message : "RSVP is unavailable."}

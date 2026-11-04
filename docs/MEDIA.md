@@ -66,3 +66,15 @@ GET sites/{id}/preview dla wedding sprawdza dodatkowo manage_options i przygotow
 Rodzic iframe przekazuje tę ograniczoną reprezentację do renderera. Nowy renderer nie wykonuje fetch biblioteki ani requestu dla każdego zdjęcia, nie zna nonce i sesji. Photo wybiera large/medium/full, srcset/sizes i jawne wymiary; hero jest eager, pozostałe obrazy lazy. Błąd img ukrywa zdjęcie lub przełącza hero na typografię. Podgląd używa bieżącej autoryzacji przy każdym odczycie, nie zapisuje URL w draft i nie zmienia snapshotu.
 
 CSP iframe nadal dopuszcza lokalne media tego samego originu. Obsługa offload/CDN, prywatnego storage i podpisanych URL nie została dodana. Kontrola istnienia get_attached_file zakłada standardowy lokalny magazyn WordPressa. Dostępność binarnych uploads przez URL pozostaje jak opisana wyżej. Nie przeprowadzono prób HTTP/mediów w W3; wykonano wyłącznie uzgodnione kontrole statyczne.
+
+## Niezapisane media i przykład W4
+
+Administracyjny POST sites/{id}/media/resolve wymaga aktualnego X-WP-Nonce, manage_options, edit_ms_sites i dostępu do projektu. Przyjmuje ograniczoną listę maks. 42 dodatnich integer ID oraz opcjonalny bieżący draft (body do 2 MB). Zwraca tylko dopuszczone DTO z resolve_ids, nigdy całą bibliotekę. Nie zapisuje Site/snapshotów. Dodatkowy draft może przejść istniejący normalizer, aby potwierdzić UTC niezapisanych terminów; niezgodna konfiguracja daje draft=null, ale nie zatrzymuje niezależnej autoryzacji wybranych zdjęć.
+
+WeddingLivePreview opóźnia batch o 180 ms, abortuje poprzednie żądanie i wiąże wynik z aktualnym zestawem ID/terminów. Stare DTO są filtrowane do bieżącego wyboru, a stary wynik nie zmienia formularza. Z normalizowanej odpowiedzi kopiowane są tylko zgodne terminy; tekst i układ pochodzą zawsze z bieżącego lokalnego stanu. Renderer otrzymuje ograniczone previewMedia, bez API/nonce/sesji. Przy braku rozstrzygnięcia jest dotychczasowy fallback, bez dowolnych URL użytkownika.
+
+MediaService::import_sample jest jedynym nowym sposobem importu pliku bez HTTP uploadu. Dostępny wyłącznie w WP-CLI właściciela-administratora i wyłącznie dla kluczy z WeddingDemo::ASSETS. Nie akceptuje ścieżek/remote URL z żądania. Kopiuje zarejestrowany lokalny JPEG do pliku tymczasowego, przechodzi wspólną kontrolę rozmiaru/wymiarów/MIME/dekodera/limitu i używa media_handle_sideload. Właściciel oraz marker modułu pozostają wymagane; dodane markery pochodzenia/licencji pozwalają ponownie wykorzystać zasób bez duplikowania.
+
+To jawny wyjątek dla dodatkowo zleconego przykładu Olivii i Jamesa, nie automatyczne kopiowanie stockowych zdjęć do zwykłych projektów. Standardowy preset nie ma zdjęć. Źródła: assets/wedding-demo/README.md i sources.json. W tej instalacji komenda przygotowała Site 12 i trzy zdjęcia właściciela radek. Innych projektów/mediów nie nadpisano, kopie uploads i warianty nie są commitowane. Nie wykonywano ponownego przebiegu lub --force jako testu.
+
+Nie sprawdzano endpointów HTTP, wyścigów, cofnięcia praw w trakcie podglądu, animacji ani wyglądu. Przygotowanie przykładowych danych nie zastępuje tych testów. Ograniczenia publicznych URL uploads z W2 pozostają aktualne.

@@ -106,7 +106,7 @@ export const sections: Record<SectionType, SectionDefinition> = {
     "rsvp",
     Rsvp,
     (section, context) =>
-      context.preview || hasText(section.content.heading, section.content.text),
+      Boolean(context.rsvp) || context.preview || hasText(section.content.heading, section.content.text),
   ),
   contact: define("contact", Contact, (section) =>
     section.content.contacts.some(

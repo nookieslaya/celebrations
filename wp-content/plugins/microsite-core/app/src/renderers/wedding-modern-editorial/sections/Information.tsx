@@ -104,10 +104,11 @@ export function Rsvp({ section, context }: SectionProps<"rsvp">) {
       className="me-rsvp-section"
     >
       <Copy text={section.content.text} />
-      {context.preview && (
+      {context.rsvp}
+      {context.preview && !context.rsvp && (
         <p className="me-development-note">
-          RSVP will be connected in W5. This development preview does not
-          collect responses.
+          RSVP is not configured. Enable guest responses in the RSVP section to
+          preview the form. No responses are sent from a private preview.
         </p>
       )}
     </SectionShell>

@@ -1,21 +1,32 @@
-import { useState } from "react";
 import type { WeddingDraft } from "../../generated/drafts";
 import { SectionForms } from "./SectionForms";
-import { defaultSection, sectionNames, type WeddingSection } from "./model";
+import {
+  defaultRsvpSettings,
+  defaultSection,
+  sectionNames,
+  type WeddingSection,
+} from "./model";
 
 export function PageSections({
   projectId,
   value,
   onChange,
+  selectedId,
+  onSelect,
 }: {
+  selectedId: string;
+  onSelect: (id: string) => void;
   projectId: number;
   value: WeddingDraft;
   onChange: (draft: WeddingDraft) => void;
 }) {
-  const [selectedId, setSelectedId] = useState(value.sections[0]?.id);
   const selected =
     value.sections.find((section) => section.id === selectedId) ??
     value.sections[0];
+  const selectedIndex = value.sections.findIndex(
+    (section) => section.id === selected?.id,
+  );
+  const fixedSection = selected?.type === "hero" || selected?.type === "footer";
   const missing = (
     Object.keys(sectionNames) as WeddingSection["type"][]
   ).filter((type) => !value.sections.some((section) => section.type === type));
@@ -46,83 +57,78 @@ export function PageSections({
         Changes are local until you save the draft. Disabled sections keep their
         content and position.
       </p>
-      <ol className="wedding-section-list">
-        {value.sections.map((section, index) => {
-          const fixed = section.type === "hero" || section.type === "footer";
-          return (
-            <li key={section.id}>
-              <div className="wedding-actions">
-                <button
-                  type="button"
-                  className="button"
-                  aria-pressed={selected?.id === section.id}
-                  onClick={() => setSelectedId(section.id)}
-                >
-                  Edit {sectionNames[section.type]}
-                </button>
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={section.enabled}
-                    disabled={fixed}
-                    onChange={(event) =>
-                      onChange({
-                        ...value,
-                        sections: value.sections.map((current) =>
-                          current.id === section.id
-                            ? { ...current, enabled: event.target.checked }
-                            : current,
-                        ),
-                      })
-                    }
-                  />
-                  Enabled{fixed ? " (required)" : ""}
-                </label>
-                <button
-                  type="button"
-                  className="button"
-                  aria-label={`Move ${sectionNames[section.type]} up`}
-                  disabled={fixed || index <= 1}
-                  onClick={() => move(section.id, -1)}
-                >
-                  Move up
-                </button>
-                <button
-                  type="button"
-                  className="button"
-                  aria-label={`Move ${sectionNames[section.type]} down`}
-                  disabled={fixed || index >= value.sections.length - 2}
-                  onClick={() => move(section.id, 1)}
-                >
-                  Move down
-                </button>
-              </div>
-            </li>
-          );
-        })}
-      </ol>
-      {missing.length > 0 && (
-        <div className="wedding-actions" aria-label="Available sections">
-          {missing.map((type) => (
-            <button
-              key={type}
-              type="button"
-              className="button"
-              onClick={() => {
-                const section = { ...defaultSection(type), enabled: true };
-                const sections = [...value.sections];
-                sections.splice(sections.length - 1, 0, section);
-                onChange({ ...value, sections });
-                setSelectedId(section.id);
-              }}
-            >
-              Add {sectionNames[type]}
-            </button>
-          ))}
+      {selected && (
+        <div className="wedding-actions" aria-label="Selected section actions">
+          <label>
+            <input
+              type="checkbox"
+              checked={
+                selected.enabled &&
+                (selected.type !== "rsvp" || Boolean(selected.content.settings))
+              }
+              disabled={fixedSection}
+              onChange={(event) =>
+                onChange({
+                  ...value,
+                  sections: value.sections.map((current) =>
+                    current.id === selected.id
+                      ? enableSection(current, event.target.checked)
+                      : current,
+                  ),
+                })
+              }
+            />
+            Enabled{fixedSection ? " (required)" : ""}
+          </label>
+          <button
+            type="button"
+            className="button"
+            disabled={fixedSection || selectedIndex <= 1}
+            onClick={() => move(selected.id, -1)}
+          >
+            Move up
+          </button>
+          <button
+            type="button"
+            className="button"
+            disabled={
+              fixedSection || selectedIndex >= value.sections.length - 2
+            }
+            onClick={() => move(selected.id, 1)}
+          >
+            Move down
+          </button>
         </div>
       )}
+      {missing.length > 0 && (
+        <details>
+          <summary>Add a section</summary>
+          <div className="wedding-actions" aria-label="Available sections">
+            {missing.map((type) => (
+              <button
+                key={type}
+                type="button"
+                className="button"
+                onClick={() => {
+                  const section = { ...defaultSection(type), enabled: true };
+                  const sections = [...value.sections];
+                  sections.splice(sections.length - 1, 0, section);
+                  onChange({ ...value, sections });
+                  onSelect(section.id);
+                }}
+              >
+                Add {sectionNames[type]}
+              </button>
+            ))}
+          </div>
+        </details>
+      )}
       {selected && (
-        <div className="wedding-section-form" key={selected.id}>
+        <div
+          className="wedding-section-form"
+          key={selected.id}
+          data-wedding-section={selected.id}
+        >
           <h3>{sectionNames[selected.type]}</h3>
           {!selected.enabled && (
             <p className="notice">
@@ -130,8 +136,7 @@ export function PageSections({
             </p>
           )}
           <p className="field-help">
-            Saved variant: {selected.variant}. Visual options will become
-            available with their renderer.
+            This section keeps its content when its appearance changes.
           </p>
           <SectionForms
             projectId={projectId}
@@ -150,4 +155,21 @@ export function PageSections({
       )}
     </section>
   );
+}
+
+function enableSection(
+  section: WeddingSection,
+  enabled: boolean,
+): WeddingSection {
+  if (section.type === "rsvp" && enabled) {
+    return {
+      ...section,
+      enabled,
+      content: {
+        ...section.content,
+        settings: section.content.settings ?? defaultRsvpSettings(),
+      },
+    };
+  }
+  return { ...section, enabled };
 }

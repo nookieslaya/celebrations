@@ -49,12 +49,12 @@ final class PublicPage {
 
         status_header( 200 );
         $url = $this->publication->url( $matches[1] );
-        $content = $snapshot['content'];
-        $title = $content['heading'];
-        $description = $content['message'] ?? $content['description'] ?? '';
+        $metadata = SitePresentation::metadata( $snapshot );
+        $title = $metadata['title'];
+        $description = $metadata['description'];
         $rsvp_config = null;
 
-        if ( ! empty( $snapshot['content']['rsvp']['enabled'] ) ) {
+        if ( RsvpContext::resolve( $snapshot )['enabled'] ) {
             $rsvp_config = array(
                 'statusUrl' => rest_url( 'microsites/v1/public/sites/' . $matches[1] . '/rsvp' ),
                 'createUrl' => rest_url( 'microsites/v1/public/sites/' . $matches[1] . '/responses' ),

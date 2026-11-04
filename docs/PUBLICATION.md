@@ -53,3 +53,12 @@ Lokalna, przypięta biblioteka [qrcode 1.5.4](https://github.com/soldair/node-qr
 Przyszłe SVG: `wp-content/plugins/microsite-core/app/src/assets/birthday-party/svg/`. Zasady w sąsiednim README.md. Obecne ręcznie dodane pliki pozostawiono bez zmian i nie importowano ich do renderera. Samo skopiowanie niczego nie aktywuje.
 
 Następny etap: RSVP bez konta gościa, jako oddzielny moduł. Płatności, uploady, domeny własne i dostęp na kod pozostają poza tym etapem.
+
+
+## Wedding W5 — publikacja administracyjna development
+
+Wedding/modern-editorial nadal mają availability=development i są ukryte w katalogu. Wyłącznie te zaufane wpisy mają administrativePublication=true oraz zaimplementowany renderer. Nie odblokowuje to globalnie typów development. Bramka wymaga manage_options, publish_ms_sites, dostępu do projektu i istniejącego prawa publikacji projektu. Zwykły klient nie tworzy/publikuje wedding przez API. Anonimowy odczyt świadomie opublikowanego snapshotu nie wymaga administratora.
+
+Read-only gotowość jest częścią istniejącego odczytu projektu. WeddingReadiness sprawdza wspólny termin, imiona, implementację opcji oraz treść aktywnych sekcji; reguły szczegółowe i stabilne ścieżki błędów opisuje docs/WEDDING.md. Szkic może pozostać niepełny. Snapshot zawiera również sections/entrance i zachowuje kanoniczne UTC. Publiczna projekcja pomija wyłączone treści i rozwiązuje tylko wskazane aktywne media właściciela; brakujący plik daje fallback bez ujawniania biblioteki. Metadata są dopasowane do typu przez SitePresentation.
+
+Projekt Olivia & James (12) nie został automatycznie opublikowany ani odblokowany. Administrator po uzupełnieniu konfiguracji może jawnie nadać prawo w LocalWP Open site shell: `wp microsite publication-right 12 grant --user=radek`, następnie użyć Publish w edytorze. Aktualizacja, wycofanie, stały URL, link/QR, noindex i dotychczasowe zasady cache są wspólne. Bieżące wyniki runtime i ograniczenia znajdują się w docs/STATUS.md.

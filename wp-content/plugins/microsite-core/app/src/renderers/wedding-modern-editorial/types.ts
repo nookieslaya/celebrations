@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { WeddingDraft } from "../../generated/drafts";
 import type { MediaAsset } from "../../media/types";
 
@@ -10,6 +11,7 @@ export type SectionOf<Type extends SectionType> = Extract<
 export type EventValue = WeddingDraft["content"]["event"];
 
 export interface WeddingContext {
+  rsvp?: ReactNode;
   draft: WeddingDraft;
   media: ReadonlyMap<number, MediaAsset>;
   sections: readonly WeddingSection[];

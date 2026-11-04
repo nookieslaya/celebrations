@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useRef,
+  useLayoutEffect,
   useState,
   type FormEvent,
 } from "react";
@@ -10,6 +11,8 @@ import {
   useEditorOperations,
 } from "../components/EditorOperations";
 import { getRenderer } from "../renderers/registry";
+import { WeddingLivePreview } from "../preview/WeddingLivePreview";
+import type { WeddingDraft } from "../generated/drafts";
 import { LivePreview } from "../preview/LivePreview";
 import { PublicationPanel } from "../components/PublicationPanel";
 import {
@@ -31,6 +34,7 @@ import { getEditor } from "../editors/registry";
 import { rememberStep, rememberedStep } from "../editors/navigation";
 import { Link, useRouter } from "../routing/Router";
 import "../gallery/gallery.css";
+import "../editors/workspace.css";
 
 export function EditorView({ id }: { id: number }) {
   const { api } = useSession();
@@ -108,7 +112,32 @@ function DraftEditor<Type extends SiteTypeId>({
   const [error, setError] = useState<unknown>(null);
   const [success, setSuccess] = useState(false);
   const [previewChoice, setPreviewChoice] = useState(false);
-  const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
+  const [workspaceMode, setWorkspaceMode] = useState<"edit" | "preview">(
+    "edit",
+  );
+  const previewButton = useRef<HTMLButtonElement>(null);
+  const previewBackButton = useRef<HTMLButtonElement>(null);
+  const editorScroll = useRef({ x: 0, y: 0 });
+  const previousMode = useRef(workspaceMode);
+
+  useLayoutEffect(() => {
+    if (previousMode.current === workspaceMode) {
+      return;
+    }
+    previousMode.current = workspaceMode;
+    if (workspaceMode === "preview") {
+      window.scrollTo(0, 0);
+      previewBackButton.current?.focus({ preventScroll: true });
+    } else {
+      window.scrollTo(editorScroll.current.x, editorScroll.current.y);
+      previewButton.current?.focus({ preventScroll: true });
+    }
+  }, [workspaceMode]);
+
+  function openPreview() {
+    editorScroll.current = { x: window.scrollX, y: window.scrollY };
+    setWorkspaceMode("preview");
+  }
   const submitting = useRef(false);
   const mounted = useMounted();
   const stepHeading = useRef<HTMLHeadingElement>(null);
@@ -134,9 +163,19 @@ function DraftEditor<Type extends SiteTypeId>({
   const required = type?.publishRequired ?? [];
   const filled = required.filter((path) => hasContent(site.draft, path)).length;
   const fields = module?.fields ?? {};
-  const labels = Object.fromEntries(
-    Object.entries(fields).map(([path, field]) => [path, field.label]),
-  );
+  const labels = {
+    ...Object.fromEntries(
+      Object.entries(fields).map(([path, field]) => [path, field.label]),
+    ),
+    ...Object.fromEntries(
+      Object.keys(site.publication.fieldErrors).map((path) => [
+        path,
+        module?.fieldLabel?.(path, site.draft) ??
+          fields[path]?.label ??
+          "Project details",
+      ]),
+    ),
+  };
 
   useEffect(() => {
     setDirty(dirty || operations.pending);
@@ -163,7 +202,7 @@ function DraftEditor<Type extends SiteTypeId>({
   }, [step?.id, focusField]);
 
   function goStep(id: string, field?: string) {
-    setMobileView("edit");
+    setWorkspaceMode("edit");
     const next = new URLSearchParams({ step: id });
     if (field) {
       next.set("field", field);
@@ -172,6 +211,11 @@ function DraftEditor<Type extends SiteTypeId>({
   }
 
   function goField(path: string) {
+    if (module?.focusField) {
+      setWorkspaceMode("edit");
+      module.focusField(path, site.id);
+      return;
+    }
     const target = fields[path];
     if (target) {
       goStep(target.step, path);
@@ -243,11 +287,9 @@ function DraftEditor<Type extends SiteTypeId>({
   const palette = Object.values(appearance)[0];
   const content = site.draft.content as Record<string, unknown>;
   const event = content.event as
-    | { localDateTime?: string; timeZone?: string }
-    | undefined;
+    { localDateTime?: string; timeZone?: string } | undefined;
   const rsvp = content.rsvp as
-    | { enabled?: boolean; maxPartySize?: number }
-    | undefined;
+    { enabled?: boolean; maxPartySize?: number } | undefined;
   const missing = Object.entries(site.publication.fieldErrors);
 
   function publicationPanel() {
@@ -259,7 +301,7 @@ function DraftEditor<Type extends SiteTypeId>({
         save={() => save()}
         onBusy={setBusy}
         fieldLabels={labels}
-        onField={steps.length ? goField : undefined}
+        onField={steps.length || module?.focusField ? goField : undefined}
         onChange={(updated) =>
           setSite((current) => ({
             ...current,
@@ -272,321 +314,338 @@ function DraftEditor<Type extends SiteTypeId>({
 
   return (
     <>
-      <Link className="text-link" href={`${appBase}/sites`}>
-        ← {copy.back}
-      </Link>
-      <div className="page-title">
-        <h1>{steps.length ? site.name : copy.edit}</h1>
-        <span className="badge">
-          {site.publication.published ? "Published" : copy.draft}
-        </span>
-      </div>
-      {steps.length > 0 && (
-        <>
-          <p className="wizard-progress">
-            {filled} of {required.length} publishing details filled in
-            <progress
-              value={filled}
-              max={Math.max(1, required.length)}
-              aria-label="Publishing details filled in"
-            />
-          </p>
-          <ol className="wizard-stepper" aria-label="Invitation steps">
-            {steps.map((item, index) => {
-              const paths = required.filter(
-                (path) => fields[path]?.step === item.id,
-              );
-              const count = paths.filter((path) =>
-                hasContent(site.draft, path),
-              ).length;
-              return (
-                <li key={item.id}>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    aria-label={`Step ${index + 1}: ${item.title}`}
-                    aria-current={item.id === step?.id ? "step" : undefined}
-                    onClick={() => goStep(item.id)}
-                  >
-                    <span>{index + 1}</span>{" "}
-                    <span className="wizard-step-name">{item.title}</span>
-                    <small>
-                      {paths.length
-                        ? `${count}/${paths.length} details`
-                        : item.feature
-                          ? "Optional"
-                          : item.review
-                            ? "Saved draft status"
-                            : "Your chosen palette"}
-                    </small>
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </>
-      )}
-      <div
-        className="mobile-editor-toggle"
-        role="group"
-        aria-label="Editor view"
-      >
-        <button
-          className="button"
-          type="button"
-          aria-pressed={mobileView === "edit"}
-          onClick={() => setMobileView("edit")}
-        >
-          Edit
-        </button>
-        <button
-          className="button"
-          type="button"
-          aria-pressed={mobileView === "preview"}
-          onClick={() => setMobileView("preview")}
-        >
-          Preview
-        </button>
-      </div>
-      <div className="editor-layout" data-mobile-view={mobileView}>
-        <div className="editor-form-column">
-          <form
-            className="panel-card"
-            onSubmit={
-              step && !step.review
-                ? continueAfterSave
-                : (event) => void save(event)
-            }
-          >
-            {step && (
-              <>
-                <p className="eyebrow">
-                  Step {stepIndex + 1} of {steps.length}
-                </p>
-                <h2 ref={stepHeading} tabIndex={-1}>
-                  {step.title}
-                </h2>
-              </>
-            )}
-            <fieldset disabled={busy || operations.pending}>
-              {(!step || step.projectName) && (
+      <div className="editor-workspace" data-mode={workspaceMode}>
+        <div className="editor-edit-surface" hidden={workspaceMode !== "edit"}>
+          <div className="editor-action-bar" aria-label="Project actions">
+            <Link className="text-link" href={`${appBase}/sites`}>
+              ← Back to projects
+            </Link>
+            <h1>{site.name || "Untitled project"}</h1>
+            <span
+              className="editor-save-state"
+              role="status"
+              aria-live="polite"
+            >
+              {submitting.current
+                ? "Saving"
+                : error !== null
+                  ? "Save failed"
+                  : dirty
+                    ? "Unsaved changes"
+                    : success
+                      ? "Saved"
+                      : "No unsaved changes"}
+            </span>
+            <button
+              ref={previewButton}
+              className="button"
+              type="button"
+              disabled={!hasVisualPreview}
+              onClick={openPreview}
+            >
+              Preview
+            </button>
+            <button
+              className="button primary"
+              type="button"
+              disabled={!dirty || busy || operations.pending}
+              onClick={() => void save()}
+            >
+              Save changes
+            </button>
+          </div>
+          {steps.length > 0 && (
+            <>
+              <p className="wizard-progress">
+                {filled} of {required.length} publishing details filled in
+                <progress
+                  value={filled}
+                  max={Math.max(1, required.length)}
+                  aria-label="Publishing details filled in"
+                />
+              </p>
+              <ol className="wizard-stepper" aria-label="Invitation steps">
+                {steps.map((item, index) => {
+                  const paths = required.filter(
+                    (path) => fields[path]?.step === item.id,
+                  );
+                  const count = paths.filter((path) =>
+                    hasContent(site.draft, path),
+                  ).length;
+                  return (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        aria-label={`Step ${index + 1}: ${item.title}`}
+                        aria-current={item.id === step?.id ? "step" : undefined}
+                        onClick={() => goStep(item.id)}
+                      >
+                        <span>{index + 1}</span>{" "}
+                        <span className="wizard-step-name">{item.title}</span>
+                        <small>
+                          {paths.length
+                            ? `${count}/${paths.length} details`
+                            : item.feature
+                              ? "Optional"
+                              : item.review
+                                ? "Saved draft status"
+                                : "Your chosen palette"}
+                        </small>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+            </>
+          )}
+          <div className="editor-layout">
+            <div className="editor-form-column">
+              <form
+                id="project-editor-form"
+                className="panel-card editor-fields-panel"
+                onSubmit={
+                  step && !step.review
+                    ? continueAfterSave
+                    : (event) => void save(event)
+                }
+              >
+                {step && (
+                  <>
+                    <p className="eyebrow">
+                      Step {stepIndex + 1} of {steps.length}
+                    </p>
+                    <h2 ref={stepHeading} tabIndex={-1}>
+                      {step.title}
+                    </h2>
+                  </>
+                )}
+                <fieldset disabled={busy || operations.pending}>
+                  {(!step || step.projectName) && (
+                    <>
+                      <label htmlFor="project-name">{copy.name}</label>
+                      <input
+                        id="project-name"
+                        required
+                        maxLength={120}
+                        value={site.name}
+                        onChange={(change) => {
+                          setSite({ ...site, name: change.target.value });
+                          setSuccess(false);
+                          setError(null);
+                        }}
+                      />
+                    </>
+                  )}
+                  {!step?.review && (
+                    <Fields
+                      projectId={site.id}
+                      templateId={site.templateId}
+                      section={step?.id}
+                      availablePalettes={template?.allowedAppearance.palette}
+                      value={site.draft}
+                      onChange={(draft) => {
+                        setSite({ ...site, draft });
+                        setSuccess(false);
+                        setError(null);
+                      }}
+                    />
+                  )}
+                  {step?.review && (
+                    <div className="wizard-summary">
+                      <dl>
+                        <dt>Template</dt>
+                        <dd>{template?.name ?? "Invitation"}</dd>
+                        <dt>Color palette</dt>
+                        <dd>
+                          {template?.paletteLabels[palette] ??
+                            "Selected palette"}
+                        </dd>
+                        <dt>Celebration</dt>
+                        <dd>
+                          {String(content.celebrantName || "Not set yet")}
+                        </dd>
+                        <dt>When</dt>
+                        <dd>
+                          {event?.localDateTime?.replace("T", " · ") ||
+                            "Not set yet"}{" "}
+                          {event?.timeZone}
+                        </dd>
+                        <dt>Where</dt>
+                        <dd>
+                          {String(content.venueName || "Not set yet")}
+                          <br />
+                          {String(content.address ?? "")}
+                        </dd>
+                        {type?.features.includes("rsvp") && (
+                          <>
+                            <dt>Guest responses</dt>
+                            <dd>
+                              {rsvp?.enabled
+                                ? `Enabled · up to ${rsvp.maxPartySize} guests`
+                                : "Disabled"}
+                            </dd>
+                          </>
+                        )}
+                        <dt>Publication</dt>
+                        <dd>
+                          {site.publication.published
+                            ? "Published"
+                            : "Not published"}
+                        </dd>
+                      </dl>
+                      <h3>Still needed before publishing</h3>
+                      <p className="field-help">
+                        {dirty
+                          ? "This check is for your last saved draft. Save your changes to refresh it."
+                          : "Checked against your saved draft."}
+                      </p>
+                      {missing.length ? (
+                        <ul className="wizard-missing">
+                          {missing.map(([path, message]) => (
+                            <li key={path}>
+                              <button
+                                type="button"
+                                onClick={() => goField(path)}
+                              >
+                                {labels[path] ?? "Invitation details"}
+                              </button>{" "}
+                              · {message}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="notice success">
+                          Your saved invitation has all required publishing
+                          details.
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {error !== null && !previewChoice && (
+                    <ErrorNotice error={error} />
+                  )}
+                  <div className="wizard-actions">
+                    {stepIndex > 0 && (
+                      <button
+                        className="button"
+                        type="button"
+                        onClick={() => goStep(steps[stepIndex - 1].id)}
+                      >
+                        Back
+                      </button>
+                    )}
+                    {step && !step.review && (
+                      <button className="button primary" type="submit">
+                        {busy ? copy.saving : "Save & continue"}
+                      </button>
+                    )}
+                  </div>
+                </fieldset>
+              </form>
+              {step?.review && publicationPanel()}
+            </div>
+            <div className="editor-secondary-actions">
+              {type?.features.includes("rsvp") && (
+                <Link
+                  className="button"
+                  href={`${appBase}/sites/${site.id}/responses`}
+                >
+                  Manage responses
+                </Link>
+              )}
+              {hasVisualPreview && (
                 <>
-                  <label htmlFor="project-name">{copy.name}</label>
-                  <input
-                    id="project-name"
-                    required
-                    maxLength={120}
-                    value={site.name}
-                    onChange={(change) => {
-                      setSite({ ...site, name: change.target.value });
-                      setSuccess(false);
-                      setError(null);
+                  <button
+                    className="button primary"
+                    disabled={busy}
+                    onClick={() => {
+                      if (dirty) {
+                        setPreviewChoice(true);
+                      } else {
+                        navigate(`${appBase}/sites/${site.id}/preview`);
+                      }
                     }}
-                  />
+                  >
+                    Preview saved draft
+                  </button>
+                  {previewChoice && (
+                    <div
+                      className="preview-choice"
+                      role="dialog"
+                      aria-label="Save before preview"
+                    >
+                      <p>
+                        The preview uses your last saved draft. Save your
+                        changes before opening it?
+                      </p>
+                      {error !== null && <ErrorNotice error={error} />}
+                      <button
+                        className="button primary"
+                        disabled={busy}
+                        onClick={() => void save(undefined, true)}
+                      >
+                        Save and preview saved draft
+                      </button>
+                      <a
+                        className="button"
+                        href={`${appBase}/sites/${site.id}/preview`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Open saved version in a new tab
+                      </a>
+                      <button
+                        className="button"
+                        disabled={busy}
+                        onClick={() => setPreviewChoice(false)}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
                 </>
               )}
-              {!step?.review && (
-                <Fields
-                  projectId={site.id}
-                  templateId={site.templateId}
-                  section={step?.id}
-                  availablePalettes={template?.allowedAppearance.palette}
-                  value={site.draft}
-                  onChange={(draft) => {
-                    setSite({ ...site, draft });
-                    setSuccess(false);
-                    setError(null);
-                  }}
-                />
-              )}
-              {step?.review && (
-                <div className="wizard-summary">
-                  <dl>
-                    <dt>Template</dt>
-                    <dd>{template?.name ?? "Invitation"}</dd>
-                    <dt>Color palette</dt>
-                    <dd>
-                      {template?.paletteLabels[palette] ?? "Selected palette"}
-                    </dd>
-                    <dt>Celebration</dt>
-                    <dd>{String(content.celebrantName || "Not set yet")}</dd>
-                    <dt>When</dt>
-                    <dd>
-                      {event?.localDateTime?.replace("T", " · ") ||
-                        "Not set yet"}{" "}
-                      {event?.timeZone}
-                    </dd>
-                    <dt>Where</dt>
-                    <dd>
-                      {String(content.venueName || "Not set yet")}
-                      <br />
-                      {String(content.address ?? "")}
-                    </dd>
-                    {type?.features.includes("rsvp") && (
-                      <>
-                        <dt>Guest responses</dt>
-                        <dd>
-                          {rsvp?.enabled
-                            ? `Enabled · up to ${rsvp.maxPartySize} guests`
-                            : "Disabled"}
-                        </dd>
-                      </>
-                    )}
-                    <dt>Publication</dt>
-                    <dd>
-                      {site.publication.published
-                        ? "Published"
-                        : "Not published"}
-                    </dd>
-                  </dl>
-                  <h3>Still needed before publishing</h3>
-                  <p className="field-help">
-                    {dirty
-                      ? "This check is for your last saved draft. Save your changes to refresh it."
-                      : "Checked against your saved draft."}
-                  </p>
-                  {missing.length ? (
-                    <ul className="wizard-missing">
-                      {missing.map(([path, message]) => (
-                        <li key={path}>
-                          <button type="button" onClick={() => goField(path)}>
-                            {labels[path] ?? "Invitation details"}
-                          </button>{" "}
-                          · {message}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="notice success">
-                      Your saved invitation has all required publishing details.
-                    </p>
-                  )}
-                </div>
-              )}
-              {error !== null && !previewChoice && (
-                <ErrorNotice error={error} />
-              )}
-              {success && (
-                <p className="notice success" role="status">
-                  {copy.saved}
-                </p>
-              )}
-              <p className="changes-state" role="status">
-                {dirty ? copy.unsaved : copy.upToDate}
+              <p className="field-help">
+                {site.publication.published
+                  ? "Your live page changes only when you publish an update."
+                  : copy.previewHelp}
               </p>
-              <div className="wizard-actions">
-                {stepIndex > 0 && (
-                  <button
-                    className="button"
-                    type="button"
-                    onClick={() => goStep(steps[stepIndex - 1].id)}
-                  >
-                    Back
-                  </button>
-                )}
-                <button
-                  className="button"
-                  type="button"
-                  disabled={!dirty}
-                  onClick={() => void save()}
-                >
-                  {busy ? copy.saving : "Save draft"}
-                </button>
-                {step && !step.review && (
-                  <button className="button primary" type="submit">
-                    {busy ? copy.saving : "Save & continue"}
-                  </button>
-                )}
-              </div>
-            </fieldset>
-          </form>
-          {step?.review && publicationPanel()}
+              {!step && publicationPanel()}
+            </div>
+          </div>
         </div>
-        <div className="editor-preview-column">
-          {type?.features.includes("rsvp") && (
-            <Link
-              className="button"
-              href={`${appBase}/sites/${site.id}/responses`}
-            >
-              Manage responses
-            </Link>
-          )}
-          {hasVisualPreview ? (
-            <>
-              {site.siteType !== "wedding" ? (
-                <LivePreview
-                  document={site}
-                  mobileVisible={mobileView === "preview"}
-                />
-              ) : (
-                <p className="notice">
-                  Save your draft and open Preview saved draft. Live preview
-                  will be available in W4.
-                </p>
-              )}
-              <>
-                <button
-                  className="button primary"
-                  disabled={busy}
-                  onClick={() => {
-                    if (dirty) {
-                      setPreviewChoice(true);
-                    } else {
-                      navigate(`${appBase}/sites/${site.id}/preview`);
-                    }
-                  }}
-                >
-                  Preview saved draft
-                </button>
-                {previewChoice && (
-                  <div
-                    className="preview-choice"
-                    role="dialog"
-                    aria-label="Save before preview"
-                  >
-                    <p>
-                      The preview uses your last saved draft. Save your changes
-                      before opening it?
-                    </p>
-                    {error !== null && <ErrorNotice error={error} />}
-                    <button
-                      className="button primary"
-                      disabled={busy}
-                      onClick={() => void save(undefined, true)}
-                    >
-                      Save and preview
-                    </button>
-                    <a
-                      className="button"
-                      href={`${appBase}/sites/${site.id}/preview`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      Open saved version in a new tab
-                    </a>
-                    <button
-                      className="button"
-                      disabled={busy}
-                      onClick={() => setPreviewChoice(false)}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                )}
-              </>
-            </>
-          ) : (
-            <p className="notice" role="status">
-              Visual preview will be available in the next stage
-            </p>
-          )}
-          <p className="field-help">
-            {site.publication.published
-              ? "Your live page changes only when you publish an update."
-              : copy.previewHelp}
-          </p>
-          {!step && publicationPanel()}
-        </div>
+        {workspaceMode === "preview" && (
+          <section
+            className="editor-preview-workspace"
+            aria-label="Current draft preview"
+          >
+            <div className="editor-preview-heading">
+              <button
+                ref={previewBackButton}
+                className="button"
+                type="button"
+                onClick={() => setWorkspaceMode("edit")}
+              >
+                ← Back to editing
+              </button>
+              <p>
+                {dirty
+                  ? "Unsaved changes · preview only"
+                  : "Preview only · changes are not published"}
+              </p>
+            </div>
+            {site.siteType === "wedding" ? (
+              <WeddingLivePreview
+                projectId={site.id}
+                document={{ ...site, draft: site.draft as WeddingDraft }}
+                mobileVisible
+              />
+            ) : (
+              <LivePreview document={site} mobileVisible />
+            )}
+          </section>
+        )}
       </div>
     </>
   );

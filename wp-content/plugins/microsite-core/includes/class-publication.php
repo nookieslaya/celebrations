@@ -151,13 +151,32 @@ final class Publication {
         $snapshot = $state['snapshot'];
         // Validate stored data through the same contract, but keep its frozen UTC.
         $record = $snapshot;
-        $record['draft'] = array( 'content' => $snapshot['content'], 'appearance' => $snapshot['appearance'] );
+        $properties = ( new Catalog() )->type( $snapshot['siteType'] )['schema']['properties'] ?? array();
+        $record['draft'] = array_intersect_key( $snapshot, $properties );
         $valid = $this->validator->publishable( $record, false );
 
         if ( is_wp_error( $valid ) ) {
             return null;
         }
 
+        if ( 'wedding' === $snapshot['siteType'] ) {
+            // Public projection omits disabled/private unused content without altering storage.
+            $snapshot['sections'] = array_values( array_filter( $snapshot['sections'], static function ( array $section ): bool {
+                return $section['enabled'];
+            } ) );
+            $venue_ids = array();
+            foreach ( $snapshot['sections'] as $section ) {
+                if ( 'venues' === $section['type'] ) {
+                    $venue_ids = array_merge( $venue_ids, $section['content']['venueIds'] );
+                } elseif ( 'schedule' === $section['type'] ) {
+                    $venue_ids = array_merge( $venue_ids, array_column( $section['content']['items'], 'venueId' ) );
+                }
+            }
+            $snapshot['content']['venues'] = array_values( array_filter( $snapshot['content']['venues'], static function ( array $venue ) use ( $venue_ids ): bool {
+                return in_array( $venue['id'], $venue_ids, true );
+            } ) );
+            $snapshot['media'] = MediaService::preview_assets( $record['draft'], (int) $posts[0]->post_author );
+        }
         return $snapshot;
     }
 
@@ -170,6 +189,12 @@ final class Publication {
 
         if ( ! $post || ! $this->permissions->can_access( $post ) ) {
             return $this->not_found();
+        }
+
+        $data = get_post_meta( $id, '_microsite_data', true );
+        $type = ( new Catalog() )->type( $data['siteType'] );
+        if ( ! empty( $type['administrativePublication'] ) && ! current_user_can( 'manage_options' ) ) {
+            return new WP_Error( 'microsite_forbidden', 'Only an administrator can publish this development type.', array( 'status' => 403 ) );
         }
 
         if ( ! current_user_can( 'publish_ms_sites' ) ) {
@@ -189,14 +214,12 @@ final class Publication {
     }
 
     private function snapshot( array $record ): array {
-        return array(
+        return array_merge( array(
             'siteType' => $record['siteType'],
             'templateId' => $record['templateId'],
             'templateVersion' => $record['templateVersion'],
             'schemaVersion' => $record['schemaVersion'],
-            'content' => $record['draft']['content'],
-            'appearance' => $record['draft']['appearance'],
-        );
+        ), $record['draft'] );
     }
 
     private function hash( array $snapshot ): string {
